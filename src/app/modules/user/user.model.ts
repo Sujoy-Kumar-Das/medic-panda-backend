@@ -45,4 +45,5 @@ userSchema.pre('save', async function (next) {
 
   next();
 });
+
 export const userModel = model<IUser, IUserMethods>('user', userSchema);

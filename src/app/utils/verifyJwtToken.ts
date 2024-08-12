@@ -10,3 +10,5 @@ const verifyToken = (token: string, secret: string) => {
     throw new AppError(401, 'unauthorize access');
   }
 };
+
+export default verifyToken;

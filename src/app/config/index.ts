@@ -7,4 +7,7 @@ export default {
   port: process.env.PORT,
   db_url: process.env.db_url,
   salt_round: process.env.saltRounds,
+  node_env: process.env.node_env,
+  access_token: process.env.jwt_access_token,
+  refresh_token: process.env.jwt_refresh_token,
 };

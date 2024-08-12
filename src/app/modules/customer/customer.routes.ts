@@ -1,7 +1,7 @@
 import express from 'express';
-import { customerServiceController } from './customer.controller';
 const router = express.Router();
 
-router.post('/user', customerServiceController.createCustomerController);
+// router.post('/customer', customerServiceController.createCustomerController);
+// router.post('/admin', adminServiceController.createAdminController);
 
-export const customerServiceRouter = router;
+export const customerRoutes = router;

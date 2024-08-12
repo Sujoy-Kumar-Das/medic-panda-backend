@@ -1,12 +1,42 @@
+import config from '../config';
 import AppError from '../errors/AppError';
+import { IUserRoles } from '../interface/user.roles.interface';
+import { userModel } from '../modules/user/user.model';
 import catchAsync from '../utils/catchAsync';
+import verifyToken from '../utils/verifyJwtToken';
 
-const auth = () => {
+const auth = (...requiredRoles: IUserRoles[]) => {
   return catchAsync(async (req, res, next) => {
     const token = req.headers.authorization;
 
     if (!token) {
       throw new AppError(404, 'You are not authorize.');
     }
+
+    const decoded = verifyToken(token, config.access_token as string);
+
+    const { role, email, iat } = decoded;
+
+    const user = await userModel.isUserExists(email);
+
+    if (!user) {
+      throw new AppError(404, 'User not found.');
+    }
+
+    if (user.isBlocked) {
+      throw new AppError(403, 'This user is blocked');
+    }
+
+    if (user.isDeleted) {
+      throw new AppError(403, 'This user is not found.');
+    }
+
+    if (requiredRoles && !requiredRoles.includes(role)) {
+      throw new AppError(403, 'You are not authorized  hi!');
+    }
+
+    req.user = { email: user.email, role: user.role };
   });
 };
+
+export default auth;

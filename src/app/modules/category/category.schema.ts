@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const createCategorySchema = z.object({
+const createCategoryValidationSchema = z.object({
   body: z.object({
     name: z.string({
       required_error: 'Category name is required.',
@@ -22,6 +22,36 @@ const createCategorySchema = z.object({
   }),
 });
 
-export const categorySchema = {
-  createCategorySchema,
+const updateCategoryValidationSchema = z.object({
+  body: z.object({
+    name: z
+      .string({
+        required_error: 'Category name is required.',
+      })
+      .optional(),
+    slug: z
+      .string({
+        required_error: 'Slug is required.',
+      })
+      .optional(),
+    categoryType: z
+      .enum(['primary', 'secondary', 'tertiary'], {
+        required_error: 'Category type is required.',
+      })
+      .optional(),
+    thumbnail: z
+      .string({
+        required_error: 'Thumbnail is required.',
+      })
+      .url({
+        message: 'Thumbnail must be a valid URL.',
+      })
+      .optional(),
+    variantId: z.string({ required_error: 'Variant is required.' }).optional(),
+  }),
+});
+
+export const categoryValidationSchema = {
+  createCategoryValidationSchema,
+  updateCategoryValidationSchema,
 };

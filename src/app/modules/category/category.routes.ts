@@ -3,14 +3,14 @@ import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
 import { categoryController } from './category.controller';
-import { categorySchema } from './category.schema';
+import { categoryValidationSchema } from './category.schema';
 
 const router = Router();
 
 router.post(
   '/category',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  validateRequest(categorySchema.createCategorySchema),
+  validateRequest(categoryValidationSchema.createCategoryValidationSchema),
   categoryController.createCategoryController,
 );
 
@@ -21,7 +21,7 @@ router.get('/category/:id', categoryController.getSingleCategoryController);
 router.patch(
   '/category',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  validateRequest(categorySchema.createCategorySchema),
+  validateRequest(categoryValidationSchema.updateCategoryValidationSchema),
   categoryController.updateCategoryController,
 );
 

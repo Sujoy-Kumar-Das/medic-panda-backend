@@ -18,28 +18,28 @@ const createProductController = catchAsync(async (req, res) => {
   });
 });
 
-// const getAllProductController = catchAsync(async (req, res) => {
-//   const result = await ProductService.getAllProductService();
+const getAllProductController = catchAsync(async (req, res) => {
+  const result = await productService.getAllProductService();
 
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: 200,
-//     data: result,
-//     message: 'Product fetched successfully.',
-//   });
-// });
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    data: result,
+    message: 'Product fetched successfully.',
+  });
+});
 
-// const getSingleProductController = catchAsync(async (req, res) => {
-//   const { id } = req.params;
-//   const result = await ProductService.getSingleProductService(id);
+const getSingleProductController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await productService.getSingleProductService(id);
 
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: 200,
-//     data: result,
-//     message: 'Product fetched successfully.',
-//   });
-// });
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    data: result,
+    message: 'Product fetched successfully.',
+  });
+});
 
 // const updateProductController = catchAsync(async (req, res) => {
 //   const { id } = req.params;
@@ -53,22 +53,22 @@ const createProductController = catchAsync(async (req, res) => {
 //   });
 // });
 
-// const deleteProductController = catchAsync(async (req, res) => {
-//   const { id } = req.params;
-//   const result = await ProductService.deleteProductService(id);
+const deleteProductController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await productService.deleteProductService(id);
 
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: 200,
-//     data: result,
-//     message: 'Product deleted successfully.',
-//   });
-// });
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    data: result,
+    message: 'Product deleted successfully.',
+  });
+});
 
 export const ProductController = {
   createProductController,
-  //   getAllProductController,
-  //   getSingleProductController,
-  //   updateProductController,
-  //   deleteProductController,
+  getAllProductController,
+  getSingleProductController,
+  // updateProductController,
+  deleteProductController,
 };

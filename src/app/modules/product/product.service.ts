@@ -90,6 +90,33 @@ const createProductService = async (payload: IProductPayload) => {
   }
 };
 
+const getAllProductService = async () => {
+  const result = await productModel.find();
+  return result;
+};
+
+const getSingleProductService = async (id: string) => {
+  const result = await productModel.findById(id);
+  return result;
+};
+
+const updateProductService = async (
+  id: string,
+  payload: Partial<IProductPayload>,
+) => {
+  const result = await productModel.findByIdAndUpdate(id, payload);
+  return result;
+};
+
+const deleteProductService = async (id: string) => {
+  const result = await productModel.findByIdAndUpdate(id, { isDeleted: true });
+  return result;
+};
+
 export const productService = {
   createProductService,
+  getAllProductService,
+  getSingleProductService,
+  updateProductService,
+  deleteProductService,
 };

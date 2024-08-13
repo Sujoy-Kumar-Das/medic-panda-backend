@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
-import { IUser } from '../user/user.interface';
-import { userModel } from '../user/user.model';
-import { ICustomer } from '../customer/customer.interface';
-import { customerModel } from '../customer/customer.model';
 import { IAdmin } from '../admin/admin.interface';
 import { adminModel } from '../admin/admin.model';
+import { ICustomer } from '../customer/customer.interface';
+import { customerModel } from '../customer/customer.model';
+import { IUser } from '../user/user.interface';
+import { userModel } from '../user/user.model';
 
 // create customer
 const createCustomerService = async (payload: ICustomer) => {
@@ -25,7 +25,7 @@ const createCustomerService = async (payload: ICustomer) => {
     // start transaction
     session.startTransaction();
 
-    const userData: IUser = {
+    const userData = {
       email,
       password,
       role: 'user',
@@ -126,6 +126,7 @@ const createAdminService = async (payload: IAdmin) => {
     );
   }
 };
+
 export const userService = {
   createCustomerService,
   createAdminService,

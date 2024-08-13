@@ -31,11 +31,15 @@ const auth = (...requiredRoles: IUserRoles[]) => {
       throw new AppError(403, 'This user is not found.');
     }
 
+    console.log(user);
+
     if (requiredRoles && !requiredRoles.includes(role)) {
-      throw new AppError(403, 'You are not authorized  hi!');
+      throw new AppError(403, 'You are not authorize!');
     }
 
     req.user = { email: user.email, role: user.role };
+
+    next();
   });
 };
 

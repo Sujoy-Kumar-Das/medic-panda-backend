@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { model, Schema } from 'mongoose';
-import config from '../../config';
+import hashPassword from '../../utils/hashPassword';
 import { IUser, IUserMethods } from './user.interface';
 const userSchema = new Schema<IUser, IUserMethods>(
   {
@@ -25,9 +25,24 @@ const userSchema = new Schema<IUser, IUserMethods>(
       type: Boolean,
       default: false,
     },
+    passwordChangeAt: {
+      type: Date,
+    },
+    otpCode: {
+      type: String,
+    },
+    otpTime: {
+      type: Date,
+      default: new Date(),
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     versionKey: false,
+    timestamps: true,
   },
 );
 
@@ -36,12 +51,20 @@ userSchema.statics.isUserExists = function (email: string) {
   return userModel.findOne({ email });
 };
 
+// is password matched method
+userSchema.statics.isPasswordMatched = async function (
+  plainTextPassword,
+  hashedPassword,
+) {
+  return await bcrypt.compare(plainTextPassword, hashedPassword);
+};
+
 // hash password middleware
 userSchema.pre('save', async function (next) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const user = this;
   // hashing password and save into DB
-  user.password = await bcrypt.hash(user.password, Number(config.salt_round));
+  user.password = await hashPassword(user.password);
 
   next();
 });

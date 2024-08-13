@@ -10,4 +10,6 @@ export default {
   node_env: process.env.node_env,
   access_token: process.env.jwt_access_token,
   refresh_token: process.env.jwt_refresh_token,
+  otp_token: process.env.otp_url,
+  otp_verification_url: process.env.otp_verification_url,
 };

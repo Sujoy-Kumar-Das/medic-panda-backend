@@ -17,7 +17,7 @@ const auth = (...requiredRoles: IUserRoles[]) => {
 
     const { role, email, iat } = decoded;
 
-    const user = await userModel.isUserExists(email);
+    const user = await userModel.findOne({ email });
 
     if (!user) {
       throw new AppError(404, 'User not found.');
@@ -31,13 +31,11 @@ const auth = (...requiredRoles: IUserRoles[]) => {
       throw new AppError(403, 'This user is not found.');
     }
 
-    console.log(user);
-
     if (requiredRoles && !requiredRoles.includes(role)) {
       throw new AppError(403, 'You are not authorize!');
     }
 
-    req.user = { email: user.email, role: user.role };
+    req.user = { email: user.email, role: user.role, userId: user._id };
 
     next();
   });

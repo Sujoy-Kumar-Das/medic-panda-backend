@@ -31,7 +31,7 @@ const createCategoryService = async (payload: ICategory) => {
 };
 
 const getAllCategoryService = async () => {
-  const result = categoryModel.find();
+  const result = categoryModel.find().limit(4);
   return result;
 };
 

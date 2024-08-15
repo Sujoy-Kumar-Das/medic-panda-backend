@@ -96,7 +96,10 @@ const getAllProductService = async () => {
 };
 
 const getSingleProductService = async (id: string) => {
-  const result = await productModel.findById(id);
+  const result = await productDetailModel
+    .findOne({ productId: id })
+    .populate('productId')
+    .populate('categoryId');
   return result;
 };
 

@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
   '/product',
-  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   validateRequest(productValidationSchema.createProductValidationSchema),
   ProductController.createProductController,
 );

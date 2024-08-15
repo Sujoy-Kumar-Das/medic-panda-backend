@@ -4,9 +4,11 @@ import { IProductDetail } from './productDetail.interface';
 const productDetailSchema = new Schema<IProductDetail>({
   productId: {
     type: Schema.Types.ObjectId,
+    ref: 'product',
   },
   categoryId: {
     type: Schema.Types.ObjectId,
+    ref: 'category',
     required: [true, 'Category ID is required.'],
   },
   photos: {

@@ -6,10 +6,6 @@ const productSchema = new Schema<IProduct, IProductModel>({
     type: String,
     required: [true, 'Product name is required.'],
   },
-  slug: {
-    type: String,
-    required: [true, 'Product slug is required.'],
-  },
   thumbnail: {
     type: String,
     required: [true, 'Product thumbnail is required.'],
@@ -23,7 +19,6 @@ const productSchema = new Schema<IProduct, IProductModel>({
   },
   discountPercentage: {
     type: Number,
-    default: 0,
   },
   stockStatus: {
     type: Boolean,
@@ -32,6 +27,10 @@ const productSchema = new Schema<IProduct, IProductModel>({
   isDeleted: {
     type: Boolean,
     default: false,
+  },
+  ratting: {
+    type: Number,
+    default: 0,
   },
 });
 

@@ -14,9 +14,15 @@ router.post(
 
 router.post(
   '/admin',
-  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   validateRequest(userValidationSchema.createUserValidationSchema),
   userController.createAdminController,
+);
+
+router.get(
+  '/get-me',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.user),
+  userController.getMeController,
 );
 
 export const userRoutes = router;

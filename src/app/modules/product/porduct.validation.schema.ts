@@ -6,9 +6,6 @@ const createProductValidationSchema = z.object({
       name: z.string({ required_error: 'Product name is required.' }).min(3, {
         message: 'Product name should be at least 3 characters long.',
       }),
-      slug: z.string({ required_error: 'Product slug is required.' }).min(3, {
-        message: 'Product slug should be at least 3 characters long.',
-      }),
       thumbnail: z
         .string({ required_error: 'Product thumbnail is required.' })
         .url({ message: 'Product thumbnail must be a valid URL.' }),
@@ -20,24 +17,27 @@ const createProductValidationSchema = z.object({
         .min(0, { message: 'Product discount percentage must be at least 0.' })
         .max(100, {
           message: 'Product discount percentage must be at most 100.',
-        }),
+        })
+        .optional(),
     }),
     productDetail: z.object({
-      categoryId: z.string({ required_error: 'Category id is required.' }),
+      category: z.string({ required_error: 'Category id is required.' }),
+      manufacture: z.string({ required_error: 'Manufacture id is required.' }),
       description: z
         .string({ required_error: 'Description is required.' })
-        .min(30, {
-          message: 'Description should be minimum 30 characters long.',
+        .min(100, {
+          message: 'Description should be minimum 100 characters long.',
         }),
-      metaKey: z.string({ required_error: 'Meta key is required.' }),
       stock: z
         .number({ required_error: 'Stock is required.' })
         .nonnegative({ message: 'Stock should be positive.' }),
-      photos: z.array(
-        z
-          .string({ required_error: 'Photo is required.' })
-          .url({ message: 'Each photo must be a valid URL.' }),
-      ),
+      images: z
+        .array(
+          z
+            .string({ required_error: 'Photo is required.' })
+            .url({ message: 'Each photo must be a valid URL.' }),
+        )
+        .optional(),
     }),
   }),
 });
@@ -49,12 +49,6 @@ const updateProductValidationSchema = z.object({
         .string({ required_error: 'Product name is required.' })
         .min(3, {
           message: 'Product name should be at least 3 characters long.',
-        })
-        .optional(),
-      slug: z
-        .string({ required_error: 'Product slug is required.' })
-        .min(3, {
-          message: 'Product slug should be at least 3 characters long.',
         })
         .optional(),
       thumbnail: z
@@ -74,21 +68,23 @@ const updateProductValidationSchema = z.object({
         .optional(),
     }),
     productDetail: z.object({
-      categoryId: z
+      category: z
         .string({ required_error: 'Category id is required.' })
+        .optional(),
+      manufacture: z
+        .string({ required_error: 'Manufacture id is required.' })
         .optional(),
       description: z
         .string({ required_error: 'Description is required.' })
-        .min(30, {
-          message: 'Description should be minimum 30 characters long.',
+        .min(100, {
+          message: 'Description should be minimum 100 characters long.',
         })
         .optional(),
-      metaKey: z.string({ required_error: 'Meta key is required.' }).optional(),
       stock: z
         .number({ required_error: 'Stock is required.' })
         .nonnegative({ message: 'Stock should be positive.' })
         .optional(),
-      photos: z
+      images: z
         .array(
           z
             .string({ required_error: 'Photo is required.' })

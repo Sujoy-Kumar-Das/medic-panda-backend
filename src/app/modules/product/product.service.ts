@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
+import calculateDiscount from '../../utils/calcutlateDiscount';
 import { categoryModel } from '../category/category.model';
+import { manufacturerModel } from '../manufacturer/manufacturer.model';
 import { IProductDetail } from '../porductDetail/productDetail.interface';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from './porduct.model';
@@ -19,7 +21,7 @@ const createProductService = async (payload: IProductPayload) => {
   // check is the the product already exists
   const isProductExists = await productModel.isProductExistsByName(name);
 
-  if (isProductExists) {
+  if (isProductExists && !isProductExists.isDeleted) {
     throw new AppError(
       403,
       `${name} product already exists you can increase the stock.`,
@@ -27,7 +29,7 @@ const createProductService = async (payload: IProductPayload) => {
   }
 
   // check is the the category is exists
-  const categoryId = productDetail.categoryId;
+  const categoryId = productDetail.category;
 
   const isCategoryExists = await categoryModel.findById(categoryId);
 
@@ -36,10 +38,24 @@ const createProductService = async (payload: IProductPayload) => {
   }
 
   // check is the the category is deleted
-  const isDeleted = isCategoryExists.isDeleted;
+  const isCategoryDeleted = isCategoryExists.isDeleted;
 
-  if (isDeleted) {
+  if (isCategoryDeleted) {
     throw new AppError(403, `This category is not found.`);
+  }
+
+  // check is the manufacture is available
+
+  const isManufactureAvailable = await manufacturerModel.findById(
+    productDetail.Manufacturer,
+  );
+
+  if (!isManufactureAvailable) {
+    throw new AppError(404, 'Manufacture is not found.');
+  }
+
+  if (isManufactureAvailable.isDeleted) {
+    throw new AppError(404, 'Manufacture is not found.');
   }
 
   // create a session
@@ -50,12 +66,7 @@ const createProductService = async (payload: IProductPayload) => {
     session.startTransaction();
 
     if (discountPercentage) {
-      const discountPrice = (
-        price -
-        price * (discountPercentage / 100)
-      ).toFixed(2);
-
-      product.discountPrice = Number(discountPrice);
+      product.discountPrice = calculateDiscount(price, discountPercentage);
     }
 
     // create the product
@@ -65,7 +76,7 @@ const createProductService = async (payload: IProductPayload) => {
       throw new AppError(400, 'Flailed to create product.');
     }
 
-    productDetail.productId = createProduct[0]._id;
+    productDetail.product = createProduct[0]._id;
 
     const createCustomer = await productDetailModel.create([productDetail], {
       session,
@@ -96,10 +107,23 @@ const getAllProductService = async () => {
 };
 
 const getSingleProductService = async (id: string) => {
+  const isProductExists = await productModel.findById(id);
+
+  if (!isProductExists) {
+    throw new AppError(404, 'This product is not found.');
+  }
+
+  const isDeleted = isProductExists.isDeleted;
+
+  if (isDeleted) {
+    throw new AppError(404, 'This product has been deleted.');
+  }
+
   const result = await productDetailModel
     .findOne({ productId: id })
     .populate('productId')
     .populate('categoryId');
+
   return result;
 };
 
@@ -112,7 +136,21 @@ const updateProductService = async (
 };
 
 const deleteProductService = async (id: string) => {
-  const result = await productModel.findByIdAndUpdate(id, { isDeleted: true });
+  const isProductExists = await productModel.findById(id);
+
+  if (!isProductExists) {
+    throw new AppError(404, 'This product is not found.');
+  }
+
+  const isDeleted = isProductExists.isDeleted;
+
+  if (isDeleted) {
+    throw new AppError(404, 'This product already deleted.');
+  }
+
+  const result = await productModel.findByIdAndUpdate(id, {
+    isDeleted: true,
+  });
   return result;
 };
 

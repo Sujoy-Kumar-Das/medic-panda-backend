@@ -1,11 +1,13 @@
 import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
+import { IUserRoles } from '../../interface/user.roles.interface';
 import { IAdmin } from '../admin/admin.interface';
 import { adminModel } from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
 import { customerModel } from '../customer/customer.model';
 import { IUser } from '../user/user.interface';
 import { userModel } from '../user/user.model';
+import { USER_ROLE } from './user.constant';
 
 // create customer
 const createCustomerService = async (payload: ICustomer) => {
@@ -127,7 +129,37 @@ const createAdminService = async (payload: IAdmin) => {
   }
 };
 
+// get me
+const getMeService = async (id: string, role: IUserRoles) => {
+  const user = await userModel.findOne({ _id: id, role });
+
+  if (!user) {
+    throw new AppError(404, 'This user not found.');
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(404, 'This user has been deleted.');
+  }
+
+  if (user.isBlocked) {
+    throw new AppError(404, 'This user has been blocked.');
+  }
+
+  if (user.role === USER_ROLE.user) {
+    return await customerModel.findOne({ userId: user._id }).populate('userId');
+  }
+
+  if (user.role === USER_ROLE.admin) {
+    return await adminModel.findOne({ userId: user._id }).populate('userId');
+  }
+
+  if (user.role === USER_ROLE.superAdmin) {
+    return await adminModel.findOne({ userId: user._id }).populate('userId');
+  }
+};
+
 export const userService = {
   createCustomerService,
   createAdminService,
+  getMeService,
 };

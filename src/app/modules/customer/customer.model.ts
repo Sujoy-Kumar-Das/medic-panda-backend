@@ -5,6 +5,7 @@ const customerSchema = new Schema<ICustomer>(
   {
     userId: {
       type: Schema.Types.ObjectId,
+      ref: 'user',
     },
     name: {
       type: String,

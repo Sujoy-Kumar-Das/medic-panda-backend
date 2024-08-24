@@ -1,5 +1,4 @@
 import AppError from '../../errors/AppError';
-import { variantModel } from '../variants/variants.model';
 import { ICategory } from './category.interface';
 import { categoryModel } from './category.model';
 
@@ -9,21 +8,10 @@ const createCategoryService = async (payload: ICategory) => {
     payload.name,
   );
 
-  if (isCategoryExists) {
+  const isDeleted = isCategoryExists?.isDeleted;
+
+  if (isCategoryExists && !isDeleted) {
     throw new AppError(401, 'This category is already exists.');
-  }
-
-  // check is the variant is exists
-  const isVariantExists = await variantModel.findById(payload.variantId);
-
-  if (!isVariantExists) {
-    throw new AppError(404, 'This variant is not found.');
-  }
-
-  const isDeleted = isVariantExists.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(404, 'This variant is not found.');
   }
 
   const result = categoryModel.create(payload);

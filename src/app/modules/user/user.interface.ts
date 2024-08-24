@@ -3,7 +3,7 @@ import { Model } from 'mongoose';
 export interface IUser {
   email: string;
   password: string;
-  role: 'user' | 'admin' | 'super-admin';
+  role: 'user' | 'admin' | 'superAdmin';
   isDeleted?: boolean;
   isBlocked?: boolean;
   passwordChangeAt: Date;

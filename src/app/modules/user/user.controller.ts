@@ -22,7 +22,19 @@ const createAdminController = catchAsync(async (req, res) => {
   });
 });
 
+const getMeController = catchAsync(async (req, res) => {
+  const { userId, role } = req.user;
+  const result = await userService.getMeService(userId, role);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User profile fetched successfully.',
+    data: result,
+  });
+});
+
 export const userController = {
   createCustomerController,
   createAdminController,
+  getMeController,
 };

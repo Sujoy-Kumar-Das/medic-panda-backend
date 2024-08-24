@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authRoutes } from '../modules/auth/auth.routes';
 import { categoryRoutes } from '../modules/category/category.routes';
+import { manufacturerRouter } from '../modules/manufacturer/manufacturer.routes';
 import { orderRoutes } from '../modules/orders/order.routes';
 import { productRoutes } from '../modules/product/porduct.routes';
 import { userRoutes } from '../modules/user/user.routes';
@@ -17,6 +18,7 @@ const modulesRoutes = [
   { path: '/api/v1/', route: variantRoutes },
   { path: '/api/v1/', route: productRoutes },
   { path: '/api/v1/', route: orderRoutes },
+  { path: '/api/v1/', route: manufacturerRouter },
 ];
 
 modulesRoutes.map((route) => router.use(route.path, route.route));

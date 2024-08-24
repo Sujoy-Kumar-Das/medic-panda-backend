@@ -18,7 +18,6 @@ const createCategoryValidationSchema = z.object({
       .url({
         message: 'Thumbnail must be a valid URL.',
       }),
-    variantId: z.string({ required_error: 'Variant is required.' }),
   }),
 });
 
@@ -47,7 +46,7 @@ const updateCategoryValidationSchema = z.object({
         message: 'Thumbnail must be a valid URL.',
       })
       .optional(),
-    variantId: z.string({ required_error: 'Variant is required.' }).optional(),
+
   }),
 });
 

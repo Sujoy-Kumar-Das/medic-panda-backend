@@ -2,26 +2,31 @@ import { model, Schema } from 'mongoose';
 import { IProductDetail } from './productDetail.interface';
 
 const productDetailSchema = new Schema<IProductDetail>({
-  productId: {
+  product: {
     type: Schema.Types.ObjectId,
     ref: 'product',
   },
-  categoryId: {
+  category: {
     type: Schema.Types.ObjectId,
     ref: 'category',
     required: [true, 'Category ID is required.'],
   },
-  photos: {
+  Manufacturer: {
+    type: Schema.Types.ObjectId,
+    ref: 'manufacture',
+    required: [true, 'Manufactured id is required'],
+  },
+  variant: {
+    type: Schema.Types.ObjectId,
+    ref: 'variant',
+    required: [true, 'Variant is required.'],
+  },
+  images: {
     type: [String],
-    required: [true, 'Product photos are required.'],
   },
   description: {
     type: String,
     required: [true, 'Product description is required.'],
-  },
-  metaKey: {
-    type: String,
-    required: [true, 'Meta key is required.'],
   },
   stock: {
     type: Number,

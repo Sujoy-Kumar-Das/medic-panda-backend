@@ -1,11 +1,11 @@
 import { Types } from 'mongoose';
 
 export interface IProductDetail {
-  productId: Types.ObjectId;
-  categoryId: Types.ObjectId;
-  photos: string[];
+  product: Types.ObjectId;
+  category: Types.ObjectId;
+  Manufacturer: Types.ObjectId;
+  images?: string[];
   description: string;
-  metaKey: string;
   stock: number;
-  status: 'active' | 'inactive';
+  status?: 'active' | 'inactive';
 }

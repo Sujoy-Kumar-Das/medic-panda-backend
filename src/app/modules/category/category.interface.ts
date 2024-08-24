@@ -1,7 +1,6 @@
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 
 export interface ICategory {
-  variantId: Types.ObjectId;
   name: string;
   slug: string;
   categoryType: 'primary' | 'secondary' | 'tertiary';

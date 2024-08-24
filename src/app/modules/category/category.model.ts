@@ -3,10 +3,6 @@ import { ICategory, ICategoryModel } from './category.interface';
 
 const categorySchema = new Schema<ICategory, ICategoryModel>(
   {
-    variantId: {
-      type: Schema.Types.ObjectId,
-      required: [true, 'Variant is required.'],
-    },
     name: {
       type: String,
       required: [true, 'Category name is required.'],

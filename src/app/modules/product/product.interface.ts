@@ -2,13 +2,13 @@ import { Model } from 'mongoose';
 
 export interface IProduct {
   name: string;
-  slug: string;
-  thumbnail: string;
   price: number;
+  discountPercentage?: number;
   discountPrice?: number;
-  discountPercentage: number;
-  stockStatus: boolean;
+  stockStatus?: boolean;
+  thumbnail: string;
   isDeleted?: boolean;
+  ratting?: number;
 }
 
 export interface IProductModel extends Model<IProduct> {

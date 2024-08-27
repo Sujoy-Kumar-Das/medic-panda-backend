@@ -1,9 +1,10 @@
 import { Types } from 'mongoose';
 
 export interface ICustomer {
-  userId: Types.ObjectId;
-  email: string;
-  password: string;
+  user: Types.ObjectId;
   name: string;
   photo: string;
+  contact?: string | null;
+  isDeleted: boolean;
+  isBlocked: boolean;
 }

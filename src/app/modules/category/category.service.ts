@@ -18,9 +18,12 @@ const createCategoryService = async (payload: ICategory) => {
   return result;
 };
 
-const getAllCategoryService = async () => {
-  const result = categoryModel.find().limit(4);
-  return result;
+const getAllCategoryService = async (limit: string) => {
+  if (limit) {
+    return await categoryModel.find().limit(Number(limit));
+  }
+
+  return await categoryModel.find();
 };
 
 const getSingleCategoryService = async (id: string) => {

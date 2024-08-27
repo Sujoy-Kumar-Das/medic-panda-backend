@@ -11,15 +11,10 @@ const productDetailSchema = new Schema<IProductDetail>({
     ref: 'category',
     required: [true, 'Category ID is required.'],
   },
-  Manufacturer: {
+  manufacture: {
     type: Schema.Types.ObjectId,
     ref: 'manufacture',
     required: [true, 'Manufactured id is required'],
-  },
-  variant: {
-    type: Schema.Types.ObjectId,
-    ref: 'variant',
-    required: [true, 'Variant is required.'],
   },
   images: {
     type: [String],

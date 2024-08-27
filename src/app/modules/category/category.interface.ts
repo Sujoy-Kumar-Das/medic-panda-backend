@@ -2,7 +2,6 @@ import { Model } from 'mongoose';
 
 export interface ICategory {
   name: string;
-  slug: string;
   categoryType: 'primary' | 'secondary' | 'tertiary';
   thumbnail: string;
   isDeleted: boolean;

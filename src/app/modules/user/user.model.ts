@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { model, Schema } from 'mongoose';
 import hashPassword from '../../utils/hashPassword';
 import { IUser, IUserMethods } from './user.interface';
+
 const userSchema = new Schema<IUser, IUserMethods>(
   {
     email: {
@@ -33,7 +34,6 @@ const userSchema = new Schema<IUser, IUserMethods>(
     },
     otpTime: {
       type: Date,
-      default: new Date(),
     },
     isVerified: {
       type: Boolean,
@@ -66,6 +66,22 @@ userSchema.pre('save', async function (next) {
   // hashing password and save into DB
   user.password = await hashPassword(user.password);
 
+  next();
+});
+
+// Query Middleware
+userSchema.pre('find', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
+
+userSchema.pre('findOne', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
+
+userSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
   next();
 });
 

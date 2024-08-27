@@ -7,10 +7,6 @@ const categorySchema = new Schema<ICategory, ICategoryModel>(
       type: String,
       required: [true, 'Category name is required.'],
     },
-    slug: {
-      type: String,
-      required: [true, 'Slug is required.'],
-    },
     categoryType: {
       type: String,
       required: [true, 'Category type is required.'],

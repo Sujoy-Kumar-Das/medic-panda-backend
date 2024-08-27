@@ -1,5 +1,19 @@
 import { z } from 'zod';
 
+const discountValidationSchema = z.object({
+  percentage: z
+    .number({ required_error: 'Product discount percentage is required.' })
+    .min(0, { message: 'Product discount percentage must be at least 0.' })
+    .max(100, {
+      message: 'Product discount percentage must be at most 100.',
+    })
+    .optional(),
+  startDate: z.string({ required_error: 'Discount start date is required.' }),
+  endDate: z.string({ required_error: 'Discount end date is required.' }),
+  startTime: z.string({ required_error: 'Discount end time is required.' }),
+  endTime: z.string({ required_error: 'Discount end' }),
+});
+
 const createProductValidationSchema = z.object({
   body: z.object({
     product: z.object({
@@ -12,13 +26,7 @@ const createProductValidationSchema = z.object({
       price: z
         .number({ required_error: 'Product price is required.' })
         .positive({ message: 'Product price must be a positive number.' }),
-      discountPercentage: z
-        .number({ required_error: 'Product discount percentage is required.' })
-        .min(0, { message: 'Product discount percentage must be at least 0.' })
-        .max(100, {
-          message: 'Product discount percentage must be at most 100.',
-        })
-        .optional(),
+      discount: discountValidationSchema,
     }),
     productDetail: z.object({
       category: z.string({ required_error: 'Category id is required.' }),
@@ -74,6 +82,7 @@ const updateProductValidationSchema = z.object({
       manufacture: z
         .string({ required_error: 'Manufacture id is required.' })
         .optional(),
+
       description: z
         .string({ required_error: 'Description is required.' })
         .min(100, {

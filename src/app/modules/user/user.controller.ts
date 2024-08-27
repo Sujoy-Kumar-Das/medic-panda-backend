@@ -33,8 +33,78 @@ const getMeController = catchAsync(async (req, res) => {
   });
 });
 
+const getAllUserController = catchAsync(async (req, res) => {
+  const result = await userService.getAllUsers();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'All user fetched successfully.',
+    data: result,
+  });
+});
+
+const getSingleUserController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await userService.getSingleUser(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: ' User fetched successfully.',
+    data: result,
+  });
+});
+
+const getAllBlockedUserController = catchAsync(async (req, res) => {
+  const result = await userService.getAllBlockedUsers();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'All blocked user fetched successfully.',
+    data: result,
+  });
+});
+
+const blockAUserController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await userService.blockUsrService(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User blocked successfully.',
+    data: result,
+  });
+});
+
+const unBlockAUserController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await userService.unBlockUsrService(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User unblock successfully.',
+    data: result,
+  });
+});
+
+const deleteAUserController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await userService.deleteUsrService(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User deleted successfully.',
+    data: result,
+  });
+});
+
 export const userController = {
   createCustomerController,
   createAdminController,
+  blockAUserController,
+  unBlockAUserController,
+  deleteAUserController,
   getMeController,
+  getAllUserController,
+  getSingleUserController,
+  getAllBlockedUserController,
 };

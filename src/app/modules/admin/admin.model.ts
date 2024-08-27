@@ -3,8 +3,9 @@ import { IAdmin } from './admin.interface';
 
 const adminSchema = new Schema<IAdmin>(
   {
-    userId: {
+    user: {
       type: Schema.Types.ObjectId,
+      ref: 'user',
     },
     name: {
       type: String,
@@ -14,11 +15,17 @@ const adminSchema = new Schema<IAdmin>(
       type: String,
       required: [true, 'Photo is required.'],
     },
-    email: {
+    contact: {
       type: String,
+      default: null,
     },
-    password: {
-      type: String,
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

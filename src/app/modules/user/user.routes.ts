@@ -6,6 +6,18 @@ import { userController } from './user.controller';
 import { userValidationSchema } from './user.schema';
 const router = express.Router();
 
+router.get(
+  '/get-me',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.user),
+  userController.getMeController,
+);
+
+router.get('/', userController.getAllUserController);
+
+router.get('/:id', userController.getSingleUserController);
+
+router.get('/block-user', userController.getAllBlockedUserController);
+
 router.post(
   '/customer',
   validateRequest(userValidationSchema.createUserValidationSchema),
@@ -19,10 +31,22 @@ router.post(
   userController.createAdminController,
 );
 
-router.get(
-  '/get-me',
-  auth(USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.user),
-  userController.getMeController,
+router.post(
+  '/block-user/:id',
+  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  userController.blockAUserController,
+);
+
+router.post(
+  '/unblock-user/:id',
+  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  userController.unBlockAUserController,
+);
+
+router.delete(
+  '/:id',
+  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  userController.deleteAUserController,
 );
 
 export const userRoutes = router;

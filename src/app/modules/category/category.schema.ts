@@ -5,9 +5,6 @@ const createCategoryValidationSchema = z.object({
     name: z.string({
       required_error: 'Category name is required.',
     }),
-    slug: z.string({
-      required_error: 'Slug is required.',
-    }),
     categoryType: z.enum(['primary', 'secondary', 'tertiary'], {
       required_error: 'Category type is required.',
     }),
@@ -28,11 +25,6 @@ const updateCategoryValidationSchema = z.object({
         required_error: 'Category name is required.',
       })
       .optional(),
-    slug: z
-      .string({
-        required_error: 'Slug is required.',
-      })
-      .optional(),
     categoryType: z
       .enum(['primary', 'secondary', 'tertiary'], {
         required_error: 'Category type is required.',
@@ -46,7 +38,6 @@ const updateCategoryValidationSchema = z.object({
         message: 'Thumbnail must be a valid URL.',
       })
       .optional(),
-
   }),
 });
 

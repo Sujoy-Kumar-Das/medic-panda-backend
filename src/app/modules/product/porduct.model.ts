@@ -1,5 +1,42 @@
 import { model, Schema } from 'mongoose';
-import { IProduct, IProductModel } from './product.interface';
+import { IDiscount, IProduct, IProductModel } from './product.interface';
+
+const discountSchema = new Schema<IDiscount>(
+  {
+    discountStatus: {
+      type: Boolean,
+      default: false,
+    },
+    percentage: {
+      type: Number,
+      required: [true, 'Discount percentage is required.'],
+    },
+    discountPrice: {
+      type: Number,
+      required: false,
+    },
+    startDate: {
+      type: String,
+      required: [true, 'Start date is required.'],
+    },
+    endDate: {
+      type: String,
+      required: [true, 'End date is required.'],
+    },
+    startTime: {
+      type: String,
+      required: [true, 'Start time is required.'],
+    },
+    endTime: {
+      type: String,
+      required: [true, 'End time is required.'],
+    },
+  },
+  {
+    id: false,
+    versionKey: false,
+  },
+);
 
 const productSchema = new Schema<IProduct, IProductModel>({
   name: {
@@ -14,8 +51,9 @@ const productSchema = new Schema<IProduct, IProductModel>({
     type: Number,
     required: [true, 'Product price is required.'],
   },
-  discountPrice: {
-    type: Number,
+  discount: {
+    type: discountSchema,
+    required: false,
   },
   discountPercentage: {
     type: Number,

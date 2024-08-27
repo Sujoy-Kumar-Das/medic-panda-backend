@@ -94,13 +94,12 @@ const getAllOrderServiceByAdmin = async () => {
 
 // get all order by user, admin and supper admin
 const getAllOrderService = async (
-  userId: string,
+  user: string,
   email: string,
   role: IUserRoles,
 ) => {
-  console.log(email, role, userId);
   if (role === USER_ROLE.user) {
-    const isOrderExists = await orderMOdel.find({ user: userId });
+    const isOrderExists = await orderMOdel.find({ user: user });
 
     if (!isOrderExists.length) {
       throw new AppError(404, 'You do not have any order.');

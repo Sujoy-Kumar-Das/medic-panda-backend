@@ -16,7 +16,7 @@ interface IProductPayload {
 const createProductService = async (payload: IProductPayload) => {
   const { product, productDetail } = payload;
 
-  const { name, price, discountPercentage } = product;
+  const { name, price, discount } = product;
 
   // check is the the product already exists
   const isProductExists = await productModel.isProductExistsByName(name);
@@ -47,7 +47,7 @@ const createProductService = async (payload: IProductPayload) => {
   // check is the manufacture is available
 
   const isManufactureAvailable = await manufacturerModel.findById(
-    productDetail.Manufacturer,
+    productDetail.manufacture,
   );
 
   if (!isManufactureAvailable) {
@@ -65,8 +65,9 @@ const createProductService = async (payload: IProductPayload) => {
     // start transaction
     session.startTransaction();
 
-    if (discountPercentage) {
-      product.discountPrice = calculateDiscount(price, discountPercentage);
+    if (discount) {
+      discount.discountPrice = calculateDiscount(price, discount.percentage);
+      discount.discountStatus = true;
     }
 
     // create the product
@@ -120,9 +121,9 @@ const getSingleProductService = async (id: string) => {
   }
 
   const result = await productDetailModel
-    .findOne({ productId: id })
-    .populate('productId')
-    .populate('categoryId');
+    .findOne({ product: id })
+    .populate('product')
+    .populate('category');
 
   return result;
 };

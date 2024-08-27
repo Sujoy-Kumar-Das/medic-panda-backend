@@ -1,10 +1,19 @@
 import { Model } from 'mongoose';
 
+export interface IDiscount {
+  discountStatus: boolean;
+  percentage: number;
+  discountPrice?: number;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+}
+
 export interface IProduct {
   name: string;
   price: number;
-  discountPercentage?: number;
-  discountPrice?: number;
+  discount?: IDiscount;
   stockStatus?: boolean;
   thumbnail: string;
   isDeleted?: boolean;

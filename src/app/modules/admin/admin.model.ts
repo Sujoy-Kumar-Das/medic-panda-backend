@@ -1,4 +1,5 @@
 import { model, Schema } from 'mongoose';
+import { addressSchema } from '../customer/customer.model';
 import { IAdmin } from './admin.interface';
 
 const adminSchema = new Schema<IAdmin>(
@@ -18,6 +19,9 @@ const adminSchema = new Schema<IAdmin>(
     contact: {
       type: String,
       default: null,
+    },
+    address: {
+      type: addressSchema,
     },
     isBlocked: {
       type: Boolean,

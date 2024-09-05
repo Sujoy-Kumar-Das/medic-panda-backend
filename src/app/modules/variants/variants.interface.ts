@@ -1,5 +1,5 @@
 export interface IVariant {
   name: string;
-  price: number;
+  quantity: number;
   isDeleted: boolean;
 }

@@ -15,9 +15,9 @@ const auth = (...requiredRoles: IUserRoles[]) => {
 
     const decoded = verifyToken(token, config.access_token as string);
 
-    const { role, email, iat } = decoded;
+    const { role, userId } = decoded;
 
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findById(userId);
 
     if (!user) {
       throw new AppError(404, 'User not found.');

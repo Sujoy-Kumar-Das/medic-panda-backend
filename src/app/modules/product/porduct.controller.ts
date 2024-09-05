@@ -19,12 +19,13 @@ const createProductController = catchAsync(async (req, res) => {
 });
 
 const getAllProductController = catchAsync(async (req, res) => {
-  const result = await productService.getAllProductService();
+  const result = await productService.getAllProductService(req.query);
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    data: result,
+    data: result.result,
+    meta: result.meta,
     message: 'Product fetched successfully.',
   });
 });

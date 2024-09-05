@@ -7,10 +7,9 @@ const categorySchema = new Schema<ICategory, ICategoryModel>(
       type: String,
       required: [true, 'Category name is required.'],
     },
-    categoryType: {
+    description: {
       type: String,
-      required: [true, 'Category type is required.'],
-      enum: ['primary', 'secondary', 'tertiary'],
+      required: [true, 'Description is required.'],
     },
     thumbnail: {
       type: String,

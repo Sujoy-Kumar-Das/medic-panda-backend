@@ -1,5 +1,24 @@
 import { model, Schema } from 'mongoose';
-import { ICustomer } from './customer.interface';
+import { IUserPermanentAddress, ICustomer } from './customer.interface';
+
+export const addressSchema = new Schema<IUserPermanentAddress>({
+  city: {
+    type: String,
+    required: [true, 'City is required.'],
+  },
+  country: {
+    type: String,
+    required: [true, 'Country is required.'],
+  },
+  postalCode: {
+    type: String,
+    required: [true, 'Postal code is required.'],
+  },
+  state: {
+    type: String,
+    required: [true, 'State is required.'],
+  },
+});
 
 const customerSchema = new Schema<ICustomer>(
   {
@@ -18,6 +37,9 @@ const customerSchema = new Schema<ICustomer>(
     contact: {
       type: String,
       default: null,
+    },
+    address: {
+      type: addressSchema,
     },
     isBlocked: {
       type: Boolean,

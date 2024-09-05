@@ -7,44 +7,44 @@ import { userValidationSchema } from './user.schema';
 const router = express.Router();
 
 router.get(
-  '/get-me',
+  '/user/get-me',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.user),
   userController.getMeController,
 );
 
-router.get('/', userController.getAllUserController);
+router.get('/user', userController.getAllUserController);
 
-router.get('/:id', userController.getSingleUserController);
+router.get('/user/:id', userController.getSingleUserController);
 
-router.get('/block-user', userController.getAllBlockedUserController);
+router.get('/users/blocked-user', userController.getAllBlockedUserController);
 
 router.post(
-  '/customer',
+  '/user/customer',
   validateRequest(userValidationSchema.createUserValidationSchema),
   userController.createCustomerController,
 );
 
 router.post(
-  '/admin',
+  '/user/admin',
   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   validateRequest(userValidationSchema.createUserValidationSchema),
   userController.createAdminController,
 );
 
 router.post(
-  '/block-user/:id',
+  '/user/block-user/:id',
   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   userController.blockAUserController,
 );
 
 router.post(
-  '/unblock-user/:id',
+  '/user/unblock-user/:id',
   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   userController.unBlockAUserController,
 );
 
 router.delete(
-  '/:id',
+  '/user/:id',
   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   userController.deleteAUserController,
 );

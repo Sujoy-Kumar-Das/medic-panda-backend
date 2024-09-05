@@ -9,7 +9,7 @@ import { IChangePassword, ILogin } from './auth.interface';
 const loginService = async (payload: ILogin) => {
   const { email, password } = payload;
 
-  const user = await userModel.isUserExists(email);
+  const user = await userModel.findOne({ email });
 
   if (!user) {
     throw new AppError(404, 'This user is not exists');
@@ -34,9 +34,8 @@ const loginService = async (payload: ILogin) => {
   }
 
   const jwtPayload = {
-    email: user.email,
     role: user.role,
-    name: user.name,
+    userId: user._id,
   };
 
   const accessToken = createToken(

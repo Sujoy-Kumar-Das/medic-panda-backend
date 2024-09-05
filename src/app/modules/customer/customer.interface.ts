@@ -1,10 +1,18 @@
 import { Types } from 'mongoose';
 
+export interface IUserPermanentAddress {
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
 export interface ICustomer {
   user: Types.ObjectId;
   name: string;
   photo: string;
   contact?: string | null;
+  address: IUserPermanentAddress;
   isDeleted: boolean;
   isBlocked: boolean;
 }

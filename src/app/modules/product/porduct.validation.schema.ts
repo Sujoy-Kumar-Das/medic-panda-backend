@@ -31,6 +31,7 @@ const createProductValidationSchema = z.object({
     productDetail: z.object({
       category: z.string({ required_error: 'Category id is required.' }),
       manufacture: z.string({ required_error: 'Manufacture id is required.' }),
+      variant: z.string({ required_error: 'Variant id is required.' }),
       description: z
         .string({ required_error: 'Description is required.' })
         .min(100, {

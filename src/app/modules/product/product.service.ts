@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import QueryBuilder from '../../builder/queryBuilder';
 import AppError from '../../errors/AppError';
 import calculateDiscount from '../../utils/calcutlateDiscount';
 import { categoryModel } from '../category/category.model';
@@ -102,9 +103,13 @@ const createProductService = async (payload: IProductPayload) => {
   }
 };
 
-const getAllProductService = async () => {
-  const result = await productModel.find();
-  return result;
+const getAllProductService = async (query: Record<string, unknown>) => {
+  console.log(query);
+  const productQuery = new QueryBuilder(productModel.find(), query);
+  const products = productQuery.search(['name']).filter().paginate();
+  const meta = await productQuery.countTotal();
+  const result = await products.modelQuery;
+  return { result, meta };
 };
 
 const getSingleProductService = async (id: string) => {
@@ -123,7 +128,9 @@ const getSingleProductService = async (id: string) => {
   const result = await productDetailModel
     .findOne({ product: id })
     .populate('product')
-    .populate('category');
+    .populate('category')
+    .populate('manufacture')
+    .populate('variant');
 
   return result;
 };

@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express from 'express';
+import express, { urlencoded } from 'express';
 import globalErrorHandler from './app/middlewares/globalErrrorHandler';
 import notFound from './app/middlewares/not-found';
 import router from './app/routes';
@@ -10,6 +10,7 @@ app.use(cors());
 
 //parsers
 app.use(express.json());
+app.use(urlencoded());
 
 // routes
 app.use(router);

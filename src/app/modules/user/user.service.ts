@@ -171,11 +171,10 @@ const getMeService = async (id: string, role: IUserRoles) => {
 
 // get all users
 const getAllUsers = async () => {
-  const customer = await customerModel
-    .find({ isBlocked: false })
-    .populate('user');
-  const admin = await adminModel.find({ isBlocked: false }).populate('user');
+  const customer = await customerModel.find().populate('user');
+  const admin = await adminModel.find().populate('user');
 
+  console.log({ customer, admin });
   return [...customer, ...admin];
 };
 
@@ -205,12 +204,15 @@ const getSingleUser = async (id: string) => {
     return await adminModel.findOne({ user: id }).populate('user');
   }
 };
+
 // get all block users
 const getAllBlockedUsers = async () => {
   const customer = await customerModel
-    .find({ isBlocked: true })
+    .find({ isBlocked: { $eq: true } })
     .populate('user');
-  const admin = await adminModel.find({ isBlocked: true }).populate('user');
+  const admin = await adminModel
+    .find({ isBlocked: { $eq: true } })
+    .populate('user');
 
   return [...customer, ...admin];
 };

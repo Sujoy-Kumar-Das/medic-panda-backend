@@ -2,7 +2,7 @@ import { Model } from 'mongoose';
 
 export interface ICategory {
   name: string;
-  categoryType: 'primary' | 'secondary' | 'tertiary';
+  description: string;
   thumbnail: string;
   isDeleted: boolean;
 }

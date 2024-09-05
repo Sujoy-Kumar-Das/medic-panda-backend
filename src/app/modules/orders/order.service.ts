@@ -1,31 +1,33 @@
 import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
+import { sslInitPaymentService } from '../../ssl/ssl.service';
+import generateTransactionId from '../../utils/generateTransactionId';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
 import { USER_ROLE } from '../user/user.constant';
 import { userModel } from '../user/user.model';
 import { IOrder } from './order.interface';
-import { orderMOdel } from './order.model';
+import { orderModel } from './order.model';
 
-const createOrderService = async (payload: IOrder) => {
-  const { user, product, quantity } = payload;
+const createOrderService = async (id: string, payload: IOrder) => {
+  const { product, quantity } = payload;
 
   // check is the user exists
-  const isUserExists = await userModel.findById(user);
+  const user = await userModel.findById(id);
 
-  if (!isUserExists) {
+  if (!user) {
     throw new AppError(403, `This user is not found.`);
   }
 
   //   is user deleted
-  const isDeleted = isUserExists.isDeleted;
+  const isDeleted = user.isDeleted;
 
   if (isDeleted) {
     throw new AppError(403, `This user is not found.`);
   }
 
   //   is user blocked
-  const isBlocked = isUserExists.isBlocked;
+  const isBlocked = user.isBlocked;
 
   if (isBlocked) {
     throw new AppError(403, `This user has been blocked.`);
@@ -55,8 +57,12 @@ const createOrderService = async (payload: IOrder) => {
 
   //   check product details
   const productDetails = await productDetailModel.findOne({
-    productId: product,
+    product,
   });
+
+  if (!productDetails) {
+    throw new AppError(404, 'This product is not found.');
+  }
 
   //   is product active
   const isActive = productDetails?.status;
@@ -67,7 +73,6 @@ const createOrderService = async (payload: IOrder) => {
 
   //   is stock available
   const stockProduct = productDetails?.stock;
-
   if (!stockProduct) {
     throw new AppError(403, 'This product has been stock out.');
   }
@@ -80,15 +85,47 @@ const createOrderService = async (payload: IOrder) => {
     );
   }
 
-  //   place order
-  const result = await orderMOdel.create(payload);
+  payload.total =
+    Number(quantity) *
+    (isProductExists.discount?.discountStatus
+      ? Number(isProductExists.discount.discountPrice)
+      : Number(isProductExists.price));
 
-  return result;
+  payload.paymentId = generateTransactionId();
+
+  const paymentData = {
+    total: payload.total,
+    productId: product,
+    productName: isProductExists.name,
+    country: 'ffffffffff',
+    phone: 'fffffffffffff',
+    city: 'fffffffffff',
+    userEmail: user.email,
+    userAddress: '',
+    transactionId: payload.paymentId,
+  };
+
+  const paymentUrl = await sslInitPaymentService(paymentData);
+
+  if (!paymentUrl) {
+    throw new AppError(403, 'Something went wrong while payment.');
+  }
+
+  // save to db
+  const result = await orderModel.create(payload);
+
+  if (!result._id) {
+    throw new AppError(403, 'Failed to place order.Try again later.');
+  }
+
+  return {
+    paymentUrl,
+  };
 };
 
 // get all order service by admin and supper admin
 const getAllOrderServiceByAdmin = async () => {
-  const result = await orderMOdel.find();
+  const result = await orderModel.find();
   return result;
 };
 
@@ -99,7 +136,7 @@ const getAllOrderService = async (
   role: IUserRoles,
 ) => {
   if (role === USER_ROLE.user) {
-    const isOrderExists = await orderMOdel.find({ user: user });
+    const isOrderExists = await orderModel.find({ user: user });
 
     if (!isOrderExists.length) {
       throw new AppError(404, 'You do not have any order.');
@@ -121,7 +158,7 @@ const getAllOrderService = async (
   }
 
   if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await orderMOdel.find({ user: userId });
+    return await orderModel.find({ user: userId });
   }
 };
 
@@ -132,7 +169,7 @@ const cancelOrderService = async (
   role: IUserRoles,
 ) => {
   if (role === USER_ROLE.user) {
-    const isOrderExists = await orderMOdel.findById(id);
+    const isOrderExists = await orderModel.findById(id);
 
     if (!isOrderExists) {
       throw new AppError(404, 'This order not found.');
@@ -150,7 +187,7 @@ const cancelOrderService = async (
       throw new AppError(403, 'Unauthorized access.');
     }
 
-    return await orderMOdel.findByIdAndUpdate(
+    return await orderModel.findByIdAndUpdate(
       id,
       { isCanceled: true },
       { new: true },
@@ -158,7 +195,7 @@ const cancelOrderService = async (
   }
 
   if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await orderMOdel.findByIdAndUpdate(
+    return await orderModel.findByIdAndUpdate(
       id,
       { isCanceled: true },
       { new: true },
@@ -173,7 +210,7 @@ const deleteOrderService = async (
   role: IUserRoles,
 ) => {
   if (role === USER_ROLE.user) {
-    const isOrderExists = await orderMOdel.findById(id);
+    const isOrderExists = await orderModel.findById(id);
 
     if (!isOrderExists) {
       throw new AppError(404, 'This order not found.');
@@ -191,7 +228,7 @@ const deleteOrderService = async (
       throw new AppError(403, 'Unauthorized access.');
     }
 
-    return await orderMOdel.findByIdAndUpdate(
+    return await orderModel.findByIdAndUpdate(
       id,
       { isDeleted: true },
       { new: true },
@@ -199,7 +236,7 @@ const deleteOrderService = async (
   }
 
   if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await orderMOdel.findByIdAndUpdate(
+    return await orderModel.findByIdAndUpdate(
       id,
       { isDeleted: true },
       { new: true },

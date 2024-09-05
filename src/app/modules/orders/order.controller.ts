@@ -3,7 +3,8 @@ import sendResponse from '../../utils/sendResponse';
 import { orderService } from './order.service';
 
 const createOrderController = catchAsync(async (req, res) => {
-  const result = await orderService.createOrderService(req.body);
+  const { userId } = req.user;
+  const result = await orderService.createOrderService(userId, req.body);
 
   sendResponse(res, {
     success: true,

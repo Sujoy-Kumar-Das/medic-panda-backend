@@ -55,9 +55,6 @@ const productSchema = new Schema<IProduct, IProductModel>({
     type: discountSchema,
     required: false,
   },
-  discountPercentage: {
-    type: Number,
-  },
   stockStatus: {
     type: Boolean,
     default: true,
@@ -65,10 +62,6 @@ const productSchema = new Schema<IProduct, IProductModel>({
   isDeleted: {
     type: Boolean,
     default: false,
-  },
-  ratting: {
-    type: Number,
-    default: 0,
   },
 });
 

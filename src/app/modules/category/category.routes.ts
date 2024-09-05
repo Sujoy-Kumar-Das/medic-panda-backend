@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
   '/category',
-  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   validateRequest(categoryValidationSchema.createCategoryValidationSchema),
   categoryController.createCategoryController,
 );

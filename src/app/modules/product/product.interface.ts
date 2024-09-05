@@ -17,7 +17,6 @@ export interface IProduct {
   stockStatus?: boolean;
   thumbnail: string;
   isDeleted?: boolean;
-  ratting?: number;
 }
 
 export interface IProductModel extends Model<IProduct> {

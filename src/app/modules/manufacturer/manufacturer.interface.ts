@@ -1,5 +1,3 @@
-import { Model } from 'mongoose';
-
 export interface IAddress {
   state: string;
   city: string;
@@ -14,5 +12,3 @@ export interface IManufacturer {
   address: IAddress;
   isDeleted?: boolean;
 }
-
-

@@ -13,8 +13,14 @@ const productDetailSchema = new Schema<IProductDetail>({
   },
   manufacture: {
     type: Schema.Types.ObjectId,
-    ref: 'manufacture',
+    ref: 'manufacturer',
     required: [true, 'Manufactured id is required'],
+  },
+
+  variant: {
+    type: Schema.Types.ObjectId,
+    required: [true, 'Variant is required.'],
+    ref: 'variant',
   },
   images: {
     type: [String],
@@ -32,6 +38,10 @@ const productDetailSchema = new Schema<IProductDetail>({
     type: String,
     enum: ['active', 'inactive'],
     default: 'active',
+  },
+  rating: {
+    type: Number,
+    default: 0,
   },
 });
 

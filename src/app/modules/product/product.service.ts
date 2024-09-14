@@ -74,7 +74,7 @@ const createProductService = async (payload: IProductPayload) => {
     // create the product
     const createProduct = await productModel.create([product], { session });
 
-    if (!createProduct.length) {
+    if (!createProduct?.length) {
       throw new AppError(400, 'Flailed to create product.');
     }
 
@@ -104,7 +104,6 @@ const createProductService = async (payload: IProductPayload) => {
 };
 
 const getAllProductService = async (query: Record<string, unknown>) => {
-  console.log(query);
   const productQuery = new QueryBuilder(productModel.find(), query);
   const products = productQuery.search(['name']).filter().paginate();
   const meta = await productQuery.countTotal();

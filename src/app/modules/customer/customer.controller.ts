@@ -2,16 +2,17 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { customerService } from './customer.service';
 
-const createCustomerController = catchAsync(async (req, res) => {
-  const result = await customerService.createCustomerService(req.body);
+const updateCustomerController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const result = await customerService.updateUserInfo(userId, req.body);
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Customer created successfully.',
+    message: 'Customer updated successfully.',
     data: result,
   });
 });
 
-export const customerServiceController = {
-  createCustomerController,
+export const customerController = {
+  updateCustomerController,
 };

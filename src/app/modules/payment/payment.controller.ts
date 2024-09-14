@@ -24,7 +24,6 @@ const successPaymentController = catchAsync(async (req, res) => {
 });
 
 const cancelPaymentController = catchAsync(async (req, res) => {
-  console.log('cancel', req.body);
   res.redirect(config.failed_frontend_link as string);
 });
 

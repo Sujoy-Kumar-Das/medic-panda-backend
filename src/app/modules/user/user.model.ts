@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { model, Schema } from 'mongoose';
+import AppError from '../../errors/AppError';
 import hashPassword from '../../utils/hashPassword';
 import { IUser, IUserMethods } from './user.interface';
 
@@ -49,6 +50,27 @@ const userSchema = new Schema<IUser, IUserMethods>(
 // is user exists statics
 userSchema.statics.isUserExists = function (email: string) {
   return userModel.findOne({ email });
+};
+
+// is user exists statics
+userSchema.statics.isValidUser = async function (
+  id: string | Schema.Types.ObjectId,
+) {
+  const user = await userModel.findById(id);
+
+  if (!user) {
+    throw new AppError(404, 'User not found.');
+  }
+
+  if (user.isBlocked) {
+    throw new AppError(403, 'This user is blocked');
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(403, 'This user is not found.');
+  }
+
+  return user;
 };
 
 // is password matched method

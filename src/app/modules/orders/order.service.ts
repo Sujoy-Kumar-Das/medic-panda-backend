@@ -1,12 +1,11 @@
+import QueryBuilder from '../../builder/queryBuilder';
 import AppError from '../../errors/AppError';
-import { IUserRoles } from '../../interface/user.roles.interface';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
 import generateTransactionId from '../../utils/generateTransactionId';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
-import { USER_ROLE } from '../user/user.constant';
 import { userModel } from '../user/user.model';
-import { IOrder } from './order.interface';
+import { IOrder, OrderStatus } from './order.interface';
 import { orderModel } from './order.model';
 
 const createOrderService = async (id: string, payload: IOrder) => {
@@ -85,6 +84,8 @@ const createOrderService = async (id: string, payload: IOrder) => {
     );
   }
 
+  payload.user = user._id;
+
   payload.total =
     Number(quantity) *
     (isProductExists.discount?.discountStatus
@@ -129,119 +130,134 @@ const getAllOrderServiceByAdmin = async () => {
   return result;
 };
 
-// get all order by user, admin and supper admin
+// get all order by user
 const getAllOrderService = async (
-  user: string,
-  email: string,
-  role: IUserRoles,
+  id: string,
+  query: Record<string, unknown>,
 ) => {
-  if (role === USER_ROLE.user) {
-    const isOrderExists = await orderModel.find({ user: user });
+  // Check if the user exists
+  const user = await userModel.findById(id);
 
-    if (!isOrderExists.length) {
-      throw new AppError(404, 'You do not have any order.');
-    }
-
-    const user = await userModel.findById(isOrderExists[0].user);
-
-    if (!user) {
-      throw new AppError(404, 'This user not found.');
-    }
-
-    const isEmailMatched = user.email === email;
-
-    if (!isEmailMatched) {
-      throw new AppError(403, 'Unauthorized access.');
-    }
-
-    return isOrderExists;
+  if (!user) {
+    throw new AppError(403, `This user is not found.`);
   }
 
-  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await orderModel.find({ user: userId });
+  // Check if the user is deleted
+  if (user.isDeleted) {
+    throw new AppError(403, `This user is not found.`);
   }
+
+  // Check if the user is blocked
+  if (user.isBlocked) {
+    throw new AppError(403, `This user has been blocked.`);
+  }
+
+  // Build the query with filters
+  const ordersQuery = new QueryBuilder(
+    orderModel.find({ user: id }).populate('product'),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate();
+
+  // Execute the query
+  const orders = await ordersQuery.modelQuery;
+
+  return orders;
 };
 
 // cancel order by user, admin and supper admin
-const cancelOrderService = async (
-  id: string,
-  email: string,
-  role: IUserRoles,
-) => {
-  if (role === USER_ROLE.user) {
-    const isOrderExists = await orderModel.findById(id);
+const cancelOrderService = async (userId: string, orderId: string) => {
+  console.log({ userId });
+  // check is the user exists
+  const user = await userModel.findById(userId);
 
-    if (!isOrderExists) {
-      throw new AppError(404, 'This order not found.');
-    }
-
-    const user = await userModel.findById(isOrderExists.user);
-
-    if (!user) {
-      throw new AppError(404, 'This user not found.');
-    }
-    const isEmailMatched = user.email === email;
-    console.log({ isEmailMatched });
-
-    if (!isEmailMatched) {
-      throw new AppError(403, 'Unauthorized access.');
-    }
-
-    return await orderModel.findByIdAndUpdate(
-      id,
-      { isCanceled: true },
-      { new: true },
-    );
+  if (!user) {
+    throw new AppError(403, `This user is not found.`);
   }
 
-  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await orderModel.findByIdAndUpdate(
-      id,
-      { isCanceled: true },
-      { new: true },
-    );
+  //   is user deleted
+  const isDeleted = user.isDeleted;
+
+  if (isDeleted) {
+    throw new AppError(403, `This user is not found.`);
   }
+
+  //   is user blocked
+  const isBlocked = user.isBlocked;
+
+  if (isBlocked) {
+    throw new AppError(403, `This user has been blocked.`);
+  }
+
+  const order = await orderModel.findById(orderId);
+
+  if (!order) {
+    throw new AppError(404, 'This order is not found.');
+  }
+
+  if (order.isCanceled) {
+    throw new AppError(403, 'This order already canceled. ');
+  }
+
+  if (order.isDeleted) {
+    throw new AppError(403, 'This order is not found. ');
+  }
+
+  if (order.status !== OrderStatus.PENDING) {
+    throw new AppError(404, "This order already can't cancel this order.");
+  }
+
+  const result = await orderModel.findByIdAndUpdate(
+    orderId,
+    { isCanceled: true },
+    { new: true },
+  );
+  return result;
 };
 
 // delete order by user, admin and supper admin
-const deleteOrderService = async (
-  id: string,
-  email: string,
-  role: IUserRoles,
-) => {
-  if (role === USER_ROLE.user) {
-    const isOrderExists = await orderModel.findById(id);
+const deleteOrderService = async (userId: string, orderId: string) => {
+  // check is the user exists
+  const user = await userModel.findById(userId);
 
-    if (!isOrderExists) {
-      throw new AppError(404, 'This order not found.');
-    }
-
-    const user = await userModel.findById(isOrderExists.user);
-
-    if (!user) {
-      throw new AppError(404, 'This user not found.');
-    }
-    const isEmailMatched = user.email === email;
-    console.log({ isEmailMatched });
-
-    if (!isEmailMatched) {
-      throw new AppError(403, 'Unauthorized access.');
-    }
-
-    return await orderModel.findByIdAndUpdate(
-      id,
-      { isDeleted: true },
-      { new: true },
-    );
+  if (!user) {
+    throw new AppError(403, `This user is not found.`);
   }
 
-  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await orderModel.findByIdAndUpdate(
-      id,
-      { isDeleted: true },
-      { new: true },
-    );
+  //   is user deleted
+  const isDeleted = user.isDeleted;
+
+  if (isDeleted) {
+    throw new AppError(403, `This user is not found.`);
   }
+
+  //   is user blocked
+  const isBlocked = user.isBlocked;
+
+  if (isBlocked) {
+    throw new AppError(403, `This user has been blocked.`);
+  }
+
+  const order = await orderModel.findById(orderId);
+
+  if (!order) {
+    throw new AppError(404, 'This order is not found.');
+  }
+
+  if (order.isDeleted) {
+    throw new AppError(403, 'This order already deleted. ');
+  }
+
+  const result = await orderModel.findByIdAndUpdate(
+    orderId,
+    {
+      isDeleted: true,
+    },
+    { new: true },
+  );
+  return result;
 };
 
 export const orderService = {

@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export interface IUser {
   email: string;
@@ -15,6 +15,9 @@ export interface IUser {
 
 export interface IUserMethods extends Model<IUser> {
   isUserExists(email: string): Promise<IUser | null>;
+  isValidUser(
+    id: string | Types.ObjectId,
+  ): Promise<(IUser & { _id: Types.ObjectId }) | null>;
   getAllBlockedUsers(): Promise<IUser[] | null>;
   isPasswordMatched(
     plainTextPassword: string,

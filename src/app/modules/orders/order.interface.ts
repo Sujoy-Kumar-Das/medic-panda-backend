@@ -1,12 +1,12 @@
 import { Types } from 'mongoose';
 
 export enum OrderStatus {
-  PENDING = 'Pending',
-  PROCESSING = 'Processing',
-  SHIPPED = 'Shipped',
-  DELIVERED = 'Delivered',
-  CANCELED = 'Canceled',
-  RETURNED = 'Returned',
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  SHIPPED = 'shipped',
+  DELIVERED = 'delivered',
+  CANCELED = 'canceled',
+  RETURNED = 'returned',
 }
 
 export interface IShippingAddress {

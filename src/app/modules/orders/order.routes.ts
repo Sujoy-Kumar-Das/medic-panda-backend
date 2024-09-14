@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
   '/order',
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.user),
   validateRequest(orderValidationSchema.createOrderValidationSchema),
   orderController.createOrderController,
 );
@@ -21,20 +21,20 @@ router.get(
 );
 
 router.get(
-  '/order/:id',
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  '/order',
+  auth(USER_ROLE.user),
   orderController.getAllOrderController,
 );
 
 router.delete(
   '/order/cancel/:id',
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.user),
   orderController.cancelOrderController,
 );
 
 router.delete(
   '/order/:id',
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.user),
   orderController.deleteOrderController,
 );
 

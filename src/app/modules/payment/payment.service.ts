@@ -13,8 +13,6 @@ const successPaymentService = async (payload: any) => {
     throw new AppError(403, 'Failed to process payment.');
   }
 
-  console.log({ payload });
-
   const session = await startSession();
   session.startTransaction();
 
@@ -56,7 +54,6 @@ const successPaymentService = async (payload: any) => {
     const paymentInfo = {
       user: order.user,
       transactionId: payload.tran_id,
-      // Make sure session is not included here
     };
 
     const storePaymentInfo = await PaymentModel.create([paymentInfo], {

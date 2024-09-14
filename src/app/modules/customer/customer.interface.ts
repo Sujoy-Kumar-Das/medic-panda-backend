@@ -13,6 +13,4 @@ export interface ICustomer {
   photo: string;
   contact?: string | null;
   address: IUserPermanentAddress;
-  isDeleted: boolean;
-  isBlocked: boolean;
 }

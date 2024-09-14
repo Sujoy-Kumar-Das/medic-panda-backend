@@ -26,10 +26,9 @@ const getAllOrderControllerByAdmin = catchAsync(async (req, res) => {
 });
 
 const getAllOrderController = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const { email, role } = req.user;
+  const { userId } = req.user;
 
-  const result = await orderService.getAllOrderService(id, email, role);
+  const result = await orderService.getAllOrderService(userId, req.query);
 
   sendResponse(res, {
     success: true,
@@ -40,10 +39,10 @@ const getAllOrderController = catchAsync(async (req, res) => {
 });
 
 const cancelOrderController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
   const { id } = req.params;
-  const { email, role } = req.user;
 
-  const result = await orderService.cancelOrderService(id, email, role);
+  const result = await orderService.cancelOrderService(userId, id);
 
   sendResponse(res, {
     success: true,
@@ -55,9 +54,9 @@ const cancelOrderController = catchAsync(async (req, res) => {
 
 const deleteOrderController = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { email, role } = req.user;
+  const { userId } = req.user;
 
-  const result = await orderService.deleteOrderService(id, email, role);
+  const result = await orderService.deleteOrderService(userId, id);
 
   sendResponse(res, {
     success: true,

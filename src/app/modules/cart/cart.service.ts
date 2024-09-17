@@ -6,46 +6,49 @@ import { ICart } from './cart.interface';
 import { cartModel } from './cart.model';
 
 const createCartService = async (payload: ICart) => {
-  const { user: userId, product: productId } = payload;
+  const { user: userId, product: productId, quantity } = payload;
 
-  // check is the user exists
   const user = await userModel.findById(userId);
 
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
+  if (!user || user.isDeleted || user.isBlocked) {
+    throw new AppError(403, 'User not found or access denied.');
   }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
-  //   check is the product is available
 
   const product = await productModel.findById(productId);
-
-  if (!product) {
-    throw new AppError(403, `This product is not found.`);
+  if (!product || product.isDeleted) {
+    throw new AppError(403, 'Product not found or deleted.');
   }
 
-  //   is product deleted
-  const isProductDeleted = product.isDeleted;
+  const existingCartItem = await cartModel.findOne({
+    user: userId,
+    product: productId,
+  });
 
-  if (isProductDeleted) {
-    throw new AppError(403, `This product is deleted.`);
+  if (existingCartItem) {
+    const updatedCart = await cartModel.findByIdAndUpdate(
+      existingCartItem._id,
+      {
+        $inc: {
+          quantity: quantity,
+          totalPrice: product.price * quantity,
+        },
+      },
+      { new: true },
+    );
+
+    return updatedCart;
+  } else {
+    const totalPrice = product.price * quantity;
+
+    const newCartItem = await cartModel.create({
+      user: userId,
+      product: productId,
+      quantity,
+      totalPrice,
+    });
+
+    return newCartItem;
   }
-
-  const result = await cartModel.create(payload);
-  return result;
 };
 
 const getAllCartProductService = async (id: string) => {

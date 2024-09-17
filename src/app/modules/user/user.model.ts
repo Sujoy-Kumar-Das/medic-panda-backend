@@ -1,6 +1,5 @@
 import bcrypt from 'bcrypt';
 import { model, Schema } from 'mongoose';
-import AppError from '../../errors/AppError';
 import hashPassword from '../../utils/hashPassword';
 import { IUser, IUserMethods } from './user.interface';
 
@@ -52,23 +51,12 @@ userSchema.statics.isUserExists = function (email: string) {
   return userModel.findOne({ email });
 };
 
+// todo
 // is user exists statics
 userSchema.statics.isValidUser = async function (
   id: string | Schema.Types.ObjectId,
 ) {
   const user = await userModel.findById(id);
-
-  if (!user) {
-    throw new AppError(404, 'User not found.');
-  }
-
-  if (user.isBlocked) {
-    throw new AppError(403, 'This user is blocked');
-  }
-
-  if (user.isDeleted) {
-    throw new AppError(403, 'This user is not found.');
-  }
 
   return user;
 };
@@ -88,22 +76,6 @@ userSchema.pre('save', async function (next) {
   // hashing password and save into DB
   user.password = await hashPassword(user.password);
 
-  next();
-});
-
-// Query Middleware
-userSchema.pre('find', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
-userSchema.pre('findOne', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
-userSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
   next();
 });
 

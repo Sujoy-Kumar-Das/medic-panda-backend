@@ -12,11 +12,11 @@ router.get(
   userController.getMeController,
 );
 
-router.get('/user', userController.getAllUserController);
+// router.get('/user', userController.getAllUserController);
 
-router.get('/user/:id', userController.getSingleUserController);
+// router.get('/user/:id', userController.getSingleUserController);
 
-router.get('/users/blocked-user', userController.getAllBlockedUserController);
+// router.get('/users/blocked-user', userController.getAllBlockedUserController);
 
 router.post(
   '/user/customer',
@@ -31,22 +31,22 @@ router.post(
   userController.createAdminController,
 );
 
-router.post(
-  '/user/block-user/:id',
-  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  userController.blockAUserController,
-);
+// router.post(
+//   '/user/block-user/:id',
+//   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+//   userController.blockAUserController,
+// );
 
-router.post(
-  '/user/unblock-user/:id',
-  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  userController.unBlockAUserController,
-);
+// router.post(
+//   '/user/unblock-user/:id',
+//   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+//   userController.unBlockAUserController,
+// );
 
-router.delete(
-  '/user/:id',
-  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  userController.deleteAUserController,
-);
+// router.delete(
+//   '/user/:id',
+//   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+//   userController.deleteAUserController,
+// );
 
 export const userRoutes = router;

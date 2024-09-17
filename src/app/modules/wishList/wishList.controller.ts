@@ -7,7 +7,7 @@ const createWishListController = catchAsync(async (req, res) => {
 
   const result = await wishListService.createWishListService({
     user: userId,
-    product: req.body,
+    product: req.body.product,
   });
 
   sendResponse(res, {

@@ -44,6 +44,15 @@ const createWishListService = async (payload: IWishList) => {
     throw new AppError(403, `This product is deleted.`);
   }
 
+  const isAlreadyExistInWishList = await wishListModel.findOne({
+    user: userId,
+    product,
+  });
+
+  if (isAlreadyExistInWishList) {
+    throw new AppError(403, 'This Product you already added in wishlist.');
+  }
+
   const result = await wishListModel.create(payload);
   return result;
 };

@@ -86,42 +86,52 @@ const getAllCartProductService = async (id: string) => {
   return result;
 };
 
-const getSingleCartProductService = async (
-  userId: string,
-  productId: string,
-) => {
-  // check is the user exists
+const removeFromCartByQuantityService = async (payload: ICart) => {
+  const { user: userId, product: productId, quantity } = payload;
+
   const user = await userModel.findById(userId);
 
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
+  if (!user || user.isDeleted || user.isBlocked) {
+    throw new AppError(403, 'User not found or access denied.');
   }
 
-  //   is user deleted
-  const isDeleted = user.isDeleted;
+  const product = await productModel.findById(productId);
 
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
+  if (!product || product.isDeleted) {
+    throw new AppError(403, 'Product not found or deleted.');
   }
 
-  //   is user blocked
-  const isBlocked = user.isBlocked;
+  const existingCartItem = await cartModel.findOne({
+    user: userId,
+    product: productId,
+  });
 
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
+  if (!existingCartItem) {
+    throw new AppError(404, 'Cart item not found.');
   }
 
-  let result = null;
+  if (quantity) {
+    const newQuantity = existingCartItem.quantity - quantity;
 
-  if (user?.role === USER_ROLE.user) {
-    result = await cartModel.findOne({ user: userId, product: productId });
+    if (newQuantity <= 0) {
+      return await cartModel.findByIdAndDelete(existingCartItem._id);
+    } else {
+      const updatedCart = await cartModel.findByIdAndUpdate(
+        existingCartItem._id,
+        {
+          $set: {
+            quantity: newQuantity,
+            totalPrice: product.price * newQuantity,
+          },
+        },
+        { new: true },
+      );
+
+      return updatedCart;
+    }
+  } else {
+    throw new AppError(400, 'Quantity is required for cart update.');
   }
-
-  if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
-    result = await cartModel.findOne({ product: productId });
-  }
-
-  return result;
 };
 
 const removeFromCartService = async (userId: string, productId: string) => {
@@ -146,24 +156,17 @@ const removeFromCartService = async (userId: string, productId: string) => {
     throw new AppError(403, `This user has been blocked.`);
   }
 
-  let result = null;
-
-  if (user?.role === USER_ROLE.user) {
-    result = await cartModel.findOneAndUpdate(
-      { user: userId, product: productId },
-      { isDeleted: true },
-    );
-  }
-
-  if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
-    result = await cartModel.find({ product: productId }, { isDeleted: true });
-  }
+  const result = await cartModel.findOneAndUpdate(
+    { user: userId, product: productId },
+    { isDeleted: true },
+    { new: true },
+  );
 
   return result;
 };
 export const cartService = {
   createCartService,
   getAllCartProductService,
-  getSingleCartProductService,
   removeFromCartService,
+  removeFromCartByQuantityService,
 };

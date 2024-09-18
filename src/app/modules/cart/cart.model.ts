@@ -4,7 +4,6 @@ import { ICart } from './cart.interface';
 const cartSchema = new Schema<ICart>({
   user: {
     type: Schema.Types.ObjectId,
-    required: [true, 'User is required.'],
   },
   product: {
     type: Schema.Types.ObjectId,

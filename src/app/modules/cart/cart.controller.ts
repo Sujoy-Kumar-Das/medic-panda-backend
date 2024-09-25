@@ -34,16 +34,16 @@ const getAllCartProductController = catchAsync(async (req, res) => {
   });
 });
 
-const removeCartProductController = catchAsync(async (req, res) => {
+const getSingleCartProductController = catchAsync(async (req, res) => {
   const { userId } = req.user;
   const { id } = req.params;
 
-  const result = await cartService.removeFromCartService(userId, id);
+  const result = await cartService.getSingleCartProductService({ id, userId });
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: 'Cart product removed successfully.',
+    message: 'Cart product fetched successfully.',
     data: result,
   });
 });
@@ -67,8 +67,23 @@ const removeFromCartByQuantityController = catchAsync(async (req, res) => {
   });
 });
 
+const removeCartProductController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const { id } = req.params;
+
+  const result = await cartService.removeFromCartService(userId, id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Cart product removed successfully.',
+    data: result,
+  });
+});
+
 export const cartController = {
   createCartController,
+  getSingleCartProductController,
   getAllCartProductController,
   removeCartProductController,
   removeFromCartByQuantityController,

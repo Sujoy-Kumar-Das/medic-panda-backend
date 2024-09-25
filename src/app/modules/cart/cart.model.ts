@@ -8,6 +8,7 @@ const cartSchema = new Schema<ICart>({
   product: {
     type: Schema.Types.ObjectId,
     required: [true, 'Product is required.'],
+    ref: 'product',
   },
   quantity: {
     type: Number,
@@ -16,10 +17,6 @@ const cartSchema = new Schema<ICart>({
   totalPrice: {
     type: Number,
     default: 0,
-  },
-  isDeleted: {
-    type: Boolean,
-    default: false,
   },
 });
 

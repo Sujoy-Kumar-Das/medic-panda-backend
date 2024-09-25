@@ -140,6 +140,48 @@ const createAdminService = async (payload: IAdminPayload) => {
   }
 };
 
+const updateUserEmail = async (userId: string, payload: { email: string }) => {
+  const { email } = payload;
+  // check is the user exists
+  const user = await userModel.findById(userId);
+
+  if (!user) {
+    throw new AppError(403, `This user is not found.`);
+  }
+
+  //   is user deleted
+  const isDeleted = user.isDeleted;
+
+  if (isDeleted) {
+    throw new AppError(403, `This user is not found.`);
+  }
+
+  //   is user blocked
+  const isBlocked = user.isBlocked;
+
+  if (isBlocked) {
+    throw new AppError(403, `This user has been blocked.`);
+  }
+
+  const isUserExistsByEmail = await userModel.findOne({ email });
+
+  if (isUserExistsByEmail) {
+    throw new AppError(401, 'This email already exists.');
+  }
+
+  if (user.email === email) {
+    throw new AppError(401, 'Both email are same.');
+  }
+
+  const result = await userModel.findByIdAndUpdate(
+    userId,
+    { email, isVerified: false },
+    { new: true },
+  );
+
+  return result;
+};
+
 // get me
 const getMeService = async (id: string, role: IUserRoles) => {
   const user = await userModel.findOne({ _id: id, role });
@@ -433,6 +475,7 @@ const deleteUsrService = async (id: string) => {
 export const userService = {
   createCustomerService,
   createAdminService,
+  updateUserEmail,
   blockUsrService,
   unBlockUsrService,
   deleteUsrService,

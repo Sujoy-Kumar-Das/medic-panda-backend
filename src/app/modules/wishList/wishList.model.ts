@@ -10,10 +10,7 @@ const wishListSchema = new Schema<IWishList>(
     product: {
       type: Schema.Types.ObjectId,
       required: [true, 'Product is required.'],
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
+      ref: 'product',
     },
   },
   {

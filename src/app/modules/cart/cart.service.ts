@@ -76,11 +76,53 @@ const getAllCartProductService = async (id: string) => {
   let result = null;
 
   if (user?.role === USER_ROLE.user) {
-    result = await cartModel.find({ user: id });
+    result = await cartModel.find({ user: id }).populate('product');
   }
 
   if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
     result = await cartModel.find();
+  }
+
+  return result;
+};
+
+const getSingleCartProductService = async (payload: {
+  id: string;
+  userId: string;
+}) => {
+  const { id, userId } = payload;
+
+  // check is the user exists
+  const user = await userModel.findById(userId);
+
+  if (!user) {
+    throw new AppError(403, `This user is not found.`);
+  }
+
+  //   is user deleted
+  const isDeleted = user.isDeleted;
+
+  if (isDeleted) {
+    throw new AppError(403, `This user is not found.`);
+  }
+
+  //   is user blocked
+  const isBlocked = user.isBlocked;
+
+  if (isBlocked) {
+    throw new AppError(403, `This user has been blocked.`);
+  }
+
+  let result = null;
+
+  if (user?.role === USER_ROLE.user) {
+    result = await cartModel
+      .findOne({ user: userId, _id: id })
+      .populate('product');
+  }
+
+  if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
+    result = await cartModel.findById(id);
   }
 
   return result;
@@ -164,9 +206,11 @@ const removeFromCartService = async (userId: string, productId: string) => {
 
   return result;
 };
+
 export const cartService = {
   createCartService,
   getAllCartProductService,
+  getSingleCartProductService,
   removeFromCartService,
   removeFromCartByQuantityService,
 };

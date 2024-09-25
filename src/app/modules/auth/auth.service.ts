@@ -61,9 +61,9 @@ const changePasswordService = async (
   payload: IChangePassword,
 ) => {
   const { oldPassword, newPassword } = payload;
-  const { email, role } = userData;
+  const { email, role, userId } = userData;
 
-  const user = await userModel.findOne({ email, role });
+  const user = await userModel.findOne({ _id: userId, email, role });
 
   if (!user) {
     throw new AppError(404, 'This user is not exists');
@@ -84,15 +84,25 @@ const changePasswordService = async (
   );
 
   if (!isPasswordMatched) {
-    throw new AppError(403, 'Wrong password.');
+    throw new AppError(403, 'Old password is wrong.');
   }
 
   const newHashedPassword = await hashPassword(newPassword);
+
+  const isOldAndNewPasswordAreSame = await userModel.isPasswordMatched(
+    newPassword,
+    user.password,
+  );
+
+  if (isOldAndNewPasswordAreSame) {
+    throw new AppError(401, 'New password must be different.');
+  }
 
   await userModel.findOneAndUpdate(
     {
       email: user.email,
       role: user.role,
+      _id: user._id,
     },
     {
       password: newHashedPassword,

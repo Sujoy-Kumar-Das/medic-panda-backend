@@ -20,6 +20,12 @@ router.get(
   cartController.getAllCartProductController,
 );
 
+router.get(
+  '/cart/:id',
+  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  cartController.getSingleCartProductController,
+);
+
 router.patch(
   '/cart',
   validateRequest(CartValidationSchema),

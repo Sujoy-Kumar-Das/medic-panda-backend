@@ -2,6 +2,7 @@
 import { startSession, Types } from 'mongoose';
 import AppError from '../../errors/AppError';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
+import { cartModel } from '../cart/cart.model';
 import { orderModel } from '../orders/order.model';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
@@ -50,6 +51,11 @@ const successPaymentService = async (payload: any) => {
       { isPaid: true },
       { session },
     );
+
+    await cartModel.findOneAndDelete({
+      product: order.product,
+      user: order.user,
+    });
 
     const paymentInfo = {
       user: order.user,

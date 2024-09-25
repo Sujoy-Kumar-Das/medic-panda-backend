@@ -5,5 +5,4 @@ export interface ICart {
   product: Types.ObjectId;
   quantity: number;
   totalPrice?: number;
-  isDeleted?: boolean;
 }

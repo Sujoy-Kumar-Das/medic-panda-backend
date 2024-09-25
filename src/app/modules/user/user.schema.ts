@@ -58,7 +58,16 @@ const updateUserValidationSchema = z.object({
     .strict(),
 });
 
+const updateUserEmailValidationSchema = z.object({
+  body: z.object({
+    email: z
+      .string({ required_error: 'User email is required.' })
+      .email({ message: 'Please provide a valid email.' }),
+  }),
+});
+
 export const userValidationSchema = {
   createUserValidationSchema,
   updateUserValidationSchema,
+  updateUserEmailValidationSchema,
 };

@@ -22,6 +22,19 @@ const createAdminController = catchAsync(async (req, res) => {
   });
 });
 
+const updateUserEmailController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+
+  const result = await userService.updateUserEmail(userId, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Email updated successfully.',
+    data: result,
+  });
+});
+
 const getMeController = catchAsync(async (req, res) => {
   const { userId, role } = req.user;
   const result = await userService.getMeService(userId, role);
@@ -100,6 +113,7 @@ const deleteAUserController = catchAsync(async (req, res) => {
 export const userController = {
   createCustomerController,
   createAdminController,
+  updateUserEmailController,
   blockAUserController,
   unBlockAUserController,
   deleteAUserController,

@@ -31,6 +31,13 @@ router.post(
   userController.createAdminController,
 );
 
+router.patch(
+  '/user/email',
+  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  validateRequest(userValidationSchema.updateUserEmailValidationSchema),
+  userController.updateUserEmailController,
+);
+
 // router.post(
 //   '/user/block-user/:id',
 //   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),

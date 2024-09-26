@@ -38,6 +38,17 @@ router.patch(
   userController.updateUserEmailController,
 );
 
+router.post(
+  '/user/verify-email',
+  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  userController.verifyEmailLinkController,
+);
+
+router.post(
+  '/user/confirm-verification-email',
+  userController.confirmEmailVerificationController,
+);
+
 // router.post(
 //   '/user/block-user/:id',
 //   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),

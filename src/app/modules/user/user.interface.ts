@@ -1,4 +1,4 @@
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 
 export interface IUser {
   email: string;
@@ -15,10 +15,10 @@ export interface IUser {
 
 export interface IUserMethods extends Model<IUser> {
   isUserExists(email: string): Promise<IUser | null>;
-  isValidUser(
-    id: string | Types.ObjectId,
-  ): Promise<(IUser & { _id: Types.ObjectId }) | null>;
-  getAllBlockedUsers(): Promise<IUser[] | null>;
+  isJwtIssuedBeforePasswordChange(
+    passwordChangeAt: Date,
+    jwtIssuedTime: number,
+  ): boolean;
   isPasswordMatched(
     plainTextPassword: string,
     hashedPassword: string,

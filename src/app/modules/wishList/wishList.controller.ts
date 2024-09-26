@@ -19,9 +19,12 @@ const createWishListController = catchAsync(async (req, res) => {
 });
 
 const getAllWishListProductController = catchAsync(async (req, res) => {
-  const { userId } = req.user;
+  const { userId, role } = req.user;
 
-  const result = await wishListService.getAllWishListProductService(userId);
+  const result = await wishListService.getAllWishListProductService(
+    userId,
+    role,
+  );
 
   sendResponse(res, {
     success: true,
@@ -32,12 +35,13 @@ const getAllWishListProductController = catchAsync(async (req, res) => {
 });
 
 const getSingleWishListProductController = catchAsync(async (req, res) => {
-  const { userId } = req.user;
+  const { userId, role } = req.user;
   const { id } = req.params;
 
   const result = await wishListService.getSingleWishListProductService(
     userId,
     id,
+    role,
   );
 
   sendResponse(res, {
@@ -49,10 +53,14 @@ const getSingleWishListProductController = catchAsync(async (req, res) => {
 });
 
 const removeWishListProductController = catchAsync(async (req, res) => {
-  const { userId } = req.user;
+  const { userId, role } = req.user;
   const { id } = req.params;
 
-  const result = await wishListService.removeFromWishListService(userId, id);
+  const result = await wishListService.removeFromWishListService(
+    userId,
+    id,
+    role,
+  );
 
   sendResponse(res, {
     success: true,

@@ -1,18 +1,11 @@
 import AppError from '../../errors/AppError';
 import { productModel } from '../product/porduct.model';
 import { USER_ROLE } from '../user/user.constant';
-import { userModel } from '../user/user.model';
 import { ICart } from './cart.interface';
 import { cartModel } from './cart.model';
 
 const createCartService = async (payload: ICart) => {
   const { user: userId, product: productId, quantity } = payload;
-
-  const user = await userModel.findById(userId);
-
-  if (!user || user.isDeleted || user.isBlocked) {
-    throw new AppError(403, 'User not found or access denied.');
-  }
 
   const product = await productModel.findById(productId);
   if (!product || product.isDeleted) {
@@ -51,35 +44,14 @@ const createCartService = async (payload: ICart) => {
   }
 };
 
-const getAllCartProductService = async (id: string) => {
-  // check is the user exists
-  const user = await userModel.findById(id);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
+const getAllCartProductService = async (id: string, role: string) => {
   let result = null;
 
-  if (user?.role === USER_ROLE.user) {
-    result = await cartModel.find({ user: id }).populate('product');
+  if (role === USER_ROLE.user) {
+    result = await cartModel.find({ user: id, role }).populate('product');
   }
 
-  if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
+  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
     result = await cartModel.find();
   }
 
@@ -89,39 +61,19 @@ const getAllCartProductService = async (id: string) => {
 const getSingleCartProductService = async (payload: {
   id: string;
   userId: string;
+  role: string;
 }) => {
-  const { id, userId } = payload;
-
-  // check is the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
+  const { id, userId, role } = payload;
 
   let result = null;
 
-  if (user?.role === USER_ROLE.user) {
+  if (role === USER_ROLE.user) {
     result = await cartModel
       .findOne({ user: userId, _id: id })
       .populate('product');
   }
 
-  if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
+  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
     result = await cartModel.findById(id);
   }
 
@@ -130,12 +82,6 @@ const getSingleCartProductService = async (payload: {
 
 const removeFromCartByQuantityService = async (payload: ICart) => {
   const { user: userId, product: productId, quantity } = payload;
-
-  const user = await userModel.findById(userId);
-
-  if (!user || user.isDeleted || user.isBlocked) {
-    throw new AppError(403, 'User not found or access denied.');
-  }
 
   const product = await productModel.findById(productId);
 
@@ -177,27 +123,6 @@ const removeFromCartByQuantityService = async (payload: ICart) => {
 };
 
 const removeFromCartService = async (userId: string, productId: string) => {
-  // check is the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
   const result = await cartModel.findOneAndUpdate(
     { user: userId, product: productId },
     { isDeleted: true },

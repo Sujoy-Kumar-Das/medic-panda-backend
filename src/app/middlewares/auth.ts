@@ -15,7 +15,7 @@ const auth = (...requiredRoles: IUserRoles[]) => {
 
     const decoded = verifyToken(token, config.access_token as string);
 
-    const { role, userId } = decoded;
+    const { role, userId, iat } = decoded;
 
     const user = await userModel.findById(userId);
 
@@ -33,6 +33,16 @@ const auth = (...requiredRoles: IUserRoles[]) => {
 
     if (requiredRoles && !requiredRoles.includes(role)) {
       throw new AppError(403, 'You are not authorize!');
+    }
+
+    if (
+      user.passwordChangeAt &&
+      userModel.isJwtIssuedBeforePasswordChange(
+        user.passwordChangeAt,
+        iat as number,
+      )
+    ) {
+      throw new AppError(404, 'You are not authorized.');
     }
 
     req.user = { email: user.email, role: user.role, userId: user._id };

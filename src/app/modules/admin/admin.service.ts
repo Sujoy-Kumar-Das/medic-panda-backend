@@ -41,20 +41,6 @@ const getAllAdmins = async () => {
 };
 
 const getSingleAdmin = async (userId: string) => {
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(404, 'This user is not found.');
-  }
-
-  if (user.isDeleted) {
-    throw new AppError(404, 'This user has been deleted.');
-  }
-
-  if (user.isBlocked) {
-    throw new AppError(404, 'This user has been blocked.');
-  }
-
   const result = await adminModel.findOne({ user: userId }).populate('user');
   return result;
 };
@@ -168,11 +154,6 @@ const deleteAdmin = async (userId: string) => {
 const updateAdminInfo = async (id: string, payload: Partial<IAdmin>) => {
   const { address, ...remainingFields } = payload;
   const modifiedData: Record<string, unknown> = { ...remainingFields };
-  const user = await userModel.isValidUser(id);
-
-  if (!user) {
-    throw new AppError(404, 'User not found.');
-  }
 
   if (address && Object.keys(address).length) {
     for (const [key, value] of Object.entries(address)) {
@@ -180,14 +161,10 @@ const updateAdminInfo = async (id: string, payload: Partial<IAdmin>) => {
     }
   }
 
-  const result = await adminModel.findOneAndUpdate(
-    { user: user._id },
-    modifiedData,
-    {
-      new: true,
-      runValidators: true,
-    },
-  );
+  const result = await adminModel.findOneAndUpdate({ user: id }, modifiedData, {
+    new: true,
+    runValidators: true,
+  });
 
   console.log({ modifiedData });
 

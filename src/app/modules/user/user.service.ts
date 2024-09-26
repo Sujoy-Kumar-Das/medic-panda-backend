@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
+import config from '../../config';
 import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
+import { createToken } from '../../utils/createJwtToken';
+import { sendEmail } from '../../utils/sendEmail';
+import verifyToken from '../../utils/verifyJwtToken';
 import { IAdmin } from '../admin/admin.interface';
 import { adminModel } from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
@@ -432,6 +436,60 @@ const deleteUsrService = async (id: string) => {
   }
 };
 
+// create verify email link
+const createVerifyEmailLink = async (id: string) => {
+  const user = await userModel.findById(id);
+
+  if (!user) {
+    throw new AppError(404, 'You are not a valid user.');
+  }
+
+  if (user?.isVerified) {
+    throw new AppError(201, 'You are already verified.');
+  }
+
+  const jwtPayload = {
+    role: user.role,
+    userId: user._id,
+  };
+
+  const emailVerificationToken = createToken(
+    jwtPayload,
+    config.access_token as string,
+    '1d',
+  );
+
+  const emailVerificationLink = `${config.emailVerifyFrontendLink}?token=${emailVerificationToken}`;
+
+  sendEmail(user.email, emailVerificationLink);
+};
+
+const confirmVerification = async (token: string) => {
+  const decoded = verifyToken(token, config.access_token as string);
+
+  const { role, userId } = decoded;
+
+  const user = await userModel.findOne({ _id: userId, role });
+
+  if (!user) {
+    throw new AppError(404, 'This user is not found.');
+  }
+
+  if (user.isBlocked) {
+    throw new AppError(404, 'This user is blocked.');
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(404, 'This user is deleted.');
+  }
+
+  return await userModel.findOneAndUpdate(
+    { _id: user._id, role },
+    { isVerified: true },
+    { new: true },
+  );
+};
+
 export const userService = {
   createCustomerService,
   createAdminService,
@@ -443,4 +501,6 @@ export const userService = {
   getAllUsers,
   getSingleUser,
   getAllBlockedUsers,
+  createVerifyEmailLink,
+  confirmVerification,
 };

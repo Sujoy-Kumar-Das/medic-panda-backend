@@ -21,4 +21,7 @@ export default {
   ssl_init_url: process.env.init_ssl_payment,
   success_frontend_link: process.env.success_frontend_link,
   failed_frontend_link: process.env.failed_frontend_link,
+  emailVerifyFrontendLink: process.env.verify_email_frontend_link,
+  authUserEmail: process.env.auth_user_email,
+  authUserPassword: process.env.auth_user_password,
 };

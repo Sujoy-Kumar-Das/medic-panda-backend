@@ -110,6 +110,28 @@ const deleteAUserController = catchAsync(async (req, res) => {
   });
 });
 
+const verifyEmailLinkController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const result = await userService.createVerifyEmailLink(userId);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Please check your email.',
+    data: result,
+  });
+});
+
+const confirmEmailVerificationController = catchAsync(async (req, res) => {
+  const token = req.headers.authorization;
+  const result = await userService.confirmVerification(token as string);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Email verified successfully.',
+    data: result,
+  });
+});
+
 export const userController = {
   createCustomerController,
   createAdminController,
@@ -121,4 +143,6 @@ export const userController = {
   getAllUserController,
   // getSingleUserController,
   getAllBlockedUserController,
+  verifyEmailLinkController,
+  confirmEmailVerificationController,
 };

@@ -22,6 +22,7 @@ export default {
   success_frontend_link: process.env.success_frontend_link,
   failed_frontend_link: process.env.failed_frontend_link,
   emailVerifyFrontendLink: process.env.verify_email_frontend_link,
+  forgotPasswordFrontendLink: process.env.forgot_password_frontend_link,
   authUserEmail: process.env.auth_user_email,
   authUserPassword: process.env.auth_user_password,
 };

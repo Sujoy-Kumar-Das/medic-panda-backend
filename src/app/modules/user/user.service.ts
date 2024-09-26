@@ -461,7 +461,9 @@ const createVerifyEmailLink = async (id: string) => {
 
   const emailVerificationLink = `${config.emailVerifyFrontendLink}?token=${emailVerificationToken}`;
 
-  sendEmail(user.email, emailVerificationLink);
+  const subject = 'Verify your account via this link.';
+
+  sendEmail(user.email, subject, emailVerificationLink);
 };
 
 const confirmVerification = async (token: string) => {

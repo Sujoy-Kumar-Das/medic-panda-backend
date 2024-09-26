@@ -96,20 +96,6 @@ const payNowService = async (userId: string, orderId: string) => {
     throw new AppError(403, `This user is not found.`);
   }
 
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
   //   check is the product is available
 
   const isProductExists = await productModel.findById(orderItem?.product);

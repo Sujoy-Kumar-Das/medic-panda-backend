@@ -56,16 +56,16 @@ const getAllUserController = catchAsync(async (req, res) => {
   });
 });
 
-const getSingleUserController = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const result = await userService.getSingleUser(id);
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: ' User fetched successfully.',
-    data: result,
-  });
-});
+// const getSingleUserController = catchAsync(async (req, res) => {
+//   const { id } = req.params;
+//   const result = await userService.getSingleUser(id);
+//   sendResponse(res, {
+//     statusCode: 200,
+//     success: true,
+//     message: ' User fetched successfully.',
+//     data: result,
+//   });
+// });
 
 const getAllBlockedUserController = catchAsync(async (req, res) => {
   const result = await userService.getAllBlockedUsers();
@@ -119,6 +119,6 @@ export const userController = {
   deleteAUserController,
   getMeController,
   getAllUserController,
-  getSingleUserController,
+  // getSingleUserController,
   getAllBlockedUserController,
 };

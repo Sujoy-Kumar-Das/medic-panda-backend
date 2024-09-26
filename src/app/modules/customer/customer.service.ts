@@ -40,12 +40,6 @@ const getAllCustomers = async () => {
 };
 
 const getSingleCustomers = async (userId: string) => {
-  const user = await userModel.isValidUser(userId);
-
-  if (!user) {
-    throw new AppError(404, 'This user is not found.');
-  }
-
   const result = await customerModel.findOne({ user: userId }).populate('user');
   return result;
 };
@@ -119,11 +113,6 @@ const getDeletedCustomers = async () => {
 const updateUserInfo = async (id: string, payload: Partial<ICustomer>) => {
   const { address, ...remainingFields } = payload;
   const modifiedData: Record<string, unknown> = { ...remainingFields };
-  const user = await userModel.isValidUser(id);
-
-  if (!user) {
-    throw new AppError(404, 'User not found.');
-  }
 
   if (address && Object.keys(address).length) {
     for (const [key, value] of Object.entries(address)) {
@@ -132,7 +121,7 @@ const updateUserInfo = async (id: string, payload: Partial<ICustomer>) => {
   }
 
   const result = await customerModel.findOneAndUpdate(
-    { user: user._id },
+    { user: id },
     modifiedData,
     {
       new: true,

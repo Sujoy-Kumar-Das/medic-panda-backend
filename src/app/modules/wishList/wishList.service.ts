@@ -1,33 +1,11 @@
 import AppError from '../../errors/AppError';
 import { productModel } from '../product/porduct.model';
 import { USER_ROLE } from '../user/user.constant';
-import { userModel } from '../user/user.model';
 import { IWishList } from './wishList.interface';
 import { wishListModel } from './wishList.model';
 
 const createWishListService = async (payload: IWishList) => {
   const { user: userId, product: productId } = payload;
-
-  // check is the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
 
   //   check is the product is available
 
@@ -57,35 +35,14 @@ const createWishListService = async (payload: IWishList) => {
   return result;
 };
 
-const getAllWishListProductService = async (id: string) => {
-  // check is the user exists
-  const user = await userModel.findById(id);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
+const getAllWishListProductService = async (id: string, role: string) => {
   let result = null;
 
-  if (user?.role === USER_ROLE.user) {
-    result = await wishListModel.find({ user: id }).populate('product');
+  if (role === USER_ROLE.user) {
+    result = await wishListModel.find({ user: id, role }).populate('product');
   }
 
-  if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
+  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
     result = await wishListModel.find();
   }
 
@@ -95,73 +52,36 @@ const getAllWishListProductService = async (id: string) => {
 const getSingleWishListProductService = async (
   userId: string,
   productId: string,
+  role: string,
 ) => {
-  // check is the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
   let result = null;
 
-  if (user?.role === USER_ROLE.user) {
+  if (role === USER_ROLE.user) {
     result = await wishListModel.findOne({ user: userId, product: productId });
   }
 
-  if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
+  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
     result = await wishListModel.findOne({ product: productId });
   }
 
   return result;
 };
 
-const removeFromWishListService = async (userId: string, productId: string) => {
-  // check is the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
+const removeFromWishListService = async (
+  userId: string,
+  productId: string,
+  role: string,
+) => {
   let result = null;
 
-  if (user?.role === USER_ROLE.user) {
+  if (role === USER_ROLE.user) {
     result = await wishListModel.findOneAndDelete(
       { user: userId, product: productId },
       { new: true },
     );
   }
 
-  if (user?.role === USER_ROLE.admin || user?.role === USER_ROLE.superAdmin) {
+  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
     result = await wishListModel.find(
       { product: productId },
       { isDeleted: true },

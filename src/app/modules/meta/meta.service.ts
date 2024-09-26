@@ -1,28 +1,9 @@
-import AppError from '../../errors/AppError';
 import { cartModel } from '../cart/cart.model';
 import { OrderStatus } from '../orders/order.interface';
 import { orderModel } from '../orders/order.model';
-import { userModel } from '../user/user.model';
 import { wishListModel } from '../wishList/wishList.model';
 
 const userMetaService = async (userId: string) => {
-  // Check if the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  // Check if the user is deleted
-  if (user.isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  // Check if the user is blocked
-  if (user.isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
   // Aggregate order data by month and total price
   const orderStatsByMonth = await orderModel.aggregate([
     { $match: { user: userId } },

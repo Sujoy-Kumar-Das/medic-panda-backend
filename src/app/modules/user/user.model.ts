@@ -51,22 +51,21 @@ userSchema.statics.isUserExists = function (email: string) {
   return userModel.findOne({ email });
 };
 
-// todo
-// is user exists statics
-userSchema.statics.isValidUser = async function (
-  id: string | Schema.Types.ObjectId,
-) {
-  const user = await userModel.findById(id);
-
-  return user;
-};
-
 // is password matched method
 userSchema.statics.isPasswordMatched = async function (
   plainTextPassword,
   hashedPassword,
 ) {
   return await bcrypt.compare(plainTextPassword, hashedPassword);
+};
+
+// is jwt issued before password change method
+userSchema.statics.isJwtIssuedBeforePasswordChange = function (
+  passwordChangeAt: Date,
+  jwtIssuedTime: number,
+) {
+  const passwordChangeTime = new Date(passwordChangeAt).getTime() / 1000;
+  return jwtIssuedTime < passwordChangeTime;
 };
 
 // hash password middleware

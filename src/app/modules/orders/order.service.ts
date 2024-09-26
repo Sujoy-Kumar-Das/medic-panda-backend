@@ -15,21 +15,7 @@ const createOrderService = async (id: string, payload: IOrder) => {
   const user = await userModel.findById(id);
 
   if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
+    throw new AppError(404, 'User not found.');
   }
 
   //   check is the product is available
@@ -84,7 +70,7 @@ const createOrderService = async (id: string, payload: IOrder) => {
     );
   }
 
-  payload.user = user._id;
+  payload.user = user?._id;
 
   payload.total =
     Number(quantity) *
@@ -135,23 +121,6 @@ const getAllOrderService = async (
   id: string,
   query: Record<string, unknown>,
 ) => {
-  // Check if the user exists
-  const user = await userModel.findById(id);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  // Check if the user is deleted
-  if (user.isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  // Check if the user is blocked
-  if (user.isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
   // Build the query with filters
   const ordersQuery = new QueryBuilder(
     orderModel.find({ user: id }).populate('product'),
@@ -169,28 +138,6 @@ const getAllOrderService = async (
 
 // cancel order by user, admin and supper admin
 const cancelOrderService = async (userId: string, orderId: string) => {
-  console.log({ userId });
-  // check is the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
   const order = await orderModel.findById(orderId);
 
   if (!order) {
@@ -219,27 +166,6 @@ const cancelOrderService = async (userId: string, orderId: string) => {
 
 // delete order by user, admin and supper admin
 const deleteOrderService = async (userId: string, orderId: string) => {
-  // check is the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user deleted
-  const isDeleted = user.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
-  //   is user blocked
-  const isBlocked = user.isBlocked;
-
-  if (isBlocked) {
-    throw new AppError(403, `This user has been blocked.`);
-  }
-
   const order = await orderModel.findById(orderId);
 
   if (!order) {

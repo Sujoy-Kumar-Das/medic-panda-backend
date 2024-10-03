@@ -38,13 +38,13 @@ router.patch(
   userController.updateUserEmailController,
 );
 
-router.post(
+router.patch(
   '/user/verify-email',
   auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
   userController.verifyEmailLinkController,
 );
 
-router.post(
+router.patch(
   '/user/confirm-verification-email',
   userController.confirmEmailVerificationController,
 );

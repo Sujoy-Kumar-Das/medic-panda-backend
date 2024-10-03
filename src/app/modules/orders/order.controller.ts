@@ -38,6 +38,20 @@ const getAllOrderController = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleOrderController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const { id } = req.params;
+
+  const result = await orderService.getSingleOrderService(id, userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Order fetched successfully.',
+    data: result,
+  });
+});
+
 const cancelOrderController = catchAsync(async (req, res) => {
   const { userId } = req.user;
   const { id } = req.params;
@@ -70,6 +84,7 @@ export const orderController = {
   createOrderController,
   getAllOrderControllerByAdmin,
   getAllOrderController,
+  getSingleOrderController,
   cancelOrderController,
   deleteOrderController,
 };

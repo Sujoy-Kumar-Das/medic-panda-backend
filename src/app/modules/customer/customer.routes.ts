@@ -43,7 +43,7 @@ router.delete(
 );
 
 router.patch(
-  '/:id',
+  '/',
   validateRequest(userValidationSchema.updateUserValidationSchema),
   auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
   customerController.updateCustomerController,

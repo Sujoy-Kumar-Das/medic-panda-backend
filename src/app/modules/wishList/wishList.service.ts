@@ -39,7 +39,7 @@ const getAllWishListProductService = async (id: string, role: string) => {
   let result = null;
 
   if (role === USER_ROLE.user) {
-    result = await wishListModel.find({ user: id, role }).populate('product');
+    result = await wishListModel.find({ user: id }).populate('product');
   }
 
   if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
@@ -73,6 +73,15 @@ const removeFromWishListService = async (
   role: string,
 ) => {
   let result = null;
+
+  const product = await wishListModel.findOne({
+    product: productId,
+    user: userId,
+  });
+
+  if (!product) {
+    throw new AppError(404, 'This product is already deleted.');
+  }
 
   if (role === USER_ROLE.user) {
     result = await wishListModel.findOneAndDelete(

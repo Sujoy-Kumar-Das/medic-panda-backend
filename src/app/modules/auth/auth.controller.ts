@@ -58,9 +58,28 @@ const resetPasswordController = catchAsync(async (req, res) => {
   });
 });
 
+const refreshTokenController = catchAsync(async (req, res) => {
+  const { refreshToken } = req.cookies;
+  const { accessToken } = await authService.refreshTokenService(refreshToken);
+
+  res.cookie('accessToken', accessToken, {
+    secure: config.node_env === 'production',
+    httpOnly: true,
+    sameSite: true,
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Access token retrieve successfully.',
+    data: null,
+  });
+});
+
 export const authController = {
   loginController,
   changePasswordController,
   forgotPasswordController,
   resetPasswordController,
+  refreshTokenController,
 };

@@ -22,9 +22,9 @@ const createCartController = catchAsync(async (req, res) => {
 });
 
 const getAllCartProductController = catchAsync(async (req, res) => {
-  const { userId } = req.user;
+  const { userId, role } = req.user;
 
-  const result = await cartService.getAllCartProductService(userId);
+  const result = await cartService.getAllCartProductService(userId, role);
 
   sendResponse(res, {
     success: true,

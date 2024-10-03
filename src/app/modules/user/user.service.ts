@@ -11,6 +11,7 @@ import { ICustomer } from '../customer/customer.interface';
 import { customerModel } from '../customer/customer.model';
 import { userModel } from '../user/user.model';
 import { USER_ROLE } from './user.constant';
+import emailVerificationBody from './user.emailBody';
 
 interface ICustomerPayload extends ICustomer {
   email: string;
@@ -444,6 +445,14 @@ const createVerifyEmailLink = async (id: string) => {
     throw new AppError(404, 'You are not a valid user.');
   }
 
+  if (user.isBlocked) {
+    throw new AppError(404, 'This user is blocked.');
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(404, 'This user is not found.');
+  }
+
   if (user?.isVerified) {
     throw new AppError(201, 'You are already verified.');
   }
@@ -463,10 +472,13 @@ const createVerifyEmailLink = async (id: string) => {
 
   const subject = 'Verify your account via this link.';
 
-  sendEmail(user.email, subject, emailVerificationLink);
+  sendEmail(user.email, subject, emailVerificationBody(emailVerificationLink));
 };
 
 const confirmVerification = async (token: string) => {
+  if (!token) {
+    throw new AppError(404, 'You are not authorized.');
+  }
   const decoded = verifyToken(token, config.access_token as string);
 
   const { role, userId } = decoded;
@@ -475,6 +487,10 @@ const confirmVerification = async (token: string) => {
 
   if (!user) {
     throw new AppError(404, 'This user is not found.');
+  }
+
+  if (user.isVerified) {
+    throw new AppError(401, 'You are already verified.');
   }
 
   if (user.isBlocked) {

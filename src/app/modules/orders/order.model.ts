@@ -1,4 +1,5 @@
 import { model, Schema } from 'mongoose';
+import { addressSchema } from '../customer/customer.model';
 import { IOrder, OrderStatus } from './order.interface';
 
 const orderSchema = new Schema<IOrder>(
@@ -14,6 +15,10 @@ const orderSchema = new Schema<IOrder>(
     },
     paymentId: {
       type: String,
+    },
+    shippingAddress: {
+      type: addressSchema,
+      required: [true, 'Shipping address is required.'],
     },
     quantity: {
       type: Number,

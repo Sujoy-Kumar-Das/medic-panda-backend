@@ -112,6 +112,8 @@ const getDeletedCustomers = async () => {
 
 const updateUserInfo = async (id: string, payload: Partial<ICustomer>) => {
   const { address, ...remainingFields } = payload;
+
+  console.log(payload);
   const modifiedData: Record<string, unknown> = { ...remainingFields };
 
   if (address && Object.keys(address).length) {
@@ -128,8 +130,6 @@ const updateUserInfo = async (id: string, payload: Partial<ICustomer>) => {
       runValidators: true,
     },
   );
-
-  console.log({ modifiedData });
 
   return result;
 };

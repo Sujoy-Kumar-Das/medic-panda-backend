@@ -31,9 +31,21 @@ const failedPaymentController = catchAsync(async (req, res) => {
   res.redirect(config.failed_frontend_link as string);
 });
 
+const paymentHistoryController = catchAsync(async (req, res) => {
+  const result = await paymentService.paymentHistory(req.user.userId);
+
+  sendResponse(res, {
+    message: 'Payment history fetched successfully.',
+    statusCode: 200,
+    success: true,
+    data: result,
+  });
+});
+
 export const paymentController = {
   successPaymentController,
   failedPaymentController,
   cancelPaymentController,
   payNowController,
+  paymentHistoryController,
 };

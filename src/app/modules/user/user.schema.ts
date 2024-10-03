@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const userAddressValidationSchema = z.object({
   city: z.string({ required_error: 'City is required.' }).optional(),
-  state: z.string({ required_error: 'State is required.' }).optional(),
+  street: z.string({ required_error: 'State is required.' }).optional(),
   postalCode: z
     .string({ required_error: 'Postal Code is required.' })
     .optional(),

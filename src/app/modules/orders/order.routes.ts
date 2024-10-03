@@ -26,6 +26,12 @@ router.get(
   orderController.getAllOrderController,
 );
 
+router.get(
+  '/order/:id',
+  auth(USER_ROLE.user),
+  orderController.getSingleOrderController,
+);
+
 router.delete(
   '/order/cancel/:id',
   auth(USER_ROLE.user),

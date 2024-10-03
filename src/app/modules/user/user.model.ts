@@ -29,12 +29,6 @@ const userSchema = new Schema<IUser, IUserMethods>(
     passwordChangeAt: {
       type: Date,
     },
-    otpCode: {
-      type: String,
-    },
-    otpTime: {
-      type: Date,
-    },
     isVerified: {
       type: Boolean,
       default: false,

@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 
 export interface IUserPermanentAddress {
   city: string;
-  state: string;
+  street: string;
   postalCode: string;
   country: string;
 }

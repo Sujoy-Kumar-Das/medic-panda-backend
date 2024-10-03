@@ -7,6 +7,10 @@ const PaymentInfoSchema = new Schema<IPaymentInfo>(
       type: Schema.Types.ObjectId,
       ref: 'user',
     },
+    order: {
+      type: Schema.Types.ObjectId,
+      ref: 'Order',
+    },
     transactionId: {
       type: String,
     },

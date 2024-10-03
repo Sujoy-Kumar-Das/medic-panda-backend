@@ -8,8 +8,6 @@ export interface IUser {
   isBlocked?: boolean;
   passwordChangeAt: Date;
   passwordWrongAttempt: number;
-  otpCode: string;
-  otpTime: Date;
   isVerified: boolean;
 }
 

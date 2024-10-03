@@ -17,4 +17,10 @@ router.post(
   paymentController.payNowController,
 );
 
+router.get(
+  '/payment',
+  auth(USER_ROLE.user),
+  paymentController.paymentHistoryController,
+);
+
 export const paymentRouter = router;

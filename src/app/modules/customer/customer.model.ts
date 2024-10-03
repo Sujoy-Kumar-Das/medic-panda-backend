@@ -15,9 +15,9 @@ export const addressSchema = new Schema<IUserPermanentAddress>(
       type: String,
       required: [true, 'Postal code is required.'],
     },
-    state: {
+    street: {
       type: String,
-      required: [true, 'State is required.'],
+      required: [true, 'Street is required.'],
     },
   },
   {

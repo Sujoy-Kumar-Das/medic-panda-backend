@@ -2,7 +2,6 @@
 import { startSession, Types } from 'mongoose';
 import AppError from '../../errors/AppError';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
-import { cartModel } from '../cart/cart.model';
 import { orderModel } from '../orders/order.model';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
@@ -52,14 +51,10 @@ const successPaymentService = async (payload: any) => {
       { session },
     );
 
-    await cartModel.findOneAndDelete({
-      product: order.product,
-      user: order.user,
-    });
-
     const paymentInfo = {
       user: order.user,
       transactionId: payload.tran_id,
+      order: order._id,
     };
 
     const storePaymentInfo = await PaymentModel.create([paymentInfo], {
@@ -173,7 +168,18 @@ const payNowService = async (userId: string, orderId: string) => {
   };
 };
 
+const paymentHistory = async (userId: string) => {
+  const result = await PaymentModel.find({ user: userId }).populate({
+    path: 'order',
+    populate: {
+      path: 'product',
+    },
+  });
+  return result;
+};
+
 export const paymentService = {
   successPaymentService,
   payNowService,
+  paymentHistory,
 };

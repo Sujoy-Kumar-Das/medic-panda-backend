@@ -5,7 +5,7 @@ import { ICart } from './cart.interface';
 import { cartModel } from './cart.model';
 
 const createCartService = async (payload: ICart) => {
-  const { user: userId, product: productId, quantity } = payload;
+  const { user: userId, product: productId, quantity = 1 } = payload;
 
   const product = await productModel.findById(productId);
   if (!product || product.isDeleted) {
@@ -48,7 +48,7 @@ const getAllCartProductService = async (id: string, role: string) => {
   let result = null;
 
   if (role === USER_ROLE.user) {
-    result = await cartModel.find({ user: id, role }).populate('product');
+    result = await cartModel.find({ user: id }).populate({ path: 'product' });
   }
 
   if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {

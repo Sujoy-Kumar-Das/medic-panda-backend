@@ -2,6 +2,9 @@ import QueryBuilder from '../../builder/queryBuilder';
 import AppError from '../../errors/AppError';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
 import generateTransactionId from '../../utils/generateTransactionId';
+import { cartModel } from '../cart/cart.model';
+import { customerModel } from '../customer/customer.model';
+import { PaymentModel } from '../payment/payment.model';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
 import { userModel } from '../user/user.model';
@@ -84,11 +87,11 @@ const createOrderService = async (id: string, payload: IOrder) => {
     total: payload.total,
     productId: product,
     productName: isProductExists.name,
-    country: 'ffffffffff',
-    phone: 'fffffffffffff',
-    city: 'fffffffffff',
+    country: payload.shippingAddress?.country as string,
+    phone: 'N/A',
+    city: payload.shippingAddress?.city as string,
     userEmail: user.email,
-    userAddress: '',
+    userAddress: payload.shippingAddress?.street as string,
     transactionId: payload.paymentId,
   };
 
@@ -102,6 +105,15 @@ const createOrderService = async (id: string, payload: IOrder) => {
   const result = await orderModel.create(payload);
 
   if (!result._id) {
+    throw new AppError(403, 'Failed to place order.Try again later.');
+  }
+
+  const cartRes = await cartModel.findOneAndDelete({
+    product: isProductExists._id,
+    user: user._id,
+  });
+
+  if (!cartRes?._id) {
     throw new AppError(403, 'Failed to place order.Try again later.');
   }
 
@@ -134,6 +146,25 @@ const getAllOrderService = async (
   const orders = await ordersQuery.modelQuery;
 
   return orders;
+};
+
+// get all order by user
+const getSingleOrderService = async (id: string, userId: string) => {
+  const order = await orderModel
+    .findOne({ _id: id, user: userId })
+    .populate('product');
+
+  const paymentInfo = await PaymentModel.findOne({
+    transactionId: order?.paymentId,
+  });
+
+  const userInfo = await customerModel
+    .findOne({ user: userId })
+    .populate('user');
+
+  const result = { order, userInfo, paymentInfo };
+
+  return result;
 };
 
 // cancel order by user, admin and supper admin
@@ -191,5 +222,6 @@ export const orderService = {
   getAllOrderServiceByAdmin,
   cancelOrderService,
   getAllOrderService,
+  getSingleOrderService,
   deleteOrderService,
 };

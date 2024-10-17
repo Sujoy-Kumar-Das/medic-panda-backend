@@ -32,7 +32,7 @@ router.get(
   orderController.getSingleOrderController,
 );
 
-router.delete(
+router.patch(
   '/order/cancel/:id',
   auth(USER_ROLE.user),
   orderController.cancelOrderController,

@@ -52,15 +52,16 @@ const getSingleCartProductController = catchAsync(async (req, res) => {
   });
 });
 
-const removeFromCartByQuantityController = catchAsync(async (req, res) => {
+const removeCartProductController = catchAsync(async (req, res) => {
   const { userId } = req.user;
+  const { id } = req.params;
 
-  const { product, quantity } = req.body;
+  const { quantity } = req.body;
 
-  const result = await cartService.removeFromCartByQuantityService({
+  const result = await cartService.removeFromCartService({
     user: userId,
-    product: product,
-    quantity,
+    product: id,
+    quantity: quantity || 1,
   });
 
   sendResponse(res, {
@@ -71,24 +72,9 @@ const removeFromCartByQuantityController = catchAsync(async (req, res) => {
   });
 });
 
-const removeCartProductController = catchAsync(async (req, res) => {
-  const { userId } = req.user;
-  const { id } = req.params;
-
-  const result = await cartService.removeFromCartService(userId, id);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Cart product removed successfully.',
-    data: result,
-  });
-});
-
 export const cartController = {
   createCartController,
   getSingleCartProductController,
   getAllCartProductController,
   removeCartProductController,
-  removeFromCartByQuantityController,
 };

@@ -9,6 +9,8 @@ export interface IUser {
   passwordChangeAt: Date;
   passwordWrongAttempt: number;
   isVerified: boolean;
+  resetTime: Date | null;
+  verifyTime: Date | null;
 }
 
 export interface IUserMethods extends Model<IUser> {

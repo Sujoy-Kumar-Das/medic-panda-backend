@@ -116,7 +116,7 @@ const verifyEmailLinkController = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Please check your email.',
+    message: 'Please check your email and verify with in 5 minutes.',
     data: result,
   });
 });

@@ -1,10 +1,14 @@
 import { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
+import resetPasswordEmailTemplate from '../../emailTemplate/resetPasswordEmailTemplate';
 import AppError from '../../errors/AppError';
 import { createToken } from '../../utils/createJwtToken';
 import hashPassword from '../../utils/hashPassword';
 import { sendEmail } from '../../utils/sendEmail';
 import verifyToken from '../../utils/verifyJwtToken';
+import { adminModel } from '../admin/admin.model';
+import { customerModel } from '../customer/customer.model';
+import { USER_ROLE } from '../user/user.constant';
 import { userModel } from '../user/user.model';
 import { IChangePassword, ILogin } from './auth.interface';
 
@@ -108,36 +112,64 @@ const changePasswordService = async (
 
 const forgotPassword = async (payload: { email: string }) => {
   const { email } = payload;
+
+  // Find user by email
   const user = await userModel.findOne({ email });
-
-  if (!user) {
-    throw new AppError(404, 'This user is not found.');
+  if (!user || user.isBlocked || user.isDeleted) {
+    throw new AppError(
+      404,
+      user
+        ? user.isBlocked
+          ? 'This user is blocked.'
+          : 'This user is deleted.'
+        : 'This user is not found.',
+    );
   }
 
-  if (user.isBlocked) {
-    throw new AppError(404, 'This user is blocked.');
+  // Check if the reset request is within the 2-minute limit
+  const now = new Date();
+  const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+  if (user.resetTime && user.resetTime > twoMinutesAgo) {
+    throw new AppError(
+      401,
+      'You can request a password reset only once every 2 minutes.',
+    );
   }
 
-  if (user.isDeleted) {
-    throw new AppError(404, 'This user is deleted.');
-  }
+  // Update resetTime
+  await userModel.findByIdAndUpdate(
+    user._id,
+    { resetTime: now },
+    { new: true },
+  );
 
-  const jwtPayload = {
-    role: user.role,
-    userId: user._id,
-  };
-
+  // Generate reset token (valid for 2 minutes)
   const forgotPasswordVerificationToken = createToken(
-    jwtPayload,
+    { role: user.role, userId: user._id },
     config.access_token as string,
     '2m',
   );
 
-  const resetEmailLink = `${config.forgotPasswordFrontendLink}?token=${forgotPasswordVerificationToken}`;
+  // Retrieve user information based on role
+  const userInfo =
+    user.role === USER_ROLE.user
+      ? await customerModel.findOne({ user: user._id })
+      : await adminModel.findOne({ user: user._id });
 
+  if (!userInfo) {
+    throw new AppError(404, 'User information not found.');
+  }
+
+  // Prepare the reset link and email content
+  const resetLink = `${config.forgotPasswordFrontendLink}?token=${forgotPasswordVerificationToken}`;
   const subject = 'Please reset your password.';
 
-  sendEmail(user.email, subject, resetEmailLink);
+  // Send reset email
+  sendEmail(
+    user.email,
+    subject,
+    resetPasswordEmailTemplate({ name: userInfo.name, resetLink }),
+  );
 };
 
 const resetPassword = async (
@@ -170,6 +202,7 @@ const resetPassword = async (
       password: newHashedPassword,
       passwordChangeAt: new Date(),
       passwordWrongAttempt: 0,
+      resetTime: null,
     },
     {
       new: true,
@@ -217,7 +250,7 @@ const refreshTokenService = async (token: string) => {
     '1d',
   );
 
-  return {accessToken};
+  return { accessToken };
 };
 
 export const authService = {

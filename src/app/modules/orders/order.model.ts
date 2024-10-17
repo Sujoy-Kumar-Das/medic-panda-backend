@@ -1,6 +1,34 @@
 import { model, Schema } from 'mongoose';
-import { addressSchema } from '../customer/customer.model';
-import { IOrder, OrderStatus } from './order.interface';
+import { IOrder, IShippingAddress, OrderStatus } from './order.interface';
+
+export const orderShippingAddressSchema = new Schema<IShippingAddress>(
+  {
+    city: {
+      type: String,
+      required: [true, 'City is required.'],
+    },
+    country: {
+      type: String,
+      required: [true, 'Country is required.'],
+    },
+    postalCode: {
+      type: String,
+      required: [true, 'Postal code is required.'],
+    },
+    street: {
+      type: String,
+      required: [true, 'Street is required.'],
+    },
+    contact: {
+      type: String,
+      required: [true, 'Contact number is required.'],
+    },
+  },
+  {
+    _id: false,
+    versionKey: false,
+  },
+);
 
 const orderSchema = new Schema<IOrder>(
   {
@@ -17,7 +45,7 @@ const orderSchema = new Schema<IOrder>(
       type: String,
     },
     shippingAddress: {
-      type: addressSchema,
+      type: orderShippingAddressSchema,
       required: [true, 'Shipping address is required.'],
     },
     quantity: {

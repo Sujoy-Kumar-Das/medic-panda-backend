@@ -3,6 +3,6 @@ import { Types } from 'mongoose';
 export interface ICart {
   user: Types.ObjectId;
   product: Types.ObjectId;
-  quantity: number;
+  quantity?: number;
   totalPrice?: number;
 }

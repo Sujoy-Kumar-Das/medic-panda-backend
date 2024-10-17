@@ -33,6 +33,14 @@ const userSchema = new Schema<IUser, IUserMethods>(
       type: Boolean,
       default: false,
     },
+    resetTime: {
+      type: Date,
+      default: null,
+    },
+    verifyTime: {
+      type: Date,
+      default: null,
+    },
   },
   {
     versionKey: false,

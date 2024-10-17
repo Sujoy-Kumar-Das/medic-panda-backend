@@ -2,6 +2,7 @@
 import { startSession, Types } from 'mongoose';
 import AppError from '../../errors/AppError';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
+import { IShippingAddress } from '../orders/order.interface';
 import { orderModel } from '../orders/order.model';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
@@ -145,15 +146,18 @@ const payNowService = async (userId: string, orderId: string) => {
 
   const paymentId = orderItem?.paymentId;
 
+  const { city, country, contact, postalCode, street } =
+    orderItem?.shippingAddress as IShippingAddress;
+
   const paymentData = {
     total: orderItem?.total as number,
     productId: orderItem?.product as Types.ObjectId,
     productName: isProductExists.name,
-    country: 'ffffffffff',
-    phone: 'fffffffffffff',
-    city: 'fffffffffff',
+    country: country,
+    phone: contact,
+    city: city,
     userEmail: user.email,
-    userAddress: '',
+    userAddress: `${street}-${postalCode}-${street}-${city}-${country}`,
     transactionId: paymentId as string,
   };
 

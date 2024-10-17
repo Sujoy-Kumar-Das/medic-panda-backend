@@ -4,22 +4,28 @@ import express, { urlencoded } from 'express';
 import globalErrorHandler from './app/middlewares/globalErrrorHandler';
 import notFound from './app/middlewares/not-found';
 import router from './app/routes';
+
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  }),
+);
 
-//parsers
+// Parsers
 app.use(express.json());
-app.use(urlencoded());
+app.use(urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// routes
+// Routes
 app.use(router);
 
-// middlewares
+// Middlewares
 app.use(globalErrorHandler);
 
-// not found
+// 404 Not found middleware
 app.use(notFound);
 
 export default app;

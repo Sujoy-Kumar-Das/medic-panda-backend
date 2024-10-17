@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const CartValidationSchema = z.object({
+const createCartValidationSchema = z.object({
   body: z.object({
     product: z.string({ required_error: 'Product id is required.' }),
     quantity: z
@@ -10,4 +10,16 @@ const CartValidationSchema = z.object({
   }),
 });
 
-export default CartValidationSchema;
+const updateCartValidationSchema = z.object({
+  body: z.object({
+    quantity: z
+      .number({ required_error: 'Quantity is required.' })
+      .nonnegative()
+      .optional(),
+  }),
+});
+
+export const cartValidationSchema = {
+  createCartValidationSchema,
+  updateCartValidationSchema,
+};

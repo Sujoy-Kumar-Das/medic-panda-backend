@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import config from '../../config';
+import verifyUserEmailTemplate from '../../emailTemplate/verifyUserEmailTemplate';
 import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
 import { createToken } from '../../utils/createJwtToken';
@@ -11,7 +12,6 @@ import { ICustomer } from '../customer/customer.interface';
 import { customerModel } from '../customer/customer.model';
 import { userModel } from '../user/user.model';
 import { USER_ROLE } from './user.constant';
-import emailVerificationBody from './user.emailBody';
 
 interface ICustomerPayload extends ICustomer {
   email: string;
@@ -457,22 +457,52 @@ const createVerifyEmailLink = async (id: string) => {
     throw new AppError(201, 'You are already verified.');
   }
 
+  // Check if the reset request is within the 2-minute limit
+  const now = new Date();
+  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+  if (user.resetTime && user.resetTime > fiveMinutesAgo) {
+    throw new AppError(
+      401,
+      'You can request a password reset only once every 5 minutes.',
+    );
+  }
+
+  // Retrieve user information based on role
+  const userInfo =
+    user.role === USER_ROLE.user
+      ? await customerModel.findOne({ user: user._id })
+      : await adminModel.findOne({ user: user._id });
+
+  if (!userInfo) {
+    throw new AppError(404, 'User information not found.');
+  }
+
   const jwtPayload = {
     role: user.role,
     userId: user._id,
   };
 
+  await userModel.findOneAndUpdate(
+    user._id,
+    { verifyTime: new Date() },
+    { new: true },
+  );
+
   const emailVerificationToken = createToken(
     jwtPayload,
     config.access_token as string,
-    '1d',
+    '5m',
   );
 
   const emailVerificationLink = `${config.emailVerifyFrontendLink}?token=${emailVerificationToken}`;
 
   const subject = 'Verify your account via this link.';
 
-  sendEmail(user.email, subject, emailVerificationBody(emailVerificationLink));
+  sendEmail(
+    user.email,
+    subject,
+    verifyUserEmailTemplate({ name: userInfo.name, emailVerificationLink }),
+  );
 };
 
 const confirmVerification = async (token: string) => {

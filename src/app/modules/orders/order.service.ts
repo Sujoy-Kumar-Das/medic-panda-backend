@@ -8,7 +8,7 @@ import { PaymentModel } from '../payment/payment.model';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
 import { userModel } from '../user/user.model';
-import { IOrder, OrderStatus } from './order.interface';
+import { IOrder, IShippingAddress, OrderStatus } from './order.interface';
 import { orderModel } from './order.model';
 
 const createOrderService = async (id: string, payload: IOrder) => {
@@ -83,15 +83,20 @@ const createOrderService = async (id: string, payload: IOrder) => {
 
   payload.paymentId = generateTransactionId();
 
+  // destructuring payload.shippingAddress
+
+  const { city, country, contact, street, postalCode } =
+    payload.shippingAddress as IShippingAddress;
+
   const paymentData = {
     total: payload.total,
     productId: product,
     productName: isProductExists.name,
-    country: payload.shippingAddress?.country as string,
-    phone: 'N/A',
-    city: payload.shippingAddress?.city as string,
+    country: country,
+    phone: contact,
+    city: city,
     userEmail: user.email,
-    userAddress: payload.shippingAddress?.street as string,
+    userAddress: `${street}-${postalCode}-${street}-${city}-${country}`,
     transactionId: payload.paymentId,
   };
 
@@ -183,8 +188,8 @@ const cancelOrderService = async (userId: string, orderId: string) => {
     throw new AppError(403, 'This order is not found. ');
   }
 
-  if (order.status !== OrderStatus.PENDING) {
-    throw new AppError(404, "This order already can't cancel this order.");
+  if (order.status !== OrderStatus.SHIPPED) {
+    throw new AppError(404, "This order already shifted, you can't cancel it.");
   }
 
   const result = await orderModel.findByIdAndUpdate(

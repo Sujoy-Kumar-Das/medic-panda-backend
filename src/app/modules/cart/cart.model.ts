@@ -12,7 +12,7 @@ const cartSchema = new Schema<ICart>({
   },
   quantity: {
     type: Number,
-    require: [true, 'Product quantity is required for cart.'],
+    default: 1,
   },
   totalPrice: {
     type: Number,

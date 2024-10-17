@@ -4,9 +4,17 @@ import sendResponse from '../../utils/sendResponse';
 import { authService } from './auth.service';
 
 const loginController = catchAsync(async (req, res) => {
-  const result = await authService.loginService(req.body);
+  const { refreshToken, accessToken } = await authService.loginService(
+    req.body,
+  );
 
-  const { refreshToken, accessToken } = result;
+  console.log('clicked');
+
+  res.cookie('accessToken', accessToken, {
+    secure: config.node_env === 'production',
+    httpOnly: true,
+    sameSite: true,
+  });
 
   res.cookie('refreshToken', refreshToken, {
     secure: config.node_env === 'production',
@@ -18,9 +26,7 @@ const loginController = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: 'User logged in successfully.',
-    data: {
-      accessToken,
-    },
+    data: null,
   });
 });
 

@@ -3,13 +3,13 @@ import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
 import { cartController } from './cart.controller';
-import CartValidationSchema from './cart.validation.schema';
+import { cartValidationSchema } from './cart.validation.schema';
 
 const router = Router();
 
 router.post(
   '/cart',
-  validateRequest(CartValidationSchema),
+  validateRequest(cartValidationSchema.createCartValidationSchema),
   auth(USER_ROLE.user),
   cartController.createCartController,
 );
@@ -26,15 +26,9 @@ router.get(
   cartController.getSingleCartProductController,
 );
 
-router.patch(
-  '/cart',
-  validateRequest(CartValidationSchema),
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
-  cartController.removeFromCartByQuantityController,
-);
-
 router.delete(
   '/cart/:id',
+  validateRequest(cartValidationSchema.updateCartValidationSchema),
   auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
   cartController.removeCartProductController,
 );

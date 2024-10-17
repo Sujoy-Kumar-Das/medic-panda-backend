@@ -4,6 +4,12 @@ import { USER_ROLE } from '../user/user.constant';
 import { ICart } from './cart.interface';
 import { cartModel } from './cart.model';
 
+interface ICartPayload {
+  user: string;
+  product: string;
+  quantity: number;
+}
+
 const createCartService = async (payload: ICart) => {
   const { user: userId, product: productId, quantity = 1 } = payload;
 
@@ -80,26 +86,23 @@ const getSingleCartProductService = async (payload: {
   return result;
 };
 
-const removeFromCartByQuantityService = async (payload: ICart) => {
+const removeFromCartService = async (payload: ICartPayload) => {
   const { user: userId, product: productId, quantity } = payload;
-
-  const product = await productModel.findById(productId);
-
-  if (!product || product.isDeleted) {
-    throw new AppError(403, 'Product not found or deleted.');
-  }
 
   const existingCartItem = await cartModel.findOne({
     user: userId,
     product: productId,
   });
 
+  const price =
+    Number(existingCartItem?.totalPrice) / Number(existingCartItem?.quantity);
+
   if (!existingCartItem) {
     throw new AppError(404, 'Cart item not found.');
   }
 
   if (quantity) {
-    const newQuantity = existingCartItem.quantity - quantity;
+    const newQuantity = existingCartItem?.quantity - quantity;
 
     if (newQuantity <= 0) {
       return await cartModel.findByIdAndDelete(existingCartItem._id);
@@ -109,7 +112,7 @@ const removeFromCartByQuantityService = async (payload: ICart) => {
         {
           $set: {
             quantity: newQuantity,
-            totalPrice: product.price * newQuantity,
+            totalPrice: price * newQuantity,
           },
         },
         { new: true },
@@ -122,20 +125,9 @@ const removeFromCartByQuantityService = async (payload: ICart) => {
   }
 };
 
-const removeFromCartService = async (userId: string, productId: string) => {
-  const result = await cartModel.findOneAndUpdate(
-    { user: userId, product: productId },
-    { isDeleted: true },
-    { new: true },
-  );
-
-  return result;
-};
-
 export const cartService = {
   createCartService,
   getAllCartProductService,
   getSingleCartProductService,
   removeFromCartService,
-  removeFromCartByQuantityService,
 };

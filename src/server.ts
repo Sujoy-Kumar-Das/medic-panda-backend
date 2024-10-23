@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import app from './app';
 import config from './app/config';
+import AppError from './app/errors/AppError';
 
 async function main() {
   try {
@@ -11,6 +12,7 @@ async function main() {
     });
   } catch (error) {
     console.log(error);
+    throw new AppError(404, 'Server error.');
   }
 }
 

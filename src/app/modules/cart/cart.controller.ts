@@ -52,6 +52,20 @@ const getSingleCartProductController = catchAsync(async (req, res) => {
   });
 });
 
+const incrementCartProductController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { quantity } = req.body;
+
+  const result = await cartService.incrementCartItemService(id, { quantity });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Cart product updated successfully.',
+    data: result,
+  });
+});
+
 const removeCartProductController = catchAsync(async (req, res) => {
   const { userId } = req.user;
   const { id } = req.params;
@@ -77,4 +91,5 @@ export const cartController = {
   getSingleCartProductController,
   getAllCartProductController,
   removeCartProductController,
+  incrementCartProductController,
 };

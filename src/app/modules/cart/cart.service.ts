@@ -29,7 +29,7 @@ const createCartService = async (payload: ICart) => {
       {
         $inc: {
           quantity: quantity,
-          totalPrice: product.price * quantity,
+          totalPrice: (product.price * quantity).toFixed(2),
         },
       },
       { new: true },
@@ -37,7 +37,7 @@ const createCartService = async (payload: ICart) => {
 
     return updatedCart;
   } else {
-    const totalPrice = product.price * quantity;
+    const totalPrice = (product.price * quantity).toFixed(2);
 
     const newCartItem = await cartModel.create({
       user: userId,
@@ -86,6 +86,45 @@ const getSingleCartProductService = async (payload: {
   return result;
 };
 
+const incrementCartItemService = async (
+  id: string,
+  payload: { quantity: number },
+) => {
+  const { quantity = 1 } = payload;
+
+  // Find the existing cart item
+  const existingCartItem = await cartModel.findById(id);
+
+  // Calculate the price per item
+  const price =
+    Number(existingCartItem?.totalPrice) / Number(existingCartItem?.quantity);
+
+  if (!existingCartItem) {
+    throw new AppError(404, 'Cart item not found.');
+  }
+
+  if (quantity) {
+    // Calculate the new quantity by adding the current quantity
+    const newQuantity = Number(existingCartItem?.quantity) + quantity;
+
+    // Update the cart item with the new quantity and updated total price
+    const updatedCart = await cartModel.findByIdAndUpdate(
+      existingCartItem._id,
+      {
+        $set: {
+          quantity: newQuantity,
+          totalPrice: (price * newQuantity).toFixed(2),
+        },
+      },
+      { new: true },
+    );
+
+    return updatedCart;
+  } else {
+    throw new AppError(400, 'Quantity is required for cart update.');
+  }
+};
+
 const removeFromCartService = async (payload: ICartPayload) => {
   const { user: userId, product: productId, quantity } = payload;
 
@@ -102,7 +141,7 @@ const removeFromCartService = async (payload: ICartPayload) => {
   }
 
   if (quantity) {
-    const newQuantity = existingCartItem?.quantity - quantity;
+    const newQuantity = Number(existingCartItem?.quantity) - quantity;
 
     if (newQuantity <= 0) {
       return await cartModel.findByIdAndDelete(existingCartItem._id);
@@ -112,7 +151,7 @@ const removeFromCartService = async (payload: ICartPayload) => {
         {
           $set: {
             quantity: newQuantity,
-            totalPrice: price * newQuantity,
+            totalPrice: (price * newQuantity).toFixed(2),
           },
         },
         { new: true },
@@ -130,4 +169,5 @@ export const cartService = {
   getAllCartProductService,
   getSingleCartProductService,
   removeFromCartService,
+  incrementCartItemService,
 };

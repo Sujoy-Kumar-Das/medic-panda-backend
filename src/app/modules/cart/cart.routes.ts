@@ -26,6 +26,13 @@ router.get(
   cartController.getSingleCartProductController,
 );
 
+router.patch(
+  '/cart/:id',
+  validateRequest(cartValidationSchema.updateCartValidationSchema),
+  auth(USER_ROLE.user),
+  cartController.incrementCartProductController,
+);
+
 router.delete(
   '/cart/:id',
   validateRequest(cartValidationSchema.updateCartValidationSchema),

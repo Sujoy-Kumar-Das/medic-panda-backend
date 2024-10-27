@@ -29,10 +29,15 @@ class QueryBuilder<T> {
     const queryObj = { ...this.query };
 
     const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
-
     excludeFields.forEach((el) => delete queryObj[el]);
 
-    // Apply filters
+    // Convert Boolean-like strings to actual Boolean values if needed
+    Object.keys(queryObj).forEach((key) => {
+      if (queryObj[key] === 'true') queryObj[key] = true;
+      if (queryObj[key] === 'false') queryObj[key] = false;
+    });
+
+    // Apply filters to the query
     Object.keys(queryObj).forEach((key) => {
       this.modelQuery = this.modelQuery.where(key).equals(queryObj[key]);
     });

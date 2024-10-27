@@ -7,17 +7,9 @@ const categorySchema = new Schema<ICategory, ICategoryModel>(
       type: String,
       required: [true, 'Category name is required.'],
     },
-    description: {
-      type: String,
-      required: [true, 'Description is required.'],
-    },
     thumbnail: {
       type: String,
       required: [true, 'Thumbnail is required.'],
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
     },
   },
   {
@@ -25,22 +17,6 @@ const categorySchema = new Schema<ICategory, ICategoryModel>(
     versionKey: false,
   },
 );
-
-// Query Middleware
-categorySchema.pre('find', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
-categorySchema.pre('findOne', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
-categorySchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
-  next();
-});
 
 // category statics methods
 

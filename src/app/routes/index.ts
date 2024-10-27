@@ -11,7 +11,6 @@ import { paymentRouter } from '../modules/payment/payment.routes';
 import { productRoutes } from '../modules/product/porduct.routes';
 import { reviewRouter } from '../modules/reviews/review.routes';
 import { userRoutes } from '../modules/user/user.routes';
-import { variantRoutes } from '../modules/variants/variants.routes';
 import { wishListRouter } from '../modules/wishList/wishList.routes';
 
 // express router
@@ -24,7 +23,6 @@ const modulesRoutes = [
   { path: '/api/v1/admin', route: adminRouter },
   { path: '/api/v1/auth', route: authRoutes },
   { path: '/api/v1/', route: categoryRoutes },
-  { path: '/api/v1/', route: variantRoutes },
   { path: '/api/v1/', route: productRoutes },
   { path: '/api/v1/', route: orderRoutes },
   { path: '/api/v1/', route: manufacturerRouter },

@@ -3,6 +3,7 @@ import { Model } from 'mongoose';
 export interface ICategory {
   name: string;
   thumbnail: string;
+  popularity?: boolean;
 }
 
 export interface ICategoryModel extends Model<ICategory> {

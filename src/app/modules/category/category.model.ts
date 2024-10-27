@@ -11,6 +11,10 @@ const categorySchema = new Schema<ICategory, ICategoryModel>(
       type: String,
       required: [true, 'Thumbnail is required.'],
     },
+    popularity: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

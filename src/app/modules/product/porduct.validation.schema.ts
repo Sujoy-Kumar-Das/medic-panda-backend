@@ -24,14 +24,13 @@ const createProductValidationSchema = z.object({
         .string({ required_error: 'Product thumbnail is required.' })
         .url({ message: 'Product thumbnail must be a valid URL.' }),
       category: z.string({ required_error: 'Category id is required.' }),
-      manufacture: z.string({ required_error: 'Manufacture id is required.' }),
+      manufacturer: z.string({ required_error: 'Manufacture id is required.' }),
       price: z
         .number({ required_error: 'Product price is required.' })
         .positive({ message: 'Product price must be a positive number.' }),
       discount: discountValidationSchema,
     }),
     productDetail: z.object({
-      variant: z.string({ required_error: 'Variant id is required.' }),
       description: z
         .string({ required_error: 'Description is required.' })
         .min(100, {

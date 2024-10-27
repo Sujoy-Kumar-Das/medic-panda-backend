@@ -35,21 +35,10 @@ const createProductService = async (payload: IProductPayload) => {
     throw new AppError(403, `This category is not found.`);
   }
 
-  // check is the the category is deleted
-  const isCategoryDeleted = isCategoryExists.isDeleted;
-
-  if (isCategoryDeleted) {
-    throw new AppError(403, `This category is not found.`);
-  }
-
   // check is the manufacture is available
   const isManufactureAvailable = await manufacturerModel.findById(manufacturer);
 
   if (!isManufactureAvailable) {
-    throw new AppError(404, 'Manufacture is not found.');
-  }
-
-  if (isManufactureAvailable.isDeleted) {
     throw new AppError(404, 'Manufacture is not found.');
   }
 
@@ -122,8 +111,7 @@ const getSingleProductService = async (id: string) => {
     .findOne({ product: id })
     .populate('product')
     .populate('category')
-    .populate('manufacture')
-    .populate('variant');
+    .populate('manufacture');
 
   return result;
 };

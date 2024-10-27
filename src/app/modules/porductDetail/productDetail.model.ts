@@ -6,11 +6,6 @@ const productDetailSchema = new Schema<IProductDetail>({
     type: Schema.Types.ObjectId,
     ref: 'product',
   },
-  variant: {
-    type: Schema.Types.ObjectId,
-    required: [true, 'Variant is required.'],
-    ref: 'variant',
-  },
   images: {
     type: [String],
   },

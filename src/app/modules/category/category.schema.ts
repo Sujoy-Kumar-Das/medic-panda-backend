@@ -22,11 +22,6 @@ const updateCategoryValidationSchema = z.object({
         required_error: 'Category name is required.',
       })
       .optional(),
-    categoryType: z
-      .enum(['primary', 'secondary', 'tertiary'], {
-        required_error: 'Category type is required.',
-      })
-      .optional(),
     thumbnail: z
       .string({
         required_error: 'Thumbnail is required.',

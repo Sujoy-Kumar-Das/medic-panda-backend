@@ -6,17 +6,6 @@ const productDetailSchema = new Schema<IProductDetail>({
     type: Schema.Types.ObjectId,
     ref: 'product',
   },
-  category: {
-    type: Schema.Types.ObjectId,
-    ref: 'category',
-    required: [true, 'Category ID is required.'],
-  },
-  manufacture: {
-    type: Schema.Types.ObjectId,
-    ref: 'manufacturer',
-    required: [true, 'Manufactured id is required'],
-  },
-
   variant: {
     type: Schema.Types.ObjectId,
     required: [true, 'Variant is required.'],
@@ -38,10 +27,6 @@ const productDetailSchema = new Schema<IProductDetail>({
     type: String,
     enum: ['active', 'inactive'],
     default: 'active',
-  },
-  rating: {
-    type: Number,
-    default: 0,
   },
 });
 

@@ -17,7 +17,7 @@ interface IProductPayload {
 const createProductService = async (payload: IProductPayload) => {
   const { product, productDetail } = payload;
 
-  const { name, price, discount } = product;
+  const { name, price, discount, category, manufacturer } = product;
 
   // check is the the product already exists
   const isProductExists = await productModel.isProductExistsByName(name);
@@ -29,10 +29,7 @@ const createProductService = async (payload: IProductPayload) => {
     );
   }
 
-  // check is the the category is exists
-  const categoryId = productDetail.category;
-
-  const isCategoryExists = await categoryModel.findById(categoryId);
+  const isCategoryExists = await categoryModel.findById(category);
 
   if (!isCategoryExists) {
     throw new AppError(403, `This category is not found.`);
@@ -46,10 +43,7 @@ const createProductService = async (payload: IProductPayload) => {
   }
 
   // check is the manufacture is available
-
-  const isManufactureAvailable = await manufacturerModel.findById(
-    productDetail.manufacture,
-  );
+  const isManufactureAvailable = await manufacturerModel.findById(manufacturer);
 
   if (!isManufactureAvailable) {
     throw new AppError(404, 'Manufacture is not found.');

@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export interface IDiscount {
   discountStatus: boolean;
@@ -16,6 +16,9 @@ export interface IProduct {
   discount?: IDiscount;
   stockStatus?: boolean;
   thumbnail: string;
+  category: Types.ObjectId;
+  manufacturer: Types.ObjectId;
+  rating: number;
   isDeleted?: boolean;
 }
 

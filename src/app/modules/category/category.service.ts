@@ -1,3 +1,4 @@
+import QueryBuilder from '../../builder/queryBuilder';
 import AppError from '../../errors/AppError';
 import { ICategory } from './category.interface';
 import { categoryModel } from './category.model';
@@ -8,9 +9,7 @@ const createCategoryService = async (payload: ICategory) => {
     payload.name,
   );
 
-  const isDeleted = isCategoryExists?.isDeleted;
-
-  if (isCategoryExists && !isDeleted) {
+  if (isCategoryExists) {
     throw new AppError(401, 'This category is already exists.');
   }
 
@@ -18,12 +17,12 @@ const createCategoryService = async (payload: ICategory) => {
   return result;
 };
 
-const getAllCategoryService = async (limit: string) => {
-  if (limit) {
-    return await categoryModel.find().limit(Number(limit));
-  }
-
-  return await categoryModel.find();
+const getAllCategoryService = async (query: Record<string, unknown>) => {
+  const categoryQuery = new QueryBuilder(categoryModel.find(), query);
+  const category = categoryQuery.filter().paginate();
+  const meta = await categoryQuery.countTotal();
+  const data = await category.modelQuery;
+  return { data, meta };
 };
 
 const getSingleCategoryService = async (id: string) => {

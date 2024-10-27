@@ -59,6 +59,18 @@ const productSchema = new Schema<IProduct, IProductModel>({
     type: Boolean,
     default: true,
   },
+  category: {
+    type: Schema.Types.ObjectId,
+    required: [true, 'Category is required.'],
+  },
+  manufacturer: {
+    type: Schema.Types.ObjectId,
+    required: [true, 'Manufacturer is required.'],
+  },
+  rating: {
+    type: Number,
+    default: 0,
+  },
   isDeleted: {
     type: Boolean,
     default: false,

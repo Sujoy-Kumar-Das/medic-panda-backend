@@ -14,13 +14,13 @@ const createCategoryController = catchAsync(async (req, res) => {
 });
 
 const getAllCategoryController = catchAsync(async (req, res) => {
-  const result = await categoryService.getAllCategoryService();
+  const { data, meta } = await categoryService.getAllCategoryService(req.query);
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
     message: 'Category fetched successfully',
-    data: result,
+    data: { data, meta },
   });
 });
 

@@ -62,10 +62,12 @@ const productSchema = new Schema<IProduct, IProductModel>({
   category: {
     type: Schema.Types.ObjectId,
     required: [true, 'Category is required.'],
+    ref: 'category',
   },
   manufacturer: {
     type: Schema.Types.ObjectId,
     required: [true, 'Manufacturer is required.'],
+    ref: 'manufacturer',
   },
   rating: {
     type: Number,

@@ -87,7 +87,26 @@ const createProductService = async (payload: IProductPayload) => {
 };
 
 const getAllProductService = async (query: Record<string, unknown>) => {
-  const productQuery = new QueryBuilder(productModel.find(), query);
+  // Check if 'category' is in the query
+  if (query.category) {
+    const categoryFilter = query.category as string;
+
+    // Check if it's an ObjectId (24-character hex string)
+    if (categoryFilter.match(/^[0-9a-fA-F]{24}$/)) {
+      query.category = categoryFilter;
+    } else {
+      // If it's a name, look up the category by name and get its ID
+      const categoryDoc = await categoryModel.findOne({
+        name: { $regex: categoryFilter, $options: 'i' },
+      });
+      query.category = categoryDoc ? categoryDoc._id : null;
+    }
+  }
+
+  const productQuery = new QueryBuilder(
+    productModel.find().populate('category').populate('manufacturer'),
+    query,
+  );
   const products = productQuery.search(['name']).filter().paginate();
   const meta = await productQuery.countTotal();
   const result = await products.modelQuery;
@@ -95,23 +114,10 @@ const getAllProductService = async (query: Record<string, unknown>) => {
 };
 
 const getSingleProductService = async (id: string) => {
-  const isProductExists = await productModel.findById(id);
-
-  if (!isProductExists) {
-    throw new AppError(404, 'This product is not found.');
-  }
-
-  const isDeleted = isProductExists.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(404, 'This product has been deleted.');
-  }
-
-  const result = await productDetailModel
-    .findOne({ product: id })
-    .populate('product')
-    .populate('category')
-    .populate('manufacture');
+  const result = await productDetailModel.findOne({ product: id }).populate({
+    path: 'product',
+    populate: [{ path: 'category' }, { path: 'manufacturer' }],
+  });
 
   return result;
 };

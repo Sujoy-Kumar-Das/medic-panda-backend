@@ -19,6 +19,7 @@ const createProductController = catchAsync(async (req, res) => {
 });
 
 const getAllProductController = catchAsync(async (req, res) => {
+  console.log(req.query);
   const result = await productService.getAllProductService(req.query);
 
   sendResponse(res, {
@@ -32,6 +33,7 @@ const getAllProductController = catchAsync(async (req, res) => {
 
 const getSingleProductController = catchAsync(async (req, res) => {
   const { id } = req.params;
+  console.log(id);
   const result = await productService.getSingleProductService(id);
 
   sendResponse(res, {

@@ -38,32 +38,12 @@ const manufacturerSchema = new Schema<IManufacturer>(
       type: addressSchema,
       required: [true, 'Address is required.'],
     },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
   },
   {
     timestamps: true,
     versionKey: false,
   },
 );
-
-// Query Middleware
-manufacturerSchema.pre('find', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
-manufacturerSchema.pre('findOne', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
-manufacturerSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
-  next();
-});
 
 export const manufacturerModel = model<IManufacturer>(
   'manufacturer',

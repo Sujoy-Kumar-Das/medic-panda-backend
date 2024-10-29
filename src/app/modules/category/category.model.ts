@@ -23,7 +23,6 @@ const categorySchema = new Schema<ICategory, ICategoryModel>(
 );
 
 // category statics methods
-
 categorySchema.statics.isCategoryExistsByName = async function (name: string) {
   return await categoryModel.findOne({
     name: {

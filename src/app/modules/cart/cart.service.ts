@@ -1,6 +1,7 @@
 import AppError from '../../errors/AppError';
 import { productModel } from '../product/porduct.model';
 import { USER_ROLE } from '../user/user.constant';
+import { wishListModel } from '../wishList/wishList.model';
 import { ICart } from './cart.interface';
 import { cartModel } from './cart.model';
 
@@ -45,6 +46,15 @@ const createCartService = async (payload: ICart) => {
       quantity,
       totalPrice,
     });
+
+    const isExistWishList = await wishListModel.findOne({
+      product,
+      user: userId,
+    });
+
+    if (isExistWishList) {
+      await wishListModel.findOneAndDelete({ product, user: userId });
+    }
 
     return newCartItem;
   }

@@ -73,6 +73,10 @@ const productSchema = new Schema<IProduct, IProductModel>({
     type: Number,
     default: 0,
   },
+  isWishList: {
+    type: Boolean,
+    default: false,
+  },
   isDeleted: {
     type: Boolean,
     default: false,
@@ -96,7 +100,6 @@ productSchema.pre('aggregate', function (next) {
 });
 
 // product statics methods
-
 productSchema.statics.isProductExistsByName = async function (name: string) {
   return await productModel.findOne({
     name: {
@@ -108,6 +111,14 @@ productSchema.statics.isProductExistsByName = async function (name: string) {
 
 productSchema.statics.isProductExistsById = async function (id: string) {
   return await productModel.findById(id);
+};
+
+// method for remove sensitive fields
+productSchema.methods.toJSON = function () {
+  const product = this.toObject();
+  delete product.isDeleted;
+
+  return product;
 };
 
 export const productModel = model<IProduct, IProductModel>(

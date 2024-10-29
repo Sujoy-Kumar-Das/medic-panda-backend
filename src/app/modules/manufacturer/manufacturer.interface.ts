@@ -10,5 +10,4 @@ export interface IManufacturer {
   description: string;
   contact: string;
   address: IAddress;
-  isDeleted?: boolean;
 }

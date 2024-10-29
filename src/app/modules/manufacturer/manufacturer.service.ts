@@ -10,10 +10,7 @@ const createManufacturer = async (payload: IManufacturer) => {
     },
   });
 
-  const isDeleted = (isManufactureExistsByName as IManufacturer | null)
-    ?.isDeleted;
-
-  if (isManufactureExistsByName && !isDeleted) {
+  if (isManufactureExistsByName) {
     throw new AppError(400, 'This item already exists.');
   }
 
@@ -46,15 +43,7 @@ const deleteManufacturer = async (id: string) => {
     throw new AppError(400, 'This item is not exists.');
   }
 
-  const isDeleted = isManufactureExistsByName.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(400, 'This item is deleted..');
-  }
-
-  const result = await manufacturerModel.findByIdAndUpdate(id, {
-    isDeleted: true,
-  });
+  const result = await manufacturerModel.findByIdAndDelete(id);
 
   return result;
 };

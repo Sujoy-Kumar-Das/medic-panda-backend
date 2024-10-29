@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 
 export enum OrderStatus {
+  PAID = 'paid',
   PENDING = 'pending',
   PROCESSING = 'processing',
   SHIPPED = 'shipped',
@@ -24,8 +25,5 @@ export interface IOrder {
   paymentId: string;
   quantity: number;
   total: number;
-  isPaid: boolean;
-  isCanceled: boolean;
-  isDeleted: boolean;
   status: OrderStatus;
 }

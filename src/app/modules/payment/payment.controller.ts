@@ -24,11 +24,13 @@ const successPaymentController = catchAsync(async (req, res) => {
 });
 
 const cancelPaymentController = catchAsync(async (req, res) => {
-  res.redirect(config.failed_frontend_link as string);
+  const result = await paymentService.failedPaymentService(req.body.tran_id);
+  res.redirect(result);
 });
 
 const failedPaymentController = catchAsync(async (req, res) => {
-  res.redirect(config.failed_frontend_link as string);
+  const result = await paymentService.failedPaymentService(req.body.tran_id);
+  res.redirect(result);
 });
 
 const paymentHistoryController = catchAsync(async (req, res) => {

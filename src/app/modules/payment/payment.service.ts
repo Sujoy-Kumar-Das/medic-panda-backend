@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { startSession, Types } from 'mongoose';
+import config from '../../config';
 import AppError from '../../errors/AppError';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
 import { IShippingAddress } from '../orders/order.interface';
@@ -74,6 +75,16 @@ const successPaymentService = async (payload: any) => {
   } finally {
     await session.endSession();
   }
+};
+
+const failedPaymentService = async (paymentId: string) => {
+  const order = await orderModel.findOne({ paymentId });
+
+  if (!order || order.isPaid) {
+    throw new AppError(404, 'This order is not found or already paid.');
+  }
+
+  return `${config.failed_frontend_link as string}?id=${order._id}`;
 };
 
 const payNowService = async (userId: string, orderId: string) => {
@@ -186,4 +197,5 @@ export const paymentService = {
   successPaymentService,
   payNowService,
   paymentHistory,
+  failedPaymentService,
 };

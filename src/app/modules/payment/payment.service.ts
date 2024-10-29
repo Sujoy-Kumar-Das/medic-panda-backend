@@ -3,7 +3,7 @@ import { startSession, Types } from 'mongoose';
 import config from '../../config';
 import AppError from '../../errors/AppError';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
-import { IShippingAddress } from '../orders/order.interface';
+import { IShippingAddress, OrderStatus } from '../orders/order.interface';
 import { orderModel } from '../orders/order.model';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
@@ -49,7 +49,7 @@ const successPaymentService = async (payload: any) => {
 
     await orderModel.updateOne(
       { paymentId: payload.tran_id },
-      { isPaid: true },
+      { status: OrderStatus.PAID },
       { session },
     );
 
@@ -80,8 +80,8 @@ const successPaymentService = async (payload: any) => {
 const failedPaymentService = async (paymentId: string) => {
   const order = await orderModel.findOne({ paymentId });
 
-  if (!order || order.isPaid) {
-    throw new AppError(404, 'This order is not found or already paid.');
+  if (!order || order.status === OrderStatus.PAID) {
+    throw new AppError(404, 'Something went wrong try again.');
   }
 
   return `${config.failed_frontend_link as string}?id=${order._id}`;
@@ -92,7 +92,7 @@ const payNowService = async (userId: string, orderId: string) => {
 
   const orderItem = await orderModel.findById(orderId);
 
-  if (orderItem?.isPaid) {
+  if (orderItem?.status === OrderStatus.PAID) {
     throw new AppError(208, 'You already paid for this product.');
   }
 

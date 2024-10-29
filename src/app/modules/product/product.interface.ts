@@ -19,6 +19,7 @@ export interface IProduct {
   category: Types.ObjectId;
   manufacturer: Types.ObjectId;
   rating: number;
+  isWishList: boolean;
   isDeleted?: boolean;
 }
 

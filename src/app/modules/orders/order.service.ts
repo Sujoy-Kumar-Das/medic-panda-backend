@@ -59,13 +59,15 @@ const createOrderService = async (id: string, payload: IOrder) => {
     throw new AppError(403, 'This product has been closed.');
   }
 
+  // todo
   //   is stock available
   const stockProduct = productDetails?.stock;
+
   if (!stockProduct) {
     throw new AppError(403, 'This product has been stock out.');
   }
 
-  //   is enough stock available for order.
+  // is enough stock available for order.
   if (Number(stockProduct) < Number(quantity)) {
     throw new AppError(
       403,
@@ -180,16 +182,23 @@ const cancelOrderService = async (userId: string, orderId: string) => {
     throw new AppError(404, 'This order is not found.');
   }
 
-  if (order.isCanceled) {
+  if (order.status === OrderStatus.CANCELED) {
     throw new AppError(403, 'This order already canceled. ');
   }
 
-  if (order.isDeleted) {
-    throw new AppError(403, 'This order is not found. ');
+  if (order.status === OrderStatus.SHIPPED) {
+    throw new AppError(404, "This order already shifted, you can't cancel it.");
   }
 
-  if (order.status !== OrderStatus.SHIPPED) {
-    throw new AppError(404, "This order already shifted, you can't cancel it.");
+  if (order.status === OrderStatus.DELIVERED) {
+    throw new AppError(
+      404,
+      "This order already delivered, you can't cancel it.",
+    );
+  }
+
+  if (order.status === OrderStatus.RETURNED) {
+    throw new AppError(404, "This order already , you can't cancel it.");
   }
 
   const result = await orderModel.findByIdAndUpdate(
@@ -208,17 +217,7 @@ const deleteOrderService = async (userId: string, orderId: string) => {
     throw new AppError(404, 'This order is not found.');
   }
 
-  if (order.isDeleted) {
-    throw new AppError(403, 'This order already deleted. ');
-  }
-
-  const result = await orderModel.findByIdAndUpdate(
-    orderId,
-    {
-      isDeleted: true,
-    },
-    { new: true },
-  );
+  const result = await orderModel.findByIdAndDelete(orderId);
   return result;
 };
 

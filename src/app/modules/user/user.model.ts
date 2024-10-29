@@ -80,4 +80,18 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// method for remove password and sensitive fields
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+  delete user.isDeleted;
+  delete user.isBlocked;
+  delete user.passwordChangeAt;
+  delete user.passwordWrongAttempt;
+  delete user.isVerified;
+  delete user.resetTime;
+  delete user.verifyTime;
+  return user;
+};
+
 export const userModel = model<IUser, IUserMethods>('user', userSchema);

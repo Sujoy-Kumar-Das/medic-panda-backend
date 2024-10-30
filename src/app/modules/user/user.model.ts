@@ -33,13 +33,17 @@ const userSchema = new Schema<IUser, IUserMethods>(
       type: Boolean,
       default: false,
     },
-    resetTime: {
+    otpCode: {
+      type: Number,
+      default: null,
+    },
+    otpTime: {
       type: Date,
       default: null,
     },
-    verifyTime: {
-      type: Date,
-      default: null,
+    wrongOTPAttempt: {
+      type: Number,
+      default: 0,
     },
   },
   {
@@ -88,7 +92,6 @@ userSchema.methods.toJSON = function () {
   delete user.isBlocked;
   delete user.passwordChangeAt;
   delete user.passwordWrongAttempt;
-  delete user.isVerified;
   delete user.resetTime;
   delete user.verifyTime;
   return user;

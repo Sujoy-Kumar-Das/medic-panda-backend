@@ -1,9 +1,9 @@
-const verifyUserEmailTemplate = ({
+const sendOtpEmailTemplate = ({
   name,
-  emailVerificationLink,
+  otpCode,
 }: {
   name: string;
-  emailVerificationLink: string;
+  otpCode: string;
 }) => `
     <!DOCTYPE html>
     <html lang="en">
@@ -13,50 +13,59 @@ const verifyUserEmailTemplate = ({
       <style>
         body {
           font-family: Arial, sans-serif;
-          background-color: #F4F6F8;
+          background-color: #f3f4f6;
           margin: 0;
           padding: 0;
-          color: #2D3748;
+          color: #333;
         }
         .container {
           max-width: 600px;
           margin: 0 auto;
-          background-color: #FFFFFF;
-          border-radius: 10px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          padding: 20px;
+          background-color: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          padding: 30px;
           text-align: center;
         }
         .header h2 {
-          color: #007bff;
-          font-size: 24px;
-          margin-bottom: 20px;
+          color: #0d6efd;
+          font-size: 26px;
+          margin: 0 0 10px;
+          font-weight: 600;
+        }
+        .header p {
+          font-size: 18px;
+          color: #555;
+          margin: 0 0 30px;
         }
         .content p {
           font-size: 16px;
-          line-height: 1.5;
-          color: #4A5568;
+          line-height: 1.6;
+          color: #444;
           margin-bottom: 20px;
         }
-        .content a {
+        .otp-code {
+          font-size: 24px;
+          font-weight: 700;
+          color: #0d6efd;
+          padding: 15px 30px;
+          background-color: #f0f4fb;
+          border: 1px dashed #b0c5ff;
+          border-radius: 10px;
           display: inline-block;
-          padding: 12px 20px;
-          background-color: #007bff;
-          color: #ffffff;
-          text-decoration: none;
-          border-radius: 8px;
-          transition: background-color 0.3s ease;
-        }
-        .content a:hover {
-          background-color: #0056b3;
+          margin: 20px 0;
         }
         .footer {
           font-size: 14px;
-          color: #777;
-          margin-top: 20px;
+          color: #666;
+          margin-top: 30px;
+          line-height: 1.5;
+        }
+        .footer p {
+          margin: 5px 0;
         }
         .footer a {
-          color: #ffff;
+          color: #0d6efd;
           text-decoration: none;
         }
       </style>
@@ -65,20 +74,22 @@ const verifyUserEmailTemplate = ({
       <div class="container">
         <div class="header">
           <h2>Welcome to Medic Panda, ${name}!</h2>
+          <p>Your trusted partner in health and wellness.</p>
         </div>
         <div class="content">
-          <p>We're thrilled to have you with us! Please confirm your email address to get started:</p>
-          <a href="${emailVerificationLink}">Verify Your Email</a>
-          <p>If the button doesn’t work, copy and paste the following link into your browser:</p>
-          <p class="footer">
-            <a href="${emailVerificationLink}">${emailVerificationLink}</a>
-          </p>
-          <p>Thank you for choosing Medic Panda. We're excited to have you on board!</p>
+          <p>To verify your account, please use the following One-Time Password (OTP):</p>
+          <div class="otp-code">${otpCode}</div>
+          <p>This code is valid for a limited time. Please enter it promptly to complete your verification.</p>
+          <p>If you did not request this, please disregard this email.</p>
+        </div>
+        <div class="footer">
+          <p>Thank you for choosing Medic Panda! We're thrilled to have you on board.</p>
           <p>Best regards,<br />The Medic Panda Team</p>
+          <p><a href="https://medicpanda.com">Visit our website</a> | <a href="mailto:support@medicpanda.com">Contact Support</a></p>
         </div>
       </div>
     </body>
     </html>
   `;
 
-export default verifyUserEmailTemplate;
+export default sendOtpEmailTemplate;

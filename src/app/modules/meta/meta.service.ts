@@ -34,6 +34,8 @@ const userMetaService = async (userId: string) => {
   const wishlistCount = await wishListModel.countDocuments({ user: userId });
   const cartCount = await cartModel.countDocuments({ user: userId });
 
+  console.log({ cartCount });
+
   // Extract stats with fallback values
   const stats = orderStats[0];
 

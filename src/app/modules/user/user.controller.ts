@@ -122,8 +122,11 @@ const verifyEmailLinkController = catchAsync(async (req, res) => {
 });
 
 const confirmEmailVerificationController = catchAsync(async (req, res) => {
-  const token = req.headers.authorization;
-  const result = await userService.confirmVerification(token as string);
+  const { userId, role } = req.user;
+  const otp = req.body;
+
+  const result = await userService.confirmVerification(userId, role, otp);
+
   sendResponse(res, {
     statusCode: 200,
     success: true,

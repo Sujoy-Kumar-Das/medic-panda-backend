@@ -25,4 +25,5 @@ export default {
   forgotPasswordFrontendLink: process.env.forgot_password_frontend_link,
   authUserEmail: process.env.auth_user_email,
   authUserPassword: process.env.auth_user_password,
+  emailVerificationRedirectLink: process.env.email_verification_redirect_link,
 };

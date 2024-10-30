@@ -46,6 +46,7 @@ router.patch(
 
 router.patch(
   '/user/confirm-verification-email',
+  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
   userController.confirmEmailVerificationController,
 );
 

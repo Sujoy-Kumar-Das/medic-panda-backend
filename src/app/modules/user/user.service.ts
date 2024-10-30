@@ -1,11 +1,9 @@
 import mongoose from 'mongoose';
-import config from '../../config';
-import verifyUserEmailTemplate from '../../emailTemplate/verifyUserEmailTemplate';
+import sendOtpEmailTemplate from '../../emailTemplate/verifyUserEmailTemplate';
 import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
-import { createToken } from '../../utils/createJwtToken';
+import generateOTP from '../../utils/generateOTP';
 import { sendEmail } from '../../utils/sendEmail';
-import verifyToken from '../../utils/verifyJwtToken';
 import { IAdmin } from '../admin/admin.interface';
 import { adminModel } from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
@@ -437,37 +435,24 @@ const deleteUsrService = async (id: string) => {
   }
 };
 
-// create verify email link
+// createVerifyEmailLink
 const createVerifyEmailLink = async (id: string) => {
   const user = await userModel.findById(id);
 
   if (!user) {
-    throw new AppError(404, 'You are not a valid user.');
+    throw new AppError(404, 'User not found.');
+  }
+  if (user.isVerified) {
+    throw new AppError(201, 'Already verified.');
   }
 
-  if (user.isBlocked) {
-    throw new AppError(404, 'This user is blocked.');
-  }
-
-  if (user.isDeleted) {
-    throw new AppError(404, 'This user is not found.');
-  }
-
-  if (user?.isVerified) {
-    throw new AppError(201, 'You are already verified.');
-  }
-
-  // Check if the reset request is within the 2-minute limit
   const now = new Date();
-  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-  if (user.resetTime && user.resetTime > fiveMinutesAgo) {
-    throw new AppError(
-      401,
-      'You can request a password reset only once every 5 minutes.',
-    );
+  const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+
+  if (user.otpTime && user.otpTime > twoMinutesAgo) {
+    throw new AppError(401, 'Please wait 2 minutes before requesting again.');
   }
 
-  // Retrieve user information based on role
   const userInfo =
     user.role === USER_ROLE.user
       ? await customerModel.findOne({ user: user._id })
@@ -477,65 +462,91 @@ const createVerifyEmailLink = async (id: string) => {
     throw new AppError(404, 'User information not found.');
   }
 
-  const jwtPayload = {
-    role: user.role,
-    userId: user._id,
-  };
-
-  await userModel.findOneAndUpdate(
-    user._id,
-    { verifyTime: new Date() },
+  const otpCode = generateOTP();
+  const result = await userModel.findOneAndUpdate(
+    { _id: user._id },
+    { otpCode, otpTime: new Date() },
     { new: true },
   );
 
-  const emailVerificationToken = createToken(
-    jwtPayload,
-    config.access_token as string,
-    '5m',
-  );
-
-  const emailVerificationLink = `${config.emailVerifyFrontendLink}?token=${emailVerificationToken}`;
-
-  const subject = 'Verify your account via this link.';
+  if (!result?.otpCode || !result.otpTime) {
+    throw new AppError(404, 'OTP generation failed.');
+  }
 
   sendEmail(
     user.email,
-    subject,
-    verifyUserEmailTemplate({ name: userInfo.name, emailVerificationLink }),
+    'Verify your account',
+    sendOtpEmailTemplate({
+      name: userInfo.name,
+      otpCode,
+    }),
   );
 };
 
-const confirmVerification = async (token: string) => {
-  if (!token) {
-    throw new AppError(404, 'You are not authorized.');
-  }
-  const decoded = verifyToken(token, config.access_token as string);
-
-  const { role, userId } = decoded;
+// confirmVerification
+const confirmVerification = async (
+  userId: string,
+  role: string,
+  payload: { otp: number },
+) => {
+  const { otp } = payload;
 
   const user = await userModel.findOne({ _id: userId, role });
 
+  // Check if user exists
   if (!user) {
-    throw new AppError(404, 'This user is not found.');
+    throw new AppError(404, 'User not found.');
   }
 
+  // Check if user is already verified
   if (user.isVerified) {
-    throw new AppError(401, 'You are already verified.');
+    throw new AppError(401, 'Already verified.');
   }
 
-  if (user.isBlocked) {
-    throw new AppError(404, 'This user is blocked.');
+  const now = new Date(); // Current time
+
+  // Check if otpTime is available and parse it
+  if (!user.otpTime) {
+    throw new AppError(401, 'OTP has not been sent yet.');
   }
 
-  if (user.isDeleted) {
-    throw new AppError(404, 'This user is deleted.');
+  const otpSentTime = new Date(user.otpTime); // Parse the otpTime from the user object
+  const twoMinutesAfterOtpSent = new Date(
+    otpSentTime.getTime() + 2 * 60 * 1000,
+  );
+
+  // Check if OTP is expired (it should be less than or equal to 2 minutes after it was sent)
+  if (now > twoMinutesAfterOtpSent) {
+    throw new AppError(401, 'This OTP is expired. Please try again.');
   }
 
-  return await userModel.findOneAndUpdate(
+  // Allow OTP attempts only if wrong attempts are within the time frame
+  if (user.wrongOTPAttempt > 3 && now < twoMinutesAfterOtpSent) {
+    throw new AppError(401, 'Too many attempts. Please wait 2 minutes.');
+  }
+
+  // Check if the provided OTP matches the stored OTP
+  if (user.otpCode !== otp) {
+    // Increment wrong OTP attempt count
+    await userModel.findByIdAndUpdate(userId, {
+      $inc: { wrongOTPAttempt: 1 },
+    });
+    throw new AppError(401, 'Incorrect OTP.');
+  }
+
+  // Mark user as verified and reset the wrong attempt counter
+  const result = await userModel.findOneAndUpdate(
     { _id: user._id, role },
-    { isVerified: true },
+    { isVerified: true, wrongOTPAttempt: 0 }, // Reset wrong attempts on success
     { new: true },
   );
+
+  // Check if the update was successful
+  if (!result?.isVerified) {
+    throw new AppError(404, 'Verification failed.');
+  }
+
+  return result;
 };
 
 export const userService = {

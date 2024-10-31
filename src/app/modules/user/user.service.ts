@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import mongoose from 'mongoose';
 import sendOtpEmailTemplate from '../../emailTemplate/verifyUserEmailTemplate';
 import AppError from '../../errors/AppError';
@@ -195,7 +196,6 @@ const getAllUsers = async () => {
   const customer = await customerModel.find().populate('user');
   const admin = await adminModel.find().populate('user');
 
-  console.log({ customer, admin });
   return [...customer, ...admin];
 };
 
@@ -255,27 +255,6 @@ const blockUsrService = async (id: string) => {
       throw new AppError(400, 'Failed to block the user.');
     }
 
-    let result;
-    const role = user.role;
-
-    if (role === USER_ROLE.user) {
-      result = await customerModel.findOneAndUpdate(
-        { user: user._id },
-        { isBlocked: true },
-        { session, new: true },
-      );
-    } else if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-      result = await adminModel.findOneAndUpdate(
-        { user: user._id },
-        { isBlocked: true },
-        { session, new: true },
-      );
-    }
-
-    if (!result?.isBlocked) {
-      throw new AppError(403, `Failed to block the ${user.role}.`);
-    }
-
     await session.commitTransaction();
     return updatedUser;
   } catch (error) {
@@ -321,27 +300,6 @@ const unBlockUsrService = async (id: string) => {
 
     if (updatedUser?.isBlocked) {
       throw new AppError(400, 'Failed to unblock the user.');
-    }
-
-    let result;
-    const role = user.role;
-
-    if (role === USER_ROLE.user) {
-      result = await customerModel.findOneAndUpdate(
-        { user: user._id },
-        { isBlocked: false },
-        { session, new: true },
-      );
-    } else if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-      result = await adminModel.findOneAndUpdate(
-        { user: user._id },
-        { isBlocked: false },
-        { session, new: true },
-      );
-    }
-
-    if (result?.isBlocked) {
-      throw new AppError(403, `Failed to unblock the ${user.role}.`);
     }
 
     await session.commitTransaction();
@@ -394,38 +352,9 @@ const deleteUsrService = async (id: string) => {
       throw new AppError(400, 'Failed to delete the user.');
     }
 
-    let result;
-
-    // Handle role-specific deletion
-    if (user.role === USER_ROLE.user) {
-      result = await customerModel.findOneAndUpdate(
-        { user: user._id },
-        { isDeleted: true },
-        { session, new: true },
-      );
-    } else if (
-      user.role === USER_ROLE.admin ||
-      user.role === USER_ROLE.superAdmin
-    ) {
-      result = await adminModel.findOneAndUpdate(
-        { user: user._id },
-        { isDeleted: true },
-        { session, new: true },
-      );
-    }
-
-    if (!result?.isDeleted) {
-      throw new AppError(
-        403,
-        `Failed to delete the associated ${user.role} record.`,
-      );
-    }
-
     await session.commitTransaction();
-    return result;
   } catch (error) {
     await session.abortTransaction();
-    console.error(error);
     throw new AppError(
       400,
       'Something went wrong while deleting the user. Please try again.',

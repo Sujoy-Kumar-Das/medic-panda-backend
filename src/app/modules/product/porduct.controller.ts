@@ -2,6 +2,22 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { productService } from './product.service';
 
+// const createProductController = catchAsync(async (req, res) => {
+//   const { product, productDetail } = req.body;
+//   const data = {
+//     product,
+//     productDetail,
+//   };
+//   const result = await productService.createProductService(data);
+
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: 200,
+//     data: result,
+//     message: 'Product created successfully.',
+//   });
+// });
+
 const createProductController = catchAsync(async (req, res) => {
   const { product, productDetail } = req.body;
   const data = {
@@ -9,6 +25,11 @@ const createProductController = catchAsync(async (req, res) => {
     productDetail,
   };
   const result = await productService.createProductService(data);
+
+  // Broadcast product creation to all clients
+  const newData = req.app.get('broadcastProductUpdate')('created', result._id);
+
+  console.log({ newData });
 
   sendResponse(res, {
     success: true,

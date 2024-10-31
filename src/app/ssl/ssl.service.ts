@@ -7,7 +7,6 @@ export const sslInitPaymentService = async (payload: ISSlPayload) => {
   const {
     total,
     productId,
-    userId,
     productName,
     country,
     phone,

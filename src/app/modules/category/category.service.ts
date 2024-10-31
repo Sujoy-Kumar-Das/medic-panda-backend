@@ -41,13 +41,6 @@ const updateCategoryService = async (
     throw new AppError(401, 'This category is not found.');
   }
 
-  // check is the category deleted
-  const isDeleted = isCategoryExistsById?.isDeleted;
-
-  if (isDeleted) {
-    throw new AppError(401, 'This category is not found.');
-  }
-
   // check is the category is already exists by name
   const isCategoryExistsByName = await categoryModel.isCategoryExistsByName(
     name as string,
@@ -68,13 +61,7 @@ const deleteCategoryService = async (id: string) => {
     throw new AppError(404, 'This category is not found.');
   }
 
-  if (isCategoryExists.isDeleted) {
-    throw new AppError(401, 'This category is already deleted.');
-  }
-
-  await categoryModel.findByIdAndUpdate(id, {
-    isDeleted: true,
-  });
+  await categoryModel.findByIdAndDelete(id);
   return null;
 };
 

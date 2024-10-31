@@ -109,6 +109,7 @@
     "shebang-command": "^2.0.0",
     "shebang-regex": "^3.0.0",
     "slash": "^3.0.0",
+    "socket.io": "^4.8.1",
     "strip-ansi": "^6.0.1",
     "strip-json-comments": "^3.1.1",
     "supports-color": "^7.2.0",

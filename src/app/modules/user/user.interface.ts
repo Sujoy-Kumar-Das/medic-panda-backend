@@ -12,6 +12,7 @@ export interface IUser {
   otpCode: number | null;
   otpTime: Date | null;
   wrongOTPAttempt: number;
+  resetTime: null | Date;
 }
 
 export interface IUserMethods extends Model<IUser> {

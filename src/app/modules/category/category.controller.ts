@@ -36,7 +36,9 @@ const getSingleCategoryController = catchAsync(async (req, res) => {
 });
 
 const updateCategoryController = catchAsync(async (req, res) => {
-  const result = await categoryService.updateCategoryService();
+  const { id } = req.params;
+
+  const result = await categoryService.updateCategoryService(id, req.body);
 
   sendResponse(res, {
     success: true,

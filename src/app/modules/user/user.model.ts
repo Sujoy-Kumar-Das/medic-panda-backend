@@ -45,6 +45,10 @@ const userSchema = new Schema<IUser, IUserMethods>(
       type: Number,
       default: 0,
     },
+    resetTime: {
+      type: Date,
+      default: null,
+    },
   },
   {
     versionKey: false,

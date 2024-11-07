@@ -18,29 +18,31 @@ const successPaymentService = async (payload: any) => {
   const session = await startSession();
   session.startTransaction();
 
+  const order = await orderModel.findOne({ paymentId: payload.tran_id });
+
+  if (!order) {
+    throw new AppError(404, 'Order not found.');
+  }
+
+  const user = await userModel.findById(order.user);
+
+  if (!user || user.isBlocked || user.isDeleted) {
+    throw new AppError(404, 'User not found.');
+  }
+
+  const productDetail = await productDetailModel.findOne(
+    { product: order.product },
+    null,
+    { session },
+  );
+
+  if (!productDetail) {
+    throw new AppError(404, 'Product details not found.');
+  }
+
+  const newStock = Number(productDetail.stock) - Number(order.quantity);
+
   try {
-    const order = await orderModel.findOne(
-      { paymentId: payload.tran_id },
-      null,
-      { session },
-    );
-
-    if (!order) {
-      throw new AppError(404, 'Order not found.');
-    }
-
-    const productDetail = await productDetailModel.findOne(
-      { product: order.product },
-      null,
-      { session },
-    );
-
-    if (!productDetail) {
-      throw new AppError(404, 'Product details not found.');
-    }
-
-    const newStock = Number(productDetail.stock) - Number(order.quantity);
-
     await productDetailModel.findOneAndUpdate(
       { product: order.product },
       { stock: newStock },
@@ -75,6 +77,8 @@ const successPaymentService = async (payload: any) => {
   } finally {
     await session.endSession();
   }
+
+  return { userId: user._id };
 };
 
 const failedPaymentService = async (paymentId: string) => {
@@ -92,7 +96,7 @@ const payNowService = async (userId: string, orderId: string) => {
 
   const orderItem = await orderModel.findById(orderId);
 
-  if (orderItem?.status === OrderStatus.PAID) {
+  if (orderItem?.status !== OrderStatus.PENDING) {
     throw new AppError(208, 'You already paid for this product.');
   }
 

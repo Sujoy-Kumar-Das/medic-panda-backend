@@ -1,3 +1,5 @@
+import { emitSocketEvent } from '../../socket/emitSocket';
+import { socketEvent } from '../../socket/socket.event';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { orderService } from './order.service';
@@ -5,6 +7,9 @@ import { orderService } from './order.service';
 const createOrderController = catchAsync(async (req, res) => {
   const { userId } = req.user;
   const result = await orderService.createOrderService(userId, req.body);
+
+  // emit socket event
+  emitSocketEvent(socketEvent.order, result, userId);
 
   sendResponse(res, {
     success: true,

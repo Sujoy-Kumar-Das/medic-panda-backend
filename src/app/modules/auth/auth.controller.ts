@@ -8,8 +8,6 @@ const loginController = catchAsync(async (req, res) => {
     req.body,
   );
 
-  console.log('clicked');
-
   res.cookie('accessToken', accessToken, {
     secure: config.node_env === 'production',
     httpOnly: true,
@@ -26,7 +24,7 @@ const loginController = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: 'User logged in successfully.',
-    data: null,
+    data: accessToken,
   });
 });
 

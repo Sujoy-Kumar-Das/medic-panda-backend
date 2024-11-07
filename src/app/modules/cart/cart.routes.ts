@@ -4,6 +4,7 @@ import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
 import { cartController } from './cart.controller';
 import { cartValidationSchema } from './cart.validation.schema';
+import socketMiddleWare from '../../middlewares/SocketMiddleWare';
 
 const router = Router();
 

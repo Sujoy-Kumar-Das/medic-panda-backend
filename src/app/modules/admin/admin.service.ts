@@ -166,7 +166,6 @@ const updateAdminInfo = async (id: string, payload: Partial<IAdmin>) => {
     runValidators: true,
   });
 
-  console.log({ modifiedData });
 
   return result;
 };

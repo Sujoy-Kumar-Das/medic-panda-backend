@@ -26,4 +26,5 @@ export default {
   authUserEmail: process.env.auth_user_email,
   authUserPassword: process.env.auth_user_password,
   emailVerificationRedirectLink: process.env.email_verification_redirect_link,
+  socketFrontendLink: process.env.socket_frontend_link,
 };

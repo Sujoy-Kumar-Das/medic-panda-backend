@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import mongoose from 'mongoose';
+import QueryBuilder from '../../builder/queryBuilder';
 import sendOtpEmailTemplate from '../../emailTemplate/verifyUserEmailTemplate';
 import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
@@ -170,33 +171,34 @@ const getMeService = async (id: string, role: IUserRoles) => {
     throw new AppError(404, 'This user not found.');
   }
 
-  if (user.isDeleted) {
-    throw new AppError(404, 'This user has been deleted.');
-  }
-
-  if (user.isBlocked) {
-    throw new AppError(404, 'This user has been blocked.');
-  }
+  let result;
 
   if (user.role === USER_ROLE.user) {
-    return await customerModel.findOne({ user: user._id }).populate('user');
+    result = await customerModel.findOne({ user: user._id }).populate('user');
   }
 
   if (user.role === USER_ROLE.admin) {
-    return await adminModel.findOne({ user: user._id }).populate('user');
+    result = await adminModel.findOne({ user: user._id }).populate('user');
   }
 
   if (user.role === USER_ROLE.superAdmin) {
-    return await adminModel.findOne({ user: user._id }).populate('user');
+    result = await adminModel.findOne({ user: user._id }).populate('user');
   }
+
+  return result;
 };
 
 // get all users
-const getAllUsers = async () => {
-  const customer = await customerModel.find().populate('user');
-  const admin = await adminModel.find().populate('user');
+const getAllUsers = async (query: Record<string, unknown>) => {
+  const userQuery = new QueryBuilder(userModel.find(), query);
 
-  return [...customer, ...admin];
+  const users = userQuery.search(['email']).filter().paginate().sort();
+
+  const meta = await users.countTotal();
+
+  const result = await users.modelQuery;
+
+  return { meta, result };
 };
 
 // get single users

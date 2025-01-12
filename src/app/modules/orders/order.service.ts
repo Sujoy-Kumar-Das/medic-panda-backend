@@ -124,8 +124,11 @@ const createOrderService = async (id: string, payload: IOrder) => {
     throw new AppError(403, 'Failed to place order.Try again later.');
   }
 
+  const order = await orderModel.findById(result._id).populate('product');
   return {
     paymentUrl,
+    order,
+    cartId: cartRes._id,
   };
 };
 
@@ -203,7 +206,7 @@ const cancelOrderService = async (userId: string, orderId: string) => {
 
   const result = await orderModel.findByIdAndUpdate(
     orderId,
-    { isCanceled: true },
+    { status: OrderStatus.CANCELED },
     { new: true },
   );
   return result;

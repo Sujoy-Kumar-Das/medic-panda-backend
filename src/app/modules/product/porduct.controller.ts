@@ -1,30 +1,13 @@
+import { emitSocketEvent } from '../../socket/emitSocket';
+import { socketEvent } from '../../socket/socket.event';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { productService } from './product.service';
 
-// const createProductController = catchAsync(async (req, res) => {
-//   const { product, productDetail } = req.body;
-//   const data = {
-//     product,
-//     productDetail,
-//   };
-//   const result = await productService.createProductService(data);
-
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: 200,
-//     data: result,
-//     message: 'Product created successfully.',
-//   });
-// });
-
 const createProductController = catchAsync(async (req, res) => {
-  const { product, productDetail } = req.body;
-  const data = {
-    product,
-    productDetail,
-  };
-  const result = await productService.createProductService(data);
+  const result = await productService.createProductService(req.body);
+
+  emitSocketEvent(socketEvent.product, result);
 
   sendResponse(res, {
     success: true,

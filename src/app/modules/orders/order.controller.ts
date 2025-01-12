@@ -1,4 +1,4 @@
-import { emitSocketEvent } from '../../socket/emitSocket';
+import { emitSocketEvents } from '../../socket/emitSocket';
 import { socketEvent } from '../../socket/socket.event';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
@@ -9,7 +9,7 @@ const createOrderController = catchAsync(async (req, res) => {
   const result = await orderService.createOrderService(userId, req.body);
 
   // emit socket event
-  emitSocketEvent(socketEvent.order, result, userId);
+  emitSocketEvents([{ event: socketEvent.order, data: result.order, userId }]);
 
   sendResponse(res, {
     success: true,
@@ -62,6 +62,9 @@ const cancelOrderController = catchAsync(async (req, res) => {
   const { id } = req.params;
 
   const result = await orderService.cancelOrderService(userId, id);
+
+  // emit socket event
+  emitSocketEvents([{ event: socketEvent.order, data: result, userId }]);
 
   sendResponse(res, {
     success: true,

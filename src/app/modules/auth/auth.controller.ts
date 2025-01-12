@@ -12,6 +12,7 @@ const loginController = catchAsync(async (req, res) => {
     secure: config.node_env === 'production',
     httpOnly: true,
     sameSite: true,
+    maxAge: 1 * 24 * 60 * 60 * 1000,
   });
 
   res.cookie('refreshToken', refreshToken, {

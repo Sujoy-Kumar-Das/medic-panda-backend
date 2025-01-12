@@ -1,12 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getSocketIO } from './socket';
 
-export const emitSocketEvent = (event: string, data: any, userId: string) => {
+export const emitSocketEvents = (
+  events: { event: string; data: any; userId?: string }[],
+) => {
   const io = getSocketIO();
 
   if (io) {
-    io.to(userId.toString()).emit(event, data); // Emit to the specific user room
+    events.forEach(({ event, data, userId }) => {
+      console.warn(`Emitting socket event: ${event}`);
+      if (userId) {
+        io.to(userId.toString()).emit(event, data);
+      } else {
+        io.emit(event, data);
+      }
+    });
   } else {
-    console.warn(`Failed to emit socket event: ${event}`);
+    console.warn(
+      'Failed to emit socket events: Socket.io instance not available.',
+    );
   }
 };

@@ -78,7 +78,7 @@ const successPaymentService = async (payload: any) => {
     await session.endSession();
   }
 
-  return { userId: user._id };
+  return { userId: user._id, order };
 };
 
 const failedPaymentService = async (paymentId: string) => {

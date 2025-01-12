@@ -37,7 +37,9 @@ const updateUserEmailController = catchAsync(async (req, res) => {
 
 const getMeController = catchAsync(async (req, res) => {
   const { userId, role } = req.user;
+
   const result = await userService.getMeService(userId, role);
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -46,8 +48,9 @@ const getMeController = catchAsync(async (req, res) => {
   });
 });
 
+// get all users controller
 const getAllUserController = catchAsync(async (req, res) => {
-  const result = await userService.getAllUsers();
+  const result = await userService.getAllUsers(req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,

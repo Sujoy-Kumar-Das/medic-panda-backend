@@ -1,5 +1,4 @@
 import config from '../../config';
-import { emitSocketEvent } from '../../socket/emitSocket';
 import { socketEvent } from '../../socket/socket.event';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
@@ -11,8 +10,6 @@ const payNowController = catchAsync(async (req, res) => {
 
   const result = await paymentService.payNowService(userId, id);
 
-  console.log(result);
-
   sendResponse(res, {
     success: true,
     message: 'Payment successful',
@@ -22,10 +19,12 @@ const payNowController = catchAsync(async (req, res) => {
 });
 
 const successPaymentController = catchAsync(async (req, res) => {
-  const { userId } = await paymentService.successPaymentService(req.body);
+  const { userId, order } = await paymentService.successPaymentService(
+    req.body,
+  );
 
   // emit socket event
-  emitSocketEvent(socketEvent.order, userId, userId.toString());
+  emitSocketEvent(socketEvent.order, order, userId.toString());
 
   res.redirect(config.success_frontend_link as string);
 });

@@ -50,11 +50,12 @@ router.patch(
   userController.confirmEmailVerificationController,
 );
 
-// router.post(
-//   '/user/block-user/:id',
-//   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-//   userController.blockAUserController,
-// );
+router.patch(
+  '/user/block-user',
+  validateRequest(userValidationSchema.blockUserSchema),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  userController.blockAUserController,
+);
 
 // router.post(
 //   '/user/unblock-user/:id',

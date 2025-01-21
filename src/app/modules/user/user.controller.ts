@@ -81,8 +81,7 @@ const getAllBlockedUserController = catchAsync(async (req, res) => {
 });
 
 const blockAUserController = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const result = await userService.blockUsrService(id);
+  const result = await userService.blockUsrService(req.body);
   sendResponse(res, {
     statusCode: 200,
     success: true,

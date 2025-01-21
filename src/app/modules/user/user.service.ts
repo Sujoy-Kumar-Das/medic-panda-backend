@@ -225,7 +225,8 @@ const getAllBlockedUsers = async () => {
 };
 
 // block user
-const blockUsrService = async (id: string) => {
+const blockUsrService = async (payload: { id: string }) => {
+  const { id } = payload;
   // Check if the user exists
   const user = await userModel.findById(id);
 

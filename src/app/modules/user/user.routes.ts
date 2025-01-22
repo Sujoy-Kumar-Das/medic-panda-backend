@@ -12,7 +12,11 @@ router.get(
   userController.getMeController,
 );
 
-router.get('/user', userController.getAllUserController);
+router.get(
+  '/user',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  userController.getAllUserController,
+);
 
 // router.get('/user/:id', userController.getSingleUserController);
 

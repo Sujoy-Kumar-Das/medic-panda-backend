@@ -9,25 +9,37 @@ const userSchema = new Schema<IUser, IUserMethods>(
       type: String,
       required: [true, 'Email is required.'],
       unique: true,
+      index: true,
+      validate: {
+        validator: function (v) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+        },
+        message: (props) => `${props.value} is not a valid email!`,
+      },
     },
     password: {
       type: String,
       required: [true, 'Password is required.'],
+      select: false,
     },
     role: {
       type: String,
       enum: ['user', 'admin', 'super-admin'],
+      default: 'user',
     },
     isBlocked: {
       type: Boolean,
       default: false,
+      select: false,
     },
     isDeleted: {
       type: Boolean,
       default: false,
+      select: false,
     },
     passwordChangeAt: {
       type: Date,
+      select: false,
     },
     isVerified: {
       type: Boolean,
@@ -36,18 +48,22 @@ const userSchema = new Schema<IUser, IUserMethods>(
     otpCode: {
       type: Number,
       default: null,
+      select: false,
     },
     otpTime: {
       type: Date,
       default: null,
+      select: false,
     },
     wrongOTPAttempt: {
       type: Number,
       default: 0,
+      select: false,
     },
     resetTime: {
       type: Date,
       default: null,
+      select: false,
     },
   },
   {
@@ -59,6 +75,15 @@ const userSchema = new Schema<IUser, IUserMethods>(
 // is user exists statics
 userSchema.statics.isUserExists = function (email: string) {
   return userModel.findOne({ email });
+};
+
+// find user by id
+userSchema.statics.findUserWithID = function (id: string) {
+  return userModel
+    .findById(id)
+    .select(
+      '+isBlocked +isDeleted +passwordChangeAt +otpCode +otpTime +wrongOTPAttempt +resetTime',
+    );
 };
 
 // is password matched method
@@ -87,18 +112,5 @@ userSchema.pre('save', async function (next) {
 
   next();
 });
-
-// method for remove password and sensitive fields
-userSchema.methods.toJSON = function () {
-  const user = this.toObject();
-  delete user.password;
-  delete user.isDeleted;
-  delete user.isBlocked;
-  delete user.passwordChangeAt;
-  delete user.passwordWrongAttempt;
-  delete user.resetTime;
-  delete user.verifyTime;
-  return user;
-};
 
 export const userModel = model<IUser, IUserMethods>('user', userSchema);

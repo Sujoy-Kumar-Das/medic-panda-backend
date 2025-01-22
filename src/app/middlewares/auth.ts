@@ -1,6 +1,7 @@
 import config from '../config';
 import AppError from '../errors/AppError';
 import { IUserRoles } from '../interface/user.roles.interface';
+import { IUser } from '../modules/user/user.interface';
 import { userModel } from '../modules/user/user.model';
 import catchAsync from '../utils/catchAsync';
 import verifyToken from '../utils/verifyJwtToken';
@@ -17,20 +18,21 @@ const auth = (...requiredRoles: IUserRoles[]) => {
 
     const { role, userId, iat } = decoded;
 
-    const user = await userModel.findById(userId);
+    const user = (await userModel.findUserWithID(userId)) as IUser & {
+      _id: string;
+    };
 
     if (!user) {
-      throw new AppError(404, 'User not found.');
+      throw new AppError(404, 'Unauthorized access. This user is not found.');
     }
 
     if (user.isBlocked) {
-      throw new AppError(403, 'This user is blocked');
+      throw new AppError(403, 'Unauthorized access.This user is blocked');
     }
 
     if (user.isDeleted) {
-      throw new AppError(403, 'This user is not found.');
+      throw new AppError(403, 'Unauthorized access. This user is not found.');
     }
-
     if (requiredRoles && !requiredRoles.includes(role)) {
       throw new AppError(403, 'You are not authorize!');
     }

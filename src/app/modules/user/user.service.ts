@@ -273,9 +273,10 @@ const blockUsrService = async (payload: { id: string }) => {
 };
 
 // unblock user
-const unBlockUsrService = async (id: string) => {
+const unBlockUsrService = async (payload: { id: string }) => {
+  const { id } = payload;
   // Check if the user exists
-  const user = await userModel.findById(id);
+  const user = await userModel.findUserWithID(id);
 
   if (!user) {
     throw new AppError(404, 'This account is not found.');
@@ -295,11 +296,9 @@ const unBlockUsrService = async (id: string) => {
     session.startTransaction();
 
     // Unblock the user
-    const updatedUser = await userModel.findByIdAndUpdate(
-      id,
-      { isBlocked: false },
-      { session, new: true },
-    );
+    const updatedUser = await userModel
+      .findByIdAndUpdate(id, { isBlocked: false }, { session, new: true })
+      .select('+isBlocked');
 
     if (updatedUser?.isBlocked) {
       throw new AppError(400, 'Failed to unblock the user.');

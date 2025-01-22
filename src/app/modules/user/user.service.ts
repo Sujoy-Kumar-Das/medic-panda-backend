@@ -196,7 +196,9 @@ const getAllUsers = async (query: Record<string, unknown>) => {
 
   const meta = await users.countTotal();
 
-  const result = await users.modelQuery;
+  const result = await users.modelQuery.select(
+    '_id email isVerified role isBlocked',
+  );
 
   return { meta, result };
 };
@@ -228,7 +230,7 @@ const getAllBlockedUsers = async () => {
 const blockUsrService = async (payload: { id: string }) => {
   const { id } = payload;
   // Check if the user exists
-  const user = await userModel.findById(id);
+  const user = await userModel.findUserWithID(id);
 
   if (!user) {
     throw new AppError(404, 'This account is not found.');
@@ -248,11 +250,9 @@ const blockUsrService = async (payload: { id: string }) => {
     session.startTransaction();
 
     // Block the user
-    const updatedUser = await userModel.findByIdAndUpdate(
-      id,
-      { isBlocked: true },
-      { session, new: true },
-    );
+    const updatedUser = await userModel
+      .findByIdAndUpdate(id, { isBlocked: true }, { session, new: true })
+      .select('+isBlocked');
 
     if (!updatedUser?.isBlocked) {
       throw new AppError(400, 'Failed to block the user.');

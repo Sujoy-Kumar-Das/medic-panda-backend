@@ -17,6 +17,7 @@ export interface IUser {
 
 export interface IUserMethods extends Model<IUser> {
   isUserExists(email: string): Promise<IUser | null>;
+  findUserWithID(id: string): Promise<IUser | null>;
   isJwtIssuedBeforePasswordChange(
     passwordChangeAt: Date,
     jwtIssuedTime: number,

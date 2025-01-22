@@ -6,12 +6,14 @@ import { userController } from './user.controller';
 import { userValidationSchema } from './user.schema';
 const router = express.Router();
 
+// get me route
 router.get(
   '/user/get-me',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.user),
   userController.getMeController,
 );
 
+// get all users
 router.get(
   '/user',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
@@ -61,11 +63,12 @@ router.patch(
   userController.blockAUserController,
 );
 
-// router.post(
-//   '/user/unblock-user/:id',
-//   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-//   userController.unBlockAUserController,
-// );
+router.patch(
+  '/user/unblock-user',
+  validateRequest(userValidationSchema.blockUserSchema),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  userController.unBlockAUserController,
+);
 
 // router.delete(
 //   '/user/:id',

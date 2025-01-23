@@ -70,10 +70,11 @@ router.patch(
   userController.unBlockAUserController,
 );
 
-// router.delete(
-//   '/user/:id',
-//   // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-//   userController.deleteAUserController,
-// );
+router.delete(
+  '/user',
+  validateRequest(userValidationSchema.deleteUserSchema),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  userController.deleteAUserController,
+);
 
 export const userRoutes = router;

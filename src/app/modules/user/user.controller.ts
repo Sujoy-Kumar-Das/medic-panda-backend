@@ -101,8 +101,7 @@ const unBlockAUserController = catchAsync(async (req, res) => {
 });
 
 const deleteAUserController = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const result = await userService.deleteUsrService(id);
+  const result = await userService.deleteUsrService(req.body);
   sendResponse(res, {
     statusCode: 200,
     success: true,

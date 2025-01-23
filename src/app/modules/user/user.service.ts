@@ -190,7 +190,10 @@ const getMeService = async (id: string, role: IUserRoles) => {
 
 // get all users
 const getAllUsers = async (query: Record<string, unknown>) => {
-  const userQuery = new QueryBuilder(userModel.find(), query);
+  const userQuery = new QueryBuilder(
+    userModel.find({ isDeleted: false }),
+    query,
+  );
 
   const users = userQuery.search(['email']).filter().paginate().sort();
 
@@ -319,9 +322,10 @@ const unBlockUsrService = async (payload: { id: string }) => {
 };
 
 // delete user
-const deleteUsrService = async (id: string) => {
+const deleteUsrService = async (payload: { id: string }) => {
+  const { id } = payload;
   // Check if the user exists
-  const user = await userModel.findById(id);
+  const user = await userModel.findUserWithID(id);
 
   if (!user) {
     throw new AppError(404, 'This account is not found.');
@@ -331,24 +335,19 @@ const deleteUsrService = async (id: string) => {
     throw new AppError(404, 'This account has already been deleted.');
   }
 
-  if (user.isBlocked) {
-    throw new AppError(
-      403,
-      'This account has been blocked and cannot be deleted.',
-    );
-  }
-
   const session = await mongoose.startSession();
 
   try {
     session.startTransaction();
 
     // user as deleted
-    const updatedUser = await userModel.findByIdAndUpdate(
-      id,
-      { isDeleted: true },
-      { session, new: true },
-    );
+    const updatedUser = await userModel
+      .findByIdAndUpdate(
+        id,
+        { isDeleted: true, isBlocked: true },
+        { session, new: true },
+      )
+      .select('+isDeleted');
 
     if (!updatedUser?.isDeleted) {
       throw new AppError(400, 'Failed to delete the user.');

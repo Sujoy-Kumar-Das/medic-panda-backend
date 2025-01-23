@@ -15,7 +15,9 @@ import { IChangePassword, ILogin } from './auth.interface';
 const loginService = async (payload: ILogin) => {
   const { email, password } = payload;
 
-  const user = await userModel.findOne({ email });
+  const user = await userModel
+    .findOne({ email })
+    .select('+isBlocked +isDeleted +password');
 
   if (!user) {
     throw new AppError(404, 'This user is not exists');

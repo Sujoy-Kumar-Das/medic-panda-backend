@@ -74,7 +74,11 @@ const userSchema = new Schema<IUser, IUserMethods>(
 
 // is user exists statics
 userSchema.statics.isUserExists = function (email: string) {
-  return userModel.findOne({ email });
+  return userModel
+    .findOne({ email })
+    .select(
+      '+isBlocked +isDeleted +passwordChangeAt +otpCode +otpTime +wrongOTPAttempt +resetTime',
+    );
 };
 
 // find user by id

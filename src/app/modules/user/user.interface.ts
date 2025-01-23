@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export interface IUser {
   email: string;
@@ -15,9 +15,11 @@ export interface IUser {
   resetTime: null | Date;
 }
 
+type TFindUserMethods = (IUser & { _id: Types.ObjectId }) | null;
+
 export interface IUserMethods extends Model<IUser> {
-  isUserExists(email: string): Promise<IUser | null>;
-  findUserWithID(id: string): Promise<IUser | null>;
+  isUserExists(email: string): Promise<TFindUserMethods>;
+  findUserWithID(id: string): Promise<TFindUserMethods>;
   isJwtIssuedBeforePasswordChange(
     passwordChangeAt: Date,
     jwtIssuedTime: number,

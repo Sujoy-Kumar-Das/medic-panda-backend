@@ -70,9 +70,14 @@ const blockUserSchema = z.object({
   body: z.object({ id: z.string({ required_error: 'User ID is required.' }) }),
 });
 
+const deleteUserSchema = z.object({
+  body: z.object({ id: z.string({ required_error: 'User ID is required.' }) }),
+});
+
 export const userValidationSchema = {
   createUserValidationSchema,
   updateUserValidationSchema,
   updateUserEmailValidationSchema,
   blockUserSchema,
+  deleteUserSchema,
 };

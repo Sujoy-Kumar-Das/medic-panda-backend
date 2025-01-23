@@ -31,6 +31,7 @@ export const initializeSocket = (server: HTTPServer): void => {
         userId = decoded.userId;
       } catch (error) {
         console.error('Invalid token', error);
+        userId = null;
       }
     }
 

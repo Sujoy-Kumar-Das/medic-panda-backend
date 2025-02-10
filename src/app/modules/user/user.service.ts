@@ -6,7 +6,6 @@ import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
 import generateOTP from '../../utils/generateOTP';
 import { sendEmail } from '../../utils/sendEmail';
-import { IAdmin } from '../admin/admin.interface';
 import { adminModel } from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
 import { customerModel } from '../customer/customer.model';
@@ -14,11 +13,6 @@ import { userModel } from '../user/user.model';
 import { USER_ROLE } from './user.constant';
 
 interface ICustomerPayload extends ICustomer {
-  email: string;
-  password: string;
-}
-
-interface IAdminPayload extends IAdmin {
   email: string;
   password: string;
 }
@@ -85,14 +79,30 @@ const createCustomerService = async (payload: ICustomerPayload) => {
 };
 
 // create admin
-const createAdminService = async (payload: IAdminPayload) => {
-  const { email, password, name, photo, contact } = payload;
+const createAdminService = async (payload: { email: string }) => {
+  const { email } = payload;
 
   // check is the user already exists
-  const isUserExists = await userModel.isUserExists(email);
+  const user = await userModel.isUserExists(email);
 
-  if (isUserExists) {
-    throw new AppError(403, `${name} already have an account.`);
+  if (!user) {
+    throw new AppError(403, `This user is not exists.`);
+  }
+
+  if (user.role === 'admin' || user.role === 'superAdmin') {
+    throw new AppError(403, `This user is already a ${user.role}`);
+  }
+
+  if (!user.isVerified) {
+    throw new AppError(403, 'This user is not verified.');
+  }
+
+  if (user.isBlocked) {
+    throw new AppError(403, 'This user is blocked.');
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(403, 'This user is deleted.');
   }
 
   // create a session
@@ -102,26 +112,33 @@ const createAdminService = async (payload: IAdminPayload) => {
     // start transaction
     session.startTransaction();
 
-    const userData = {
-      email,
-      password,
-      role: USER_ROLE.admin,
-    };
+    // update the user role as a admin
+    const updateRole = await userModel.findOneAndUpdate(
+      { email },
+      { role: USER_ROLE.admin },
+      { new: true, session },
+    );
 
-    // create the user
-    const createUser = await userModel.create([userData], { session });
-
-    if (!createUser.length) {
+    if (updateRole?.role !== USER_ROLE.admin) {
       throw new AppError(400, 'Flailed to create admin.');
     }
 
+    // find the user data form customer model
+    const userData = await customerModel.findOne({ user: user._id });
+
+    if (!userData) {
+      throw new AppError(404, 'Invalid user account.');
+    }
+
+    // create the admin data
     const adminData = {
-      user: createUser[0]._id,
-      name,
-      photo,
-      contact: contact ? contact : null,
+      user: user._id,
+      name: userData?.name,
+      photo: userData?.photo,
+      contact: userData?.contact ? userData?.contact : null,
     };
 
+    // create admin in admin model
     const createAdmin = await adminModel.create([adminData], {
       session,
     });
@@ -130,6 +147,10 @@ const createAdminService = async (payload: IAdminPayload) => {
       throw new AppError(400, 'Failed to create admin.');
     }
 
+    // delete the user from customer model after update to admin role
+    await customerModel.findByIdAndDelete(user._id);
+
+    // commit the transaction
     await session.commitTransaction();
     await session.endSession();
 
@@ -342,11 +363,7 @@ const deleteUsrService = async (payload: { id: string }) => {
 
     // user as deleted
     const updatedUser = await userModel
-      .findByIdAndUpdate(
-        id,
-        { isDeleted: true, isBlocked: true },
-        { session, new: true },
-      )
+      .findByIdAndUpdate(id, { isDeleted: true }, { session, new: true })
       .select('+isDeleted');
 
     if (!updatedUser?.isDeleted) {

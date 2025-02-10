@@ -39,6 +39,14 @@ const createUserValidationSchema = z.object({
   }),
 });
 
+const createAdminValidationSchema = z.object({
+  body: z.object({
+    email: z
+      .string({ required_error: 'Email is required.' })
+      .email({ message: 'Please provide a valid email.' }),
+  }),
+});
+
 const updateUserValidationSchema = z.object({
   body: z
     .object({
@@ -76,6 +84,7 @@ const deleteUserSchema = z.object({
 
 export const userValidationSchema = {
   createUserValidationSchema,
+  createAdminValidationSchema,
   updateUserValidationSchema,
   updateUserEmailValidationSchema,
   blockUserSchema,

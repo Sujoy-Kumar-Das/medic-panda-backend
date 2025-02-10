@@ -32,8 +32,8 @@ router.post(
 
 router.post(
   '/user/admin',
-  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-  validateRequest(userValidationSchema.createUserValidationSchema),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  validateRequest(userValidationSchema.createAdminValidationSchema),
   userController.createAdminController,
 );
 

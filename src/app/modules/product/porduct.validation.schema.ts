@@ -6,8 +6,7 @@ const discountValidationSchema = z.object({
     .min(0, { message: 'Product discount percentage must be at least 0.' })
     .max(100, {
       message: 'Product discount percentage must be at most 100.',
-    })
-    .optional(),
+    }),
   startDate: z.string({ required_error: 'Discount start date is required.' }),
   endDate: z.string({ required_error: 'Discount end date is required.' }),
   startTime: z.string({ required_error: 'Discount end time is required.' }),
@@ -28,7 +27,7 @@ const createProductValidationSchema = z.object({
       price: z
         .number({ required_error: 'Product price is required.' })
         .positive({ message: 'Product price must be a positive number.' }),
-      discount: discountValidationSchema,
+      discount: discountValidationSchema.optional(),
     }),
     productDetail: z.object({
       description: z
@@ -59,10 +58,7 @@ const updateProductValidationSchema = z.object({
           message: 'Product name should be at least 3 characters long.',
         })
         .optional(),
-      thumbnail: z
-        .string({ required_error: 'Product thumbnail is required.' })
-        .url({ message: 'Product thumbnail must be a valid URL.' })
-        .optional(),
+
       price: z
         .number({ required_error: 'Product price is required.' })
         .positive({ message: 'Product price must be a positive number.' })
@@ -92,13 +88,6 @@ const updateProductValidationSchema = z.object({
       stock: z
         .number({ required_error: 'Stock is required.' })
         .nonnegative({ message: 'Stock should be positive.' })
-        .optional(),
-      images: z
-        .array(
-          z
-            .string({ required_error: 'Photo is required.' })
-            .url({ message: 'Each photo must be a valid URL.' }),
-        )
         .optional(),
     }),
   }),

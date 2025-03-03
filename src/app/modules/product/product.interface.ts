@@ -13,7 +13,7 @@ export interface IDiscount {
 export interface IProduct {
   name: string;
   price: number;
-  discount?: IDiscount;
+  discount?: IDiscount | undefined;
   stockStatus?: boolean;
   thumbnail: string;
   category: Types.ObjectId;

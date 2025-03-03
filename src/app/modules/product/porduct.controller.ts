@@ -1,4 +1,4 @@
-import { emitSocketEvent } from '../../socket/emitSocket';
+import { emitSocketEvents } from '../../socket/emitSocket';
 import { socketEvent } from '../../socket/socket.event';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
@@ -7,7 +7,7 @@ import { productService } from './product.service';
 const createProductController = catchAsync(async (req, res) => {
   const result = await productService.createProductService(req.body);
 
-  emitSocketEvent(socketEvent.product, result);
+  emitSocketEvents([{ event: socketEvent.product, data: result }]);
 
   sendResponse(res, {
     success: true,
@@ -18,13 +18,14 @@ const createProductController = catchAsync(async (req, res) => {
 });
 
 const getAllProductController = catchAsync(async (req, res) => {
+  console.log(req.query);
+
   const result = await productService.getAllProductService(req.query);
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    data: result.result,
-    meta: result.meta,
+    data: result,
     message: 'Product fetched successfully.',
   });
 });
@@ -41,17 +42,19 @@ const getSingleProductController = catchAsync(async (req, res) => {
   });
 });
 
-// const updateProductController = catchAsync(async (req, res) => {
-//   const { id } = req.params;
-//   const result = await ProductService.updateProductService(id, req.body);
+const updateProductController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  // const result = await productService.updateProductService(id, req.body);
 
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: 200,
-//     data: result,
-//     message: 'Product updated successfully.',
-//   });
-// });
+  console.log({ id: id, body: req.body });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    data: null,
+    message: 'Product updated successfully.',
+  });
+});
 
 const deleteProductController = catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -69,6 +72,6 @@ export const ProductController = {
   createProductController,
   getAllProductController,
   getSingleProductController,
-  // updateProductController,
+  updateProductController,
   deleteProductController,
 };

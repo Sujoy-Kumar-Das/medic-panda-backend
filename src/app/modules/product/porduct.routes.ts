@@ -18,6 +18,12 @@ router.get('/product', ProductController.getAllProductController);
 
 router.get('/product/:id', ProductController.getSingleProductController);
 
+router.patch(
+  '/product/:id',
+  // validateRequest(productValidationSchema.updateProductValidationSchema),
+  ProductController.updateProductController,
+);
+
 router.delete(
   '/product/:id',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),

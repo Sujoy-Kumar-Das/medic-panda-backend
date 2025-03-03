@@ -54,6 +54,7 @@ const productSchema = new Schema<IProduct, IProductModel>({
   discount: {
     type: discountSchema,
     required: false,
+    default: undefined,
   },
   stockStatus: {
     type: Boolean,
@@ -80,6 +81,7 @@ const productSchema = new Schema<IProduct, IProductModel>({
   isDeleted: {
     type: Boolean,
     default: false,
+    select: false,
   },
 });
 
@@ -101,16 +103,18 @@ productSchema.pre('aggregate', function (next) {
 
 // product statics methods
 productSchema.statics.isProductExistsByName = async function (name: string) {
-  return await productModel.findOne({
-    name: {
-      $regex: name,
-      $options: 'i',
-    },
-  });
+  return await productModel
+    .findOne({
+      name: {
+        $regex: name,
+        $options: 'i',
+      },
+    })
+    .select('+isDeleted');
 };
 
 productSchema.statics.isProductExistsById = async function (id: string) {
-  return await productModel.findById(id);
+  return await productModel.findById(id).select('+isDeleted');
 };
 
 // method for remove sensitive fields

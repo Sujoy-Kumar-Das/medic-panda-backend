@@ -148,7 +148,7 @@ const createAdminService = async (payload: { email: string }) => {
     }
 
     // delete the user from customer model after update to admin role
-    await customerModel.findByIdAndDelete(user._id);
+    await customerModel.findByIdAndDelete(userData._id);
 
     // commit the transaction
     await session.commitTransaction();

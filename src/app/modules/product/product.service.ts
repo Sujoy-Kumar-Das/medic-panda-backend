@@ -126,27 +126,111 @@ const updateProductService = async (
   id: string,
   payload: Partial<IProductPayload>,
 ) => {
-  const result = await productModel.findByIdAndUpdate(id, payload);
-  return result;
+  const { product, productDetail } = payload;
+
+  const { price, discount, category, manufacturer } = product as IProduct;
+
+  const isProductExists = await productModel.isProductExistsById(id);
+
+  if (!isProductExists) {
+    throw new AppError(404, 'This product is not found');
+  }
+
+  if (isProductExists.isDeleted) {
+    throw new AppError(404, `${isProductExists.name} is deleted.`);
+  }
+
+  const isCategoryExists = await categoryModel.findById(category);
+  if (!isCategoryExists) {
+    throw new AppError(403, `This category is not found.`);
+  }
+
+  const isManufactureAvailable = await manufacturerModel.findById(manufacturer);
+  if (!isManufactureAvailable) {
+    throw new AppError(404, 'Manufacture is not found.');
+  }
+
+  // create a session
+  const session = await mongoose.startSession();
+
+  try {
+    // start transaction
+    session.startTransaction();
+
+    if (!discount) {
+      payload.product!.discount = undefined;
+    }
+
+    if (discount) {
+      discount.discountPrice = calculateDiscount(price, discount.percentage);
+      discount.discountStatus = true;
+    }
+
+    // update the product
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      id,
+      { $set: product },
+      { session, new: true },
+    );
+
+    if (!updatedProduct) {
+      throw new AppError(400, 'Failed to update product.');
+    }
+
+    if (productDetail) {
+      const updatedProductDetails = await productDetailModel.findByIdAndUpdate(
+        { product: id },
+        { $set: productDetail },
+        { session, new: true },
+      );
+
+      if (!updatedProductDetails) {
+        throw new AppError(400, 'Failed to update product details.');
+      }
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return updatedProduct;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.log(error);
+    throw new AppError(
+      400,
+      'Something went wrong while updating the product. Please try again.',
+    );
+  }
 };
 
 const deleteProductService = async (id: string) => {
-  const isProductExists = await productModel.findById(id);
+  const product = await productModel.findById(id);
 
-  if (!isProductExists) {
+  if (!product) {
     throw new AppError(404, 'This product is not found.');
   }
 
-  const isDeleted = isProductExists.isDeleted;
+  const isDeleted = product.isDeleted;
 
   if (isDeleted) {
-    throw new AppError(404, 'This product already deleted.');
+    throw new AppError(409, 'This product already deleted.');
   }
 
-  const result = await productModel.findByIdAndUpdate(id, {
-    isDeleted: true,
-  });
-  return result;
+  const result = await productModel
+    .findByIdAndUpdate(
+      id,
+      {
+        isDeleted: true,
+      },
+      { new: true },
+    )
+    .select('+isDeleted');
+
+  if (!result?.isDeleted) {
+    throw new AppError(400, `Failed to delete ${product.name} `);
+  }
+  return null;
 };
 
 export const productService = {

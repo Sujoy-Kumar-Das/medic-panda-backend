@@ -1,3 +1,4 @@
+import mongoose, { Types } from 'mongoose';
 import QueryBuilder from '../../builder/queryBuilder';
 import AppError from '../../errors/AppError';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
@@ -8,134 +9,162 @@ import { PaymentModel } from '../payment/payment.model';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
 import { userModel } from '../user/user.model';
+import { allowedOrderStatusTransitions } from './allowedOrderStatusTransitions';
 import { IOrder, IShippingAddress, OrderStatus } from './order.interface';
 import { orderModel } from './order.model';
 
-const createOrderService = async (id: string, payload: IOrder) => {
+const createOrderService = async (id: string, payload: Partial<IOrder>) => {
+  const session = await mongoose.startSession();
+
   const { product, quantity } = payload;
 
-  // check is the user exists
-  const user = await userModel.findById(id);
+  try {
+    session.startTransaction(); //start session
 
-  if (!user) {
-    throw new AppError(404, 'User not found.');
-  }
+    // check is the user exists
+    const user = await userModel.findUserWithID(id, session);
 
-  //   check is the product is available
+    const validUser = !user || user.isBlocked || user.isDeleted;
 
-  const isProductExists = await productModel.findById(product);
+    if (validUser) {
+      throw new AppError(404, 'User not found.');
+    }
 
-  if (!isProductExists) {
-    throw new AppError(403, `This product is not found.`);
-  }
+    //   check is the product is available
 
-  //   is product deleted
-  const isProductDeleted = isProductExists.isDeleted;
-
-  if (isProductDeleted) {
-    throw new AppError(403, `This product is deleted.`);
-  }
-
-  //   is product status available
-  const productStockStatus = isProductExists.stockStatus;
-
-  if (!productStockStatus) {
-    throw new AppError(403, `This product is stock out.`);
-  }
-
-  //   check product details
-  const productDetails = await productDetailModel.findOne({
-    product,
-  });
-
-  if (!productDetails) {
-    throw new AppError(404, 'This product is not found.');
-  }
-
-  //   is product active
-  const isActive = productDetails?.status;
-
-  if (isActive === 'inactive') {
-    throw new AppError(403, 'This product has been closed.');
-  }
-
-  // todo
-  //   is stock available
-  const stockProduct = productDetails?.stock;
-
-  if (!stockProduct) {
-    throw new AppError(403, 'This product has been stock out.');
-  }
-
-  // is enough stock available for order.
-  if (Number(stockProduct) < Number(quantity)) {
-    throw new AppError(
-      403,
-      `Not enough stock. We have only ${stockProduct} products yet.`,
+    const isProductExists = await productModel.isProductExistsById(
+      String(product),
+      session,
     );
+
+    const isValidProduct = !isProductExists || isProductExists.isDeleted;
+
+    if (isValidProduct) {
+      throw new AppError(403, `This product is not found.`);
+    }
+
+    //   is product status available
+    const productStockStatus = isProductExists.stockStatus;
+
+    if (!productStockStatus) {
+      throw new AppError(403, `This product is stock out.`);
+    }
+
+    //   check product details
+    const productDetails = await productDetailModel
+      .findOne({
+        product,
+      })
+      .session(session);
+
+    if (!productDetails) {
+      throw new AppError(404, 'This product is not found.');
+    }
+
+    //   is product active
+    const isActive = productDetails?.status;
+
+    if (isActive === 'inactive') {
+      throw new AppError(403, 'This product has been closed.');
+    }
+
+    //   is stock available
+    const stockProduct = productDetails?.stock;
+
+    if (!stockProduct) {
+      throw new AppError(403, 'This product has been stock out.');
+    }
+
+    // is enough stock available for order.
+    if (Number(stockProduct) < Number(quantity)) {
+      throw new AppError(
+        403,
+        `Not enough stock. We have only ${stockProduct} products yet.`,
+      );
+    }
+
+    payload.user = user?._id;
+
+    payload.total =
+      Number(quantity) *
+      (isProductExists.discount?.discountStatus
+        ? Number(isProductExists.discount.discountPrice)
+        : Number(isProductExists.price));
+
+    payload.paymentId = generateTransactionId();
+
+    // destructuring payload.shippingAddress
+
+    const { city, country, contact, street, postalCode } =
+      payload.shippingAddress as IShippingAddress;
+
+    const paymentData = {
+      total: payload.total,
+      productId: product as Types.ObjectId,
+      productName: isProductExists.name,
+      country: country,
+      phone: contact,
+      city: city,
+      userEmail: user.email,
+      userAddress: `${street}-${postalCode}-${street}-${city}-${country}`,
+      transactionId: payload.paymentId,
+    };
+
+    const paymentUrl = await sslInitPaymentService(paymentData);
+
+    if (!paymentUrl) {
+      throw new AppError(403, 'Something went wrong while payment.');
+    }
+
+    // save to db
+    const result = await orderModel.create([payload], { session });
+
+    if (!result[0]._id) {
+      throw new AppError(403, 'Failed to place order.Try again later.');
+    }
+
+    const cartRes = await cartModel
+      .findOneAndDelete({
+        product,
+        user: user._id,
+      })
+      .session(session);
+
+    if (!cartRes?._id) {
+      throw new AppError(403, 'Failed to place order.Try again later.');
+    }
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    const order = await orderModel.findById(result[0]._id).populate('product');
+
+    return {
+      paymentUrl,
+      order,
+      cartId: cartRes._id,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    await session.abortTransaction(); // Rollback transaction on error
+    session.endSession();
+    throw new AppError(403, 'Failed To place order');
   }
-
-  payload.user = user?._id;
-
-  payload.total =
-    Number(quantity) *
-    (isProductExists.discount?.discountStatus
-      ? Number(isProductExists.discount.discountPrice)
-      : Number(isProductExists.price));
-
-  payload.paymentId = generateTransactionId();
-
-  // destructuring payload.shippingAddress
-
-  const { city, country, contact, street, postalCode } =
-    payload.shippingAddress as IShippingAddress;
-
-  const paymentData = {
-    total: payload.total,
-    productId: product,
-    productName: isProductExists.name,
-    country: country,
-    phone: contact,
-    city: city,
-    userEmail: user.email,
-    userAddress: `${street}-${postalCode}-${street}-${city}-${country}`,
-    transactionId: payload.paymentId,
-  };
-
-  const paymentUrl = await sslInitPaymentService(paymentData);
-
-  if (!paymentUrl) {
-    throw new AppError(403, 'Something went wrong while payment.');
-  }
-
-  // save to db
-  const result = await orderModel.create(payload);
-
-  if (!result._id) {
-    throw new AppError(403, 'Failed to place order.Try again later.');
-  }
-
-  const cartRes = await cartModel.findOneAndDelete({
-    product: isProductExists._id,
-    user: user._id,
-  });
-
-  if (!cartRes?._id) {
-    throw new AppError(403, 'Failed to place order.Try again later.');
-  }
-
-  const order = await orderModel.findById(result._id).populate('product');
-  return {
-    paymentUrl,
-    order,
-    cartId: cartRes._id,
-  };
 };
 
 // get all order service by admin and supper admin
-const getAllOrderServiceByAdmin = async () => {
-  const result = await orderModel.find();
-  return result;
+const getAllOrderServiceByAdmin = async (query: Record<string, unknown>) => {
+  // Build the query with filters
+  const ordersQuery = new QueryBuilder(orderModel.find(), query)
+    .filter()
+    .sort()
+    .paginate();
+
+  // Execute the query
+  const orders = await ordersQuery.modelQuery;
+
+  return orders;
 };
 
 // get all order by user
@@ -212,6 +241,37 @@ const cancelOrderService = async (userId: string, orderId: string) => {
   return result;
 };
 
+const changeOrderStatusService = async (
+  orderId: string,
+  payload: { status: OrderStatus },
+) => {
+  const { status } = payload;
+
+  const order = await orderModel.findById(orderId);
+
+  if (!order) {
+    throw new AppError(404, 'This order is not found.');
+  }
+
+  const currentStatus = order.status;
+
+  if (!allowedOrderStatusTransitions[currentStatus].includes(status)) {
+    throw new AppError(400, `You can not change ${currentStatus} to ${status}`);
+  }
+
+  const result = await orderModel.findByIdAndUpdate(
+    orderId,
+    { status },
+    { new: true },
+  );
+
+  if (result?.status !== status) {
+    throw new AppError(400, 'Failed to update the status.');
+  }
+
+  return result;
+};
+
 // delete order by user, admin and supper admin
 const deleteOrderService = async (userId: string, orderId: string) => {
   const order = await orderModel.findById(orderId);
@@ -231,4 +291,5 @@ export const orderService = {
   getAllOrderService,
   getSingleOrderService,
   deleteOrderService,
+  changeOrderStatusService,
 };

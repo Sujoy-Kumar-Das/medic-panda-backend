@@ -1,4 +1,4 @@
-import { Model, Types } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 
 export interface IDiscount {
   discountStatus: boolean;
@@ -25,5 +25,8 @@ export interface IProduct {
 
 export interface IProductModel extends Model<IProduct> {
   isProductExistsByName(name: string): Promise<IProduct | null>;
-  isProductExistsById(id: string): Promise<IProduct | null>;
+  isProductExistsById(
+    id: string,
+    session?: mongoose.ClientSession,
+  ): Promise<IProduct | null>;
 }

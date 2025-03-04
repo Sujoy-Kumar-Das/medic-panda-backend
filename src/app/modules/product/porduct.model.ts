@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import mongoose, { model, Schema } from 'mongoose';
 import { IDiscount, IProduct, IProductModel } from './product.interface';
 
 const discountSchema = new Schema<IDiscount>(
@@ -113,8 +113,14 @@ productSchema.statics.isProductExistsByName = async function (name: string) {
     .select('+isDeleted');
 };
 
-productSchema.statics.isProductExistsById = async function (id: string) {
-  return await productModel.findById(id).select('+isDeleted');
+productSchema.statics.isProductExistsById = async function (
+  id: string,
+  session: mongoose.ClientSession,
+) {
+  return await productModel
+    .findById(id)
+    .select('+isDeleted')
+    .session(session || null);
 };
 
 // method for remove sensitive fields

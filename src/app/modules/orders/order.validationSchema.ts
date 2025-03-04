@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { OrderStatus } from './order.interface';
 
 const shippingAddressSchema = z.object({
   city: z.string({ required_error: 'City is required.' }),
@@ -17,4 +18,15 @@ const createOrderValidationSchema = z.object({
   }),
 });
 
-export const orderValidationSchema = { createOrderValidationSchema };
+const changeOrderStatusValidationSchema = z.object({
+  body: z.object({
+    status: z.enum(Object.values(OrderStatus) as [string, ...string[]], {
+      message: 'Please Select a status value.',
+    }),
+  }),
+});
+
+export const orderValidationSchema = {
+  createOrderValidationSchema,
+  changeOrderStatusValidationSchema,
+};

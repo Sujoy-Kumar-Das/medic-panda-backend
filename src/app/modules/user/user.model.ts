@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { model, Schema } from 'mongoose';
+import mongoose, { model, Schema } from 'mongoose';
 import hashPassword from '../../utils/hashPassword';
 import { IUser, IUserMethods } from './user.interface';
 
@@ -82,12 +82,16 @@ userSchema.statics.isUserExists = function (email: string) {
 };
 
 // find user by id
-userSchema.statics.findUserWithID = function (id: string) {
+userSchema.statics.findUserWithID = function (
+  id: string,
+  session?: mongoose.ClientSession,
+) {
   return userModel
     .findById(id)
     .select(
       '+isBlocked +isDeleted +passwordChangeAt +otpCode +otpTime +wrongOTPAttempt +resetTime',
-    );
+    )
+    .session(session || null);
 };
 
 // is password matched method

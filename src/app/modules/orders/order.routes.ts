@@ -38,6 +38,13 @@ router.patch(
   orderController.cancelOrderController,
 );
 
+router.patch(
+  '/order/change-status/:id',
+  validateRequest(orderValidationSchema.changeOrderStatusValidationSchema),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  orderController.changeOrderStatusController,
+);
+
 router.delete(
   '/order/:id',
   auth(USER_ROLE.user),

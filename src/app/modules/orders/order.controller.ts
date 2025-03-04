@@ -74,6 +74,19 @@ const cancelOrderController = catchAsync(async (req, res) => {
   });
 });
 
+const changeOrderStatusController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await orderService.changeOrderStatusService(id, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Order Status changed successfully.',
+    data: result,
+  });
+});
+
 const deleteOrderController = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { userId } = req.user;
@@ -95,4 +108,5 @@ export const orderController = {
   getSingleOrderController,
   cancelOrderController,
   deleteOrderController,
+  changeOrderStatusController,
 };

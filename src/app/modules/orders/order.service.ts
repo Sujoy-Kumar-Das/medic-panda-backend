@@ -255,7 +255,9 @@ const changeOrderStatusService = async (
 
   const currentStatus = order.status;
 
-  if (!allowedOrderStatusTransitions[currentStatus].includes(status)) {
+  const allowedOrderStatus = allowedOrderStatusTransitions[currentStatus];
+
+  if (!allowedOrderStatus.includes(status)) {
     throw new AppError(400, `You can not change ${currentStatus} to ${status}`);
   }
 

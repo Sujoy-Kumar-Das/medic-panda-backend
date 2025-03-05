@@ -20,7 +20,7 @@ router.get(
   userController.getAllUserController,
 );
 
-// router.get('/user/:id', userController.getSingleUserController);
+router.get('/user/:id', userController.getSingleUserController);
 
 // router.get('/users/blocked-user', userController.getAllBlockedUserController);
 

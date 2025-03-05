@@ -228,13 +228,25 @@ const getAllUsers = async (query: Record<string, unknown>) => {
 };
 
 // get single users
-const getSingleUser = async (id: string, role: string) => {
+const getSingleUser = async (id: string) => {
+  const user = await userModel.findUserWithID(id);
+
+  if (!user) {
+    throw new AppError(404, 'This user is not found.');
+  }
+
+  const role = user.role;
+
   if (role === USER_ROLE.user) {
-    return await customerModel.findOne({ user: id, role }).populate('user');
+    return await customerModel
+      .findOne({ user: id, role })
+      .populate('user', '+isBlocked');
   }
 
   if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await adminModel.findOne({ user: id }).populate('user');
+    return await adminModel
+      .findOne({ user: id })
+      .populate('user', '+isBlocked');
   }
 };
 

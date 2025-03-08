@@ -57,6 +57,19 @@ const getSingleOrderController = catchAsync(async (req, res) => {
   });
 });
 
+const getSingleOrderControllerByAdmin = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await orderService.getSingleOrderServiceByAdmin(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Order fetched successfully.',
+    data: result,
+  });
+});
+
 const cancelOrderController = catchAsync(async (req, res) => {
   const { userId } = req.user;
   const { id } = req.params;
@@ -109,4 +122,5 @@ export const orderController = {
   cancelOrderController,
   deleteOrderController,
   changeOrderStatusController,
+  getSingleOrderControllerByAdmin,
 };

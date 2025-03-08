@@ -136,6 +136,19 @@ const confirmEmailVerificationController = catchAsync(async (req, res) => {
   });
 });
 
+const updateUserInfoController = catchAsync(async (req, res) => {
+  const { userId, role } = req.user;
+
+  const result = await userService.updateUserInfo(userId, role, req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User Information updated successfully.',
+    data: result,
+  });
+});
+
 export const userController = {
   createCustomerController,
   createAdminController,
@@ -149,4 +162,5 @@ export const userController = {
   getAllBlockedUserController,
   verifyEmailLinkController,
   confirmEmailVerificationController,
+  updateUserInfoController,
 };

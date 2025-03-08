@@ -32,6 +32,12 @@ router.get(
   orderController.getSingleOrderController,
 );
 
+router.get(
+  '/order/:id/admin',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  orderController.getSingleOrderControllerByAdmin,
+);
+
 router.patch(
   '/order/cancel/:id',
   auth(USER_ROLE.user),

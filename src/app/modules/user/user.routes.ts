@@ -77,4 +77,11 @@ router.delete(
   userController.deleteAUserController,
 );
 
+router.patch(
+  '/user',
+  validateRequest(userValidationSchema.updateUserValidationSchema),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.user),
+  userController.updateUserInfoController,
+);
+
 export const userRoutes = router;

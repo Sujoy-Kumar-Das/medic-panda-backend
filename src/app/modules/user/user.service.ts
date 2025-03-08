@@ -1,20 +1,32 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import QueryBuilder from '../../builder/queryBuilder';
 import sendOtpEmailTemplate from '../../emailTemplate/verifyUserEmailTemplate';
 import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
 import generateOTP from '../../utils/generateOTP';
 import { sendEmail } from '../../utils/sendEmail';
+import { IAdmin } from '../admin/admin.interface';
 import { adminModel } from '../admin/admin.model';
-import { ICustomer } from '../customer/customer.interface';
+import {
+  ICustomer,
+  IUserPermanentAddress,
+} from '../customer/customer.interface';
 import { customerModel } from '../customer/customer.model';
 import { userModel } from '../user/user.model';
 import { USER_ROLE } from './user.constant';
+import { IUser } from './user.interface';
 
 interface ICustomerPayload extends ICustomer {
   email: string;
   password: string;
+}
+
+interface IUpdateCustomerPayload extends IUser {
+  name: string;
+  photo: string;
+  contact?: string | null;
+  address: IUserPermanentAddress;
 }
 
 // create customer
@@ -508,6 +520,39 @@ const confirmVerification = async (
   return result;
 };
 
+// update user info
+
+const updateUserInfo = async (
+  id: string,
+  role: IUserRoles,
+  payload: Partial<IUpdateCustomerPayload>,
+) => {
+  const { address, email, password, ...remainingFields } = payload;
+
+  if (email || password) {
+    throw new AppError(400, 'Bad request for update user info.');
+  }
+
+  const modifiedData: Record<string, unknown> = { ...remainingFields };
+
+  if (address && Object.keys(address).length) {
+    for (const [key, value] of Object.entries(address)) {
+      modifiedData[`address.${key}`] = value;
+    }
+  }
+
+  const model = (
+    role === USER_ROLE.admin || role === USER_ROLE.superAdmin
+      ? adminModel
+      : customerModel
+  ) as Model<ICustomer | IAdmin>;
+
+  return await model.findOneAndUpdate({ user: id }, modifiedData, {
+    new: true,
+    runValidators: true,
+  });
+};
+
 export const userService = {
   createCustomerService,
   createAdminService,
@@ -521,4 +566,5 @@ export const userService = {
   getAllBlockedUsers,
   createVerifyEmailLink,
   confirmVerification,
+  updateUserInfo,
 };

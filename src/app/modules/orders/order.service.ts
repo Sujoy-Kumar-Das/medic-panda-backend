@@ -206,6 +206,23 @@ const getSingleOrderService = async (id: string, userId: string) => {
   return result;
 };
 
+// get all order by user
+const getSingleOrderServiceByAdmin = async (id: string) => {
+  const order = await orderModel.findOne({ _id: id }).populate('product');
+
+  const paymentInfo = await PaymentModel.findOne({
+    transactionId: order?.paymentId,
+  });
+
+  const userInfo = await customerModel
+    .findOne({ user: order?.user })
+    .populate('user');
+
+  const result = { order, userInfo, paymentInfo };
+
+  return result;
+};
+
 // cancel order by user, admin and supper admin
 const cancelOrderService = async (userId: string, orderId: string) => {
   const order = await orderModel.findById(orderId);
@@ -294,4 +311,5 @@ export const orderService = {
   getSingleOrderService,
   deleteOrderService,
   changeOrderStatusService,
+  getSingleOrderServiceByAdmin
 };

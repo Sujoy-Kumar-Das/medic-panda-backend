@@ -11,4 +11,10 @@ router.get(
   metaController.userMetaController,
 );
 
+router.get(
+  '/meta/admin',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  metaController.adminMetaDataController,
+);
+
 export const metaRouter = router;

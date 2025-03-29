@@ -236,7 +236,7 @@ const getAllUsers = async (query: Record<string, unknown>) => {
     '_id email isVerified role isBlocked',
   );
 
-  return { meta, result };
+  return { meta, data: result };
 };
 
 // get single users

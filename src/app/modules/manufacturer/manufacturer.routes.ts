@@ -18,6 +18,7 @@ router.post(
 
 router.get(
   '/manufacturer',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   manufacturerController.getAllManufacturerController,
 );
 

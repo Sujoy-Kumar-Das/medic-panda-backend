@@ -4,7 +4,7 @@ const userAddressValidationSchema = z.object({
   city: z.string({ required_error: 'City is required.' }).optional(),
   street: z.string({ required_error: 'State is required.' }).optional(),
   postalCode: z
-    .string({ required_error: 'Postal Code is required.' })
+    .number({ required_error: 'Postal Code is required.' })
     .optional(),
   country: z.string({ required_error: 'Country is required.' }).optional(),
 });
@@ -59,7 +59,7 @@ const updateUserValidationSchema = z.object({
         .url({ message: 'Image URL is invalid.' })
         .optional(),
       contact: z
-        .string({ required_error: 'Contact number is required.' })
+        .number({ required_error: 'Contact number is required.' })
         .optional(),
       address: userAddressValidationSchema.optional(),
     })

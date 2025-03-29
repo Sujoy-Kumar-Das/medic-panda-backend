@@ -104,12 +104,17 @@ const getAllProductService = async (query: Record<string, unknown>) => {
   }
 
   const productQuery = new QueryBuilder(
-    productModel.find().populate('category').populate('manufacturer'),
+    productModel
+      .find({ isDeleted: false })
+      .populate('category')
+      .populate('manufacturer'),
     query,
   );
   const products = productQuery.search(['name']).filter().paginate();
   const meta = await productQuery.countTotal();
+
   const result = await products.modelQuery;
+
   return { result, meta };
 };
 
@@ -141,11 +146,13 @@ const updateProductService = async (
   }
 
   const isCategoryExists = await categoryModel.findById(category);
+
   if (!isCategoryExists) {
     throw new AppError(403, `This category is not found.`);
   }
 
   const isManufactureAvailable = await manufacturerModel.findById(manufacturer);
+
   if (!isManufactureAvailable) {
     throw new AppError(404, 'Manufacture is not found.');
   }
@@ -169,7 +176,7 @@ const updateProductService = async (
     // update the product
     const updatedProduct = await productModel.findByIdAndUpdate(
       id,
-      { $set: product },
+      { ...product },
       { session, new: true },
     );
 
@@ -178,9 +185,9 @@ const updateProductService = async (
     }
 
     if (productDetail) {
-      const updatedProductDetails = await productDetailModel.findByIdAndUpdate(
+      const updatedProductDetails = await productDetailModel.findOneAndUpdate(
         { product: id },
-        { $set: productDetail },
+        { ...productDetail },
         { session, new: true },
       );
 
@@ -192,6 +199,7 @@ const updateProductService = async (
     await session.commitTransaction();
     session.endSession();
 
+    console.log({ updatedProduct });
     return updatedProduct;
   } catch (error) {
     await session.abortTransaction();

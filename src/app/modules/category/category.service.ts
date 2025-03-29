@@ -13,13 +13,14 @@ const createCategoryService = async (payload: ICategory) => {
     throw new AppError(401, 'This category is already exists.');
   }
 
-  const result = categoryModel.create(payload);
+  const result = await categoryModel.create(payload);
+
   return result;
 };
 
 const getAllCategoryService = async (query: Record<string, unknown>) => {
   const categoryQuery = new QueryBuilder(categoryModel.find(), query);
-  const category = categoryQuery.filter().paginate();
+  const category = categoryQuery.filter();
   const result = await category.modelQuery;
   return result;
 };

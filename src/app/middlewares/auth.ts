@@ -1,7 +1,6 @@
 import config from '../config';
 import AppError from '../errors/AppError';
 import { IUserRoles } from '../interface/user.roles.interface';
-import { IUser } from '../modules/user/user.interface';
 import { userModel } from '../modules/user/user.model';
 import catchAsync from '../utils/catchAsync';
 import verifyToken from '../utils/verifyJwtToken';
@@ -18,9 +17,7 @@ const auth = (...requiredRoles: IUserRoles[]) => {
 
     const { role, userId, iat } = decoded;
 
-    const user = (await userModel.findUserWithID(userId)) as IUser & {
-      _id: string;
-    };
+    const user = await userModel.findUserWithID(userId);
 
     if (!user) {
       throw new AppError(404, 'Unauthorized access. This user is not found.');

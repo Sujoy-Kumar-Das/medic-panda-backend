@@ -19,7 +19,7 @@ router.get('/category', categoryController.getAllCategoryController);
 router.get('/category/:id', categoryController.getSingleCategoryController);
 
 router.patch(
-  '/category',
+  '/category/:id',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   validateRequest(categoryValidationSchema.updateCategoryValidationSchema),
   categoryController.updateCategoryController,

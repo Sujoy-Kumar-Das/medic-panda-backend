@@ -18,8 +18,6 @@ const createProductController = catchAsync(async (req, res) => {
 });
 
 const getAllProductController = catchAsync(async (req, res) => {
-  console.log(req.query);
-
   const result = await productService.getAllProductService(req.query);
 
   sendResponse(res, {
@@ -44,14 +42,12 @@ const getSingleProductController = catchAsync(async (req, res) => {
 
 const updateProductController = catchAsync(async (req, res) => {
   const { id } = req.params;
-  // const result = await productService.updateProductService(id, req.body);
-
-  console.log({ id: id, body: req.body });
+  const result = await productService.updateProductService(id, req.body);
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    data: null,
+    data: result,
     message: 'Product updated successfully.',
   });
 });

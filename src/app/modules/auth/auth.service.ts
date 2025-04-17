@@ -2,7 +2,11 @@ import { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
 import resetPasswordEmailTemplate from '../../emailTemplate/resetPasswordEmailTemplate';
 import AppError from '../../errors/AppError';
-import { createToken } from '../../utils/createJwtToken';
+import {
+  createAccessToken,
+  createRefreshToken,
+  createToken,
+} from '../../utils/createJwtToken';
 import hashPassword from '../../utils/hashPassword';
 import { sendEmail } from '../../utils/sendEmail';
 import verifyToken from '../../utils/verifyJwtToken';
@@ -46,17 +50,9 @@ const loginService = async (payload: ILogin) => {
     userId: user._id,
   };
 
-  const accessToken = createToken(
-    jwtPayload,
-    config.access_token as string,
-    '1d',
-  );
+  const accessToken = createAccessToken({ payload: jwtPayload });
 
-  const refreshToken = createToken(
-    jwtPayload,
-    config.refresh_token as string,
-    '10d',
-  );
+  const refreshToken = createRefreshToken({ payload: jwtPayload });
 
   return {
     accessToken,
@@ -71,7 +67,9 @@ const changePasswordService = async (
   const { oldPassword, newPassword } = payload;
   const { email, role, userId } = userData;
 
-  const user = await userModel.findOne({ _id: userId, email, role });
+  const user = await userModel
+    .findOne({ _id: userId, email, role })
+    .select('+password');
 
   if (!user) {
     throw new AppError(404, 'This user is not exists');
@@ -87,8 +85,6 @@ const changePasswordService = async (
     throw new AppError(403, 'Old password is wrong.');
   }
 
-  const newHashedPassword = await hashPassword(newPassword);
-
   const isOldAndNewPasswordAreSame = await userModel.isPasswordMatched(
     newPassword,
     user.password,
@@ -97,6 +93,8 @@ const changePasswordService = async (
   if (isOldAndNewPasswordAreSame) {
     throw new AppError(401, 'New password must be different.');
   }
+
+  const newHashedPassword = await hashPassword(newPassword);
 
   await userModel.findOneAndUpdate(
     {
@@ -145,12 +143,14 @@ const forgotPassword = async (payload: { email: string }) => {
     { new: true },
   );
 
+  const jwtPayload = { role: user.role, userId: user._id };
+
   // Generate reset token (valid for 2 minutes)
-  const forgotPasswordVerificationToken = createToken(
-    { role: user.role, userId: user._id },
-    config.access_token as string,
-    '2m',
-  );
+  const forgotPasswordVerificationToken = createToken({
+    payload: jwtPayload,
+    secret: config.access_token as string,
+    expiresIn: '2m',
+  });
 
   // Retrieve user information based on role
   const userInfo =
@@ -246,11 +246,11 @@ const refreshTokenService = async (token: string) => {
     userId: user._id,
   };
 
-  const accessToken = createToken(
-    jwtPayload,
-    config.access_token as string,
-    '1d',
-  );
+  const accessToken = createToken({
+    payload: jwtPayload,
+    secret: config.access_token as string,
+    expiresIn: config.accessTokenValidation as string,
+  });
 
   return { accessToken };
 };

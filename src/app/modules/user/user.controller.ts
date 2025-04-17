@@ -1,14 +1,38 @@
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
+import { setCookie } from '../../utils/setCookie';
 import { userService } from './user.service';
 
 const createCustomerController = catchAsync(async (req, res) => {
-  const result = await userService.createCustomerService(req.body);
+  const { accessToken, refreshToken } = await userService.createCustomerService(
+    req.body,
+  );
+
+  // set access token to the cookie;
+  setCookie({
+    res,
+    name: 'accessToken',
+    value: String(accessToken),
+    options: {
+      httpOnly: true,
+      sameSite: true,
+      secure: true,
+    },
+  });
+
+  // set refresh token to the cookie;
+  setCookie({
+    res,
+    name: 'refreshToken',
+    value: String(refreshToken),
+    options: { httpOnly: true, sameSite: true, secure: true },
+  });
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: 'Customer created successfully.',
-    data: result,
+    data: accessToken,
   });
 });
 
@@ -113,7 +137,7 @@ const deleteAUserController = catchAsync(async (req, res) => {
 
 const verifyEmailLinkController = catchAsync(async (req, res) => {
   const { userId } = req.user;
-  const result = await userService.createVerifyEmailLink(userId);
+  const result = await userService.createEmailVerificationOTP(userId);
   sendResponse(res, {
     statusCode: 200,
     success: true,

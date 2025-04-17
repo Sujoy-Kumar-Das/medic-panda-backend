@@ -1,6 +1,7 @@
 import config from '../../config';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
+import { setCookie } from '../../utils/setCookie';
 import { authService } from './auth.service';
 
 const loginController = catchAsync(async (req, res) => {
@@ -8,17 +9,24 @@ const loginController = catchAsync(async (req, res) => {
     req.body,
   );
 
-  res.cookie('accessToken', accessToken, {
-    secure: config.node_env === 'production',
-    httpOnly: true,
-    sameSite: true,
-    maxAge: 1 * 24 * 60 * 60 * 1000,
+  // set access token to the cookie;
+  setCookie({
+    res,
+    name: 'accessToken',
+    value: String(accessToken),
+    options: {
+      httpOnly: true,
+      sameSite: true,
+      secure: true,
+    },
   });
 
-  res.cookie('refreshToken', refreshToken, {
-    secure: config.node_env === 'production',
-    httpOnly: true,
-    sameSite: true,
+  // set refresh token to the cookie;
+  setCookie({
+    res,
+    name: 'refreshToken',
+    value: String(refreshToken),
+    options: { httpOnly: true, sameSite: true, secure: true },
   });
 
   sendResponse(res, {

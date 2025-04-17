@@ -8,9 +8,6 @@ const createOrderController = catchAsync(async (req, res) => {
   const { userId } = req.user;
   const result = await orderService.createOrderService(userId, req.body);
 
-  // emit socket event
-  emitSocketEvents([{ event: socketEvent.order, data: result.order, userId }]);
-
   sendResponse(res, {
     success: true,
     statusCode: 200,

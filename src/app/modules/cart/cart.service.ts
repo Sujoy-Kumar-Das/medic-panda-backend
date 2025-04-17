@@ -61,15 +61,17 @@ const createCartService = async (payload: ICart) => {
 };
 
 const getAllCartProductService = async (id: string, role: string) => {
-  let result = null;
+  const result = await cartModel
+    .find({ user: id })
+    .populate({ path: 'product' });
 
-  if (role === USER_ROLE.user) {
-    result = await cartModel.find({ user: id }).populate({ path: 'product' });
-  }
+  return result;
+};
 
-  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    result = await cartModel.find();
-  }
+const getCartLengthService = async (id: string) => {
+  const result = await cartModel.countDocuments({ user: id });
+
+  console.log({ result });
 
   return result;
 };
@@ -180,4 +182,5 @@ export const cartService = {
   getSingleCartProductService,
   removeFromCartService,
   incrementCartItemService,
+  getCartLengthService,
 };

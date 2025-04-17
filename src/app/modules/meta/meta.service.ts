@@ -7,49 +7,109 @@ import { userModel } from '../user/user.model';
 import { wishListModel } from '../wishList/wishList.model';
 
 const userMetaService = async (userId: string) => {
-  // Aggregate key order stats
-  const orderStats = await orderModel.aggregate([
+  const ordersAggregation = orderModel.aggregate([
     { $match: { user: userId } },
     {
       $facet: {
-        totalOrders: [{ $count: 'count' }], // Total orders count
-        totalPurchaseAmount: [
-          { $group: { _id: null, total: { $sum: '$total' } } },
-        ], // Sum of all purchase prices
+        totalOrders: [{ $count: 'totalOrders' }],
         completedOrders: [
           { $match: { status: OrderStatus.DELIVERED } },
-          { $count: 'count' },
-        ], // Delivered orders count
+          { $count: 'completedOrders' },
+        ],
+        totalPurchaseAmount: [
+          {
+            $match: {
+              status: OrderStatus.DELIVERED,
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalPurchaseAmount: { $sum: '$total' },
+            },
+          },
+          { $count: 'totalPurchaseAmount' },
+        ],
         pendingOrders: [
           { $match: { status: OrderStatus.PENDING } },
-          { $count: 'count' },
-        ], // Pending orders count
+          { $count: 'pendingOrders' },
+        ],
         returnedOrders: [
           { $match: { status: OrderStatus.RETURNED } },
-          { $count: 'count' },
-        ], // Returned orders count
-        unpaidOrders: [{ $match: { isPaid: false } }, { $count: 'count' }],
+          { $count: 'returnedOrders' },
+        ],
+        unpaidOrders: [
+          { $match: { isPaid: false } },
+          { $count: 'unpaidOrders' },
+        ],
+        paidOrders: [{ $match: { isPaid: true } }, { $count: 'paidOrders' }],
+        canceledOrders: [
+          { $match: { status: OrderStatus.CANCELED } },
+          { $count: 'canceledOrders' },
+        ],
+      },
+    },
+    {
+      $project: {
+        totalOrders: {
+          $ifNull: [{ $arrayElemAt: ['$totalOrders.totalOrders', 0] }, 0],
+        },
+        totalPaidOrder: {
+          $ifNull: [{ $arrayElemAt: ['$paidOrders.paidOrders', 0] }, 0],
+        },
+        totalCompletedOrders: {
+          $ifNull: [
+            { $arrayElemAt: ['$completedOrders.completedOrders', 0] },
+            0,
+          ],
+        },
+        totalPendingOrders: {
+          $ifNull: [{ $arrayElemAt: ['$pendingOrders.pendingOrders', 0] }, 0],
+        },
+        totalUnpaid: {
+          $ifNull: [{ $arrayElemAt: ['$unpaidOrders.unpaidOrders', 0] }, 0],
+        },
+        totalReturnedOrders: {
+          $ifNull: [{ $arrayElemAt: ['$returnedOrders.returnedOrders', 0] }, 0],
+        },
+        totalCancelOrder: {
+          $ifNull: [{ $arrayElemAt: ['$canceledOrders.canceledOrders', 0] }, 0],
+        },
+        totalPurchaseAmount: {
+          $ifNull: [
+            { $arrayElemAt: ['$totalPurchaseAmount.totalPurchaseAmount', 0] },
+            0,
+          ],
+        },
       },
     },
   ]);
 
-  // Wishlist and cart items count
-  const wishlistCount = await wishListModel.countDocuments({ user: userId });
-  const cartCount = await cartModel.countDocuments({ user: userId });
+  const wishlistCount = wishListModel.countDocuments({ user: userId });
+  const cartCount = cartModel.countDocuments({ user: userId });
 
-  // Extract stats with fallback values
-  const stats = orderStats[0];
-
-  return {
-    totalOrders: stats.totalOrders[0]?.count || 0,
-    totalPurchaseAmount: stats.totalPurchaseAmount[0]?.total || 0,
-    completedOrders: stats.completedOrders[0]?.count || 0,
-    pendingOrders: stats.pendingOrders[0]?.count || 0,
-    returnedOrders: stats.returnedOrders[0]?.count || 0,
+  const [orderCount, totalWishListItem, totalCartItem] = await Promise.all([
+    ordersAggregation,
     wishlistCount,
     cartCount,
-    unpaidOrders: stats.unpaidOrders[0]?.count || 0,
-  };
+  ]);
+
+  const orderStats = orderCount[0];
+
+  const result = [
+    { title: 'Total Orders', value: orderStats?.totalOrders },
+    { title: 'Completed Orders', value: orderStats?.totalCompletedOrders },
+    { title: 'Pending Orders', value: orderStats?.totalPendingOrders },
+    { title: 'Canceled Orders', value: orderStats?.totalCancelOrder },
+    { title: 'Returned Orders', value: orderStats?.totalReturnedOrders },
+    { title: 'Paid Orders', value: orderStats?.totalPaidOrder },
+    { title: 'Unpaid Orders', value: orderStats?.totalUnpaid },
+    { title: 'Total Purchase Amount', value: orderStats?.totalPurchaseAmount },
+    { title: 'Total Wishlist Items', value: totalWishListItem },
+    { title: 'Total Cart Items', value: totalCartItem },
+  ];
+
+  return result;
 };
 
 const adminMetaDataService = async () => {

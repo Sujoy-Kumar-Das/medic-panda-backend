@@ -1,7 +1,11 @@
 import { model, Schema } from 'mongoose';
-import { IOrder, IShippingAddress, OrderStatus } from './order.interface';
-
-export const orderShippingAddressSchema = new Schema<IShippingAddress>(
+import {
+  IOrder,
+  IShippingAddress,
+  IShippingInfo,
+  OrderStatus,
+} from './order.interface';
+const orderShippingAddressSchema = new Schema<IShippingAddress>(
   {
     city: {
       type: String,
@@ -19,9 +23,35 @@ export const orderShippingAddressSchema = new Schema<IShippingAddress>(
       type: String,
       required: [true, 'Street is required.'],
     },
+  },
+  {
+    _id: false,
+    versionKey: false,
+  },
+);
+
+const orderShippingInfoSchema = new Schema<IShippingInfo>(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required.'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required.'],
+      lowercase: true,
+      trim: true,
+      match: [/\S+@\S+\.\S+/, 'Please provide a valid email.'],
+    },
     contact: {
       type: String,
       required: [true, 'Contact number is required.'],
+      trim: true,
+    },
+    address: {
+      type: orderShippingAddressSchema,
+      required: true,
     },
   },
   {
@@ -44,8 +74,8 @@ const orderSchema = new Schema<IOrder>(
     paymentId: {
       type: String,
     },
-    shippingAddress: {
-      type: orderShippingAddressSchema,
+    shippingInfo: {
+      type: orderShippingInfoSchema,
       required: [true, 'Shipping address is required.'],
     },
     quantity: {

@@ -11,17 +11,22 @@ export enum OrderStatus {
 }
 
 export interface IShippingAddress {
-  city: string;
   street: string;
+  city: string;
   postalCode: string;
   country: string;
+}
+export interface IShippingInfo {
+  name: string;
+  email: string;
   contact: string;
+  address: IShippingAddress;
 }
 
 export interface IOrder {
   user: Types.ObjectId;
   product: Types.ObjectId;
-  shippingAddress?: IShippingAddress;
+  shippingInfo?: IShippingInfo;
   paymentId: string;
   quantity: number;
   total: number;

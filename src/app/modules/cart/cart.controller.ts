@@ -43,6 +43,19 @@ const getAllCartProductController = catchAsync(async (req, res) => {
   });
 });
 
+const getCartLengthController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+
+  const result = await cartService.getCartLengthService(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Cart length fetched successfully.',
+    data: result,
+  });
+});
+
 const getSingleCartProductController = catchAsync(async (req, res) => {
   const { userId, role } = req.user;
   const { id } = req.params;
@@ -101,4 +114,5 @@ export const cartController = {
   getAllCartProductController,
   removeCartProductController,
   incrementCartProductController,
+  getCartLengthController,
 };

@@ -10,7 +10,7 @@ import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
 import { userModel } from '../user/user.model';
 import { allowedOrderStatusTransitions } from './allowedOrderStatusTransitions';
-import { IOrder, IShippingAddress, OrderStatus } from './order.interface';
+import { IOrder, IShippingInfo, OrderStatus } from './order.interface';
 import { orderModel } from './order.model';
 
 const createOrderService = async (id: string, payload: Partial<IOrder>) => {
@@ -95,8 +95,10 @@ const createOrderService = async (id: string, payload: Partial<IOrder>) => {
 
     // destructuring payload.shippingAddress
 
-    const { city, country, contact, street, postalCode } =
-      payload.shippingAddress as IShippingAddress;
+    const {
+      address: { city, country, street, postalCode },
+      contact,
+    } = payload.shippingInfo as IShippingInfo;
 
     const paymentData = {
       total: payload.total,
@@ -145,11 +147,11 @@ const createOrderService = async (id: string, payload: Partial<IOrder>) => {
       order,
       cartId: cartRes._id,
     };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     await session.abortTransaction(); // Rollback transaction on error
     session.endSession();
     throw new AppError(403, 'Failed To place order');
+    console.log(error);
   }
 };
 
@@ -189,21 +191,18 @@ const getAllOrderService = async (
 
 // get all order by user
 const getSingleOrderService = async (id: string, userId: string) => {
-  const order = await orderModel
-    .findOne({ _id: id, user: userId })
-    .populate('product');
+  const [order, userInfo] = await Promise.all([
+    orderModel.findOne({ _id: id, user: userId }).populate('product'),
+    customerModel.findOne({ user: userId }).populate('user'),
+  ]);
+
+  if (!order) throw new AppError(404, 'Order not found');
 
   const paymentInfo = await PaymentModel.findOne({
-    transactionId: order?.paymentId,
+    transactionId: order.paymentId,
   });
 
-  const userInfo = await customerModel
-    .findOne({ user: userId })
-    .populate('user');
-
-  const result = { order, userInfo, paymentInfo };
-
-  return result;
+  return { order, userInfo, paymentInfo };
 };
 
 // get all order by user
@@ -311,5 +310,5 @@ export const orderService = {
   getSingleOrderService,
   deleteOrderService,
   changeOrderStatusService,
-  getSingleOrderServiceByAdmin
+  getSingleOrderServiceByAdmin,
 };

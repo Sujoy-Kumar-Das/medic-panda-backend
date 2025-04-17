@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Server as HTTPServer } from 'http';
-import jwt from 'jsonwebtoken';
 import { Server } from 'socket.io';
 import config from '../config';
 import { socketEvent } from './socket.event';
@@ -16,31 +15,32 @@ export const initializeSocket = (server: HTTPServer): void => {
       credentials: true,
       methods: ['GET', 'POST'],
     },
+    transports: ['websocket', 'polling'],
   });
 
   io.on(socketEvent.connection, (socket) => {
-    console.log('A user connected');
+    console.log('A user connected from connection', socket.id);
 
-    const token = socket?.handshake?.auth?.token;
-    let userId: string | null = null;
+    // const token = socket?.handshake?.auth?.token;
+    const userId: string = socket.id;
 
-    if (token) {
-      try {
-        const decoded: any = jwt.verify(token, config.access_token as string);
+    // if (token) {
+    //   try {
+    //     const decoded: any = jwt.verify(token, config.access_token as string);
 
-        userId = decoded.userId;
-      } catch (error) {
-        console.error('Invalid token', error);
-        userId = null;
-      }
-    }
+    //     userId = decoded.userId;
+    //   } catch (error) {
+    //     console.error('Invalid token', error);
+    //     userId = null;
+    //   }
+    // }
 
-    if (userId) {
-      const userRoom = userId.toString();
-      socket.join(userRoom);
-      userSockets.set(socket.id, userId);
-      console.log(`User ${userId} joined room ${userId}`);
-    }
+    // if (userId) {
+    //   const userRoom = userId.toString();
+    //   socket.join(userRoom);
+    //   userSockets.set(socket.id, userId);
+    //   console.log(`User ${userId} joined room ${userId}`);
+    // }
 
     // Listen for specific events
     socket.on(socketEvent.product, (data: any) => {

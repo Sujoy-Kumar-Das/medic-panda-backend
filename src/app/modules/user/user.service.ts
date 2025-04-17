@@ -4,6 +4,10 @@ import QueryBuilder from '../../builder/queryBuilder';
 import sendOtpEmailTemplate from '../../emailTemplate/verifyUserEmailTemplate';
 import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
+import {
+  createAccessToken,
+  createRefreshToken,
+} from '../../utils/createJwtToken';
 import generateOTP from '../../utils/generateOTP';
 import { sendEmail } from '../../utils/sendEmail';
 import { IAdmin } from '../admin/admin.interface';
@@ -78,7 +82,15 @@ const createCustomerService = async (payload: ICustomerPayload) => {
     await session.commitTransaction();
     await session.endSession();
 
-    return createCustomer[0];
+    const jwtPayload = {
+      role: createUser[0].role,
+      userId: createUser[0]._id,
+    };
+
+    const accessToken = createAccessToken({ payload: jwtPayload });
+    const refreshToken = createRefreshToken({ payload: jwtPayload });
+
+    return { accessToken, refreshToken };
   } catch (error) {
     await session.abortTransaction();
     await session.endSession();
@@ -407,8 +419,8 @@ const deleteUsrService = async (payload: { id: string }) => {
 };
 
 // createVerifyEmailLink
-const createVerifyEmailLink = async (id: string) => {
-  const user = await userModel.findById(id);
+const createEmailVerificationOTP = async (id: string) => {
+  const user = await userModel.findUserWithID(id);
 
   if (!user) {
     throw new AppError(404, 'User not found.');
@@ -434,11 +446,14 @@ const createVerifyEmailLink = async (id: string) => {
   }
 
   const otpCode = generateOTP();
-  const result = await userModel.findOneAndUpdate(
-    { _id: user._id },
-    { otpCode, otpTime: new Date() },
-    { new: true },
-  );
+
+  const result = await userModel
+    .findOneAndUpdate(
+      { _id: user._id },
+      { otpCode, otpTime: new Date() },
+      { new: true },
+    )
+    .select('+otpCode +otpTime');
 
   if (!result?.otpCode || !result.otpTime) {
     throw new AppError(404, 'OTP generation failed.');
@@ -462,7 +477,7 @@ const confirmVerification = async (
 ) => {
   const { otp } = payload;
 
-  const user = await userModel.findOne({ _id: userId, role });
+  const user = await userModel.findUserWithID(userId);
 
   // Check if user exists
   if (!user) {
@@ -506,11 +521,13 @@ const confirmVerification = async (
   }
 
   // Mark user as verified and reset the wrong attempt counter
-  const result = await userModel.findOneAndUpdate(
-    { _id: user._id, role },
-    { isVerified: true, wrongOTPAttempt: 0 }, // Reset wrong attempts on success
-    { new: true },
-  );
+  const result = await userModel
+    .findOneAndUpdate(
+      { _id: user._id, role },
+      { isVerified: true, wrongOTPAttempt: 0 },
+      { new: true },
+    )
+    .select('+isVerified');
 
   // Check if the update was successful
   if (!result?.isVerified) {
@@ -521,7 +538,6 @@ const confirmVerification = async (
 };
 
 // update user info
-
 const updateUserInfo = async (
   id: string,
   role: IUserRoles,
@@ -564,7 +580,7 @@ export const userService = {
   getAllUsers,
   getSingleUser,
   getAllBlockedUsers,
-  createVerifyEmailLink,
+  createEmailVerificationOTP,
   confirmVerification,
   updateUserInfo,
 };

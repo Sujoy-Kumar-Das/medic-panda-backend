@@ -24,7 +24,7 @@ const userSchema = new Schema<IUser, IUserMethods>(
     },
     role: {
       type: String,
-      enum: ['user', 'admin', 'super-admin'],
+      enum: ['user', 'admin', 'superAdmin'],
       default: 'user',
     },
     isBlocked: {
@@ -69,8 +69,18 @@ const userSchema = new Schema<IUser, IUserMethods>(
   {
     versionKey: false,
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
 );
+
+// using virtuals for link customer to user
+userSchema.virtual('customer', {
+  ref: 'customer',
+  localField: '_id',
+  foreignField: 'user',
+  justOne: true,
+});
 
 // is user exists statics
 userSchema.statics.isUserExists = function (email: string) {

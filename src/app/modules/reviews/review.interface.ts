@@ -10,5 +10,6 @@ export interface IReview {
   user: Types.ObjectId;
   comment: string;
   rating: number;
-  replies?: IReply[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }

@@ -71,8 +71,6 @@ const getAllCartProductService = async (id: string, role: string) => {
 const getCartLengthService = async (id: string) => {
   const result = await cartModel.countDocuments({ user: id });
 
-  console.log({ result });
-
   return result;
 };
 

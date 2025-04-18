@@ -29,4 +29,6 @@ export default {
   socketFrontendLink: process.env.socket_frontend_link,
   accessTokenValidation: process.env.jwt_access_token_validation,
   refreshTokenValidation: process.env.jwt_refresh_token_validation,
+  supperAdminPassword: process.env.supper_admin_password,
+  supperAdminEmail: process.env.supper_admin_email,
 };

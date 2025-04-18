@@ -4,7 +4,7 @@ import { IUserPermanentAddress } from '../customer/customer.interface';
 export interface IAdmin {
   user: Types.ObjectId;
   name: string;
-  photo: string;
+  photo?: string;
   contact: string | null;
   address: IUserPermanentAddress;
   isDeleted: boolean;

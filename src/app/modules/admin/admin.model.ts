@@ -14,7 +14,7 @@ const adminSchema = new Schema<IAdmin>(
     },
     photo: {
       type: String,
-      required: [true, 'Photo is required.'],
+      required: false,
     },
     contact: {
       type: String,

@@ -14,7 +14,28 @@ router.post(
   reviewController.createReviewController,
 );
 
+router.post(
+  '/review/:reviewId',
+  auth(USER_ROLE.user),
+  validateRequest(reviewValidationSchema.addReply),
+  reviewController.addReplyController,
+);
+
+// get products all reviews;
 router.get('/review/:productId', reviewController.getAllReviewController);
+
+// get the review details data;
+router.get(
+  '/review-details/:reviewId',
+  reviewController.getReviewDetailsController,
+);
+
+router.patch(
+  '/review/:reviewId',
+  validateRequest(reviewValidationSchema.editReview),
+  auth(USER_ROLE.user),
+  reviewController.editReviewController,
+);
 
 router.delete(
   '/review/:productId',

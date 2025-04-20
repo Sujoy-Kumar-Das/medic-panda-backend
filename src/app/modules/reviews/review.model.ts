@@ -1,5 +1,24 @@
 import { Schema, model } from 'mongoose';
-import { IReview } from './review.interface';
+import { IReply, IReview } from './review.interface';
+
+const replySchema = new Schema<IReply>(
+  {
+    reply: {
+      type: String,
+      required: [true, 'Reply Required.'],
+      min: 3,
+      trim: true,
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'user',
+      required: [true, 'User Id is required.'],
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
 const reviewSchema = new Schema<IReview>(
   {
@@ -22,6 +41,10 @@ const reviewSchema = new Schema<IReview>(
       required: true,
       min: 1,
       max: 5,
+    },
+    replies: {
+      type: [replySchema],
+      default: [],
     },
   },
   {

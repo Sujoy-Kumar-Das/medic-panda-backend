@@ -16,4 +16,10 @@ router.post(
 
 router.get('/review/:productId', reviewController.getAllReviewController);
 
+router.delete(
+  '/review/:productId',
+  auth(USER_ROLE.user),
+  reviewController.deleteReviewController,
+);
+
 export const reviewRouter = router;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const createReview = z.object({
+const createReview = z.object({
   body: z.object({
     product: z
       .string({
@@ -33,6 +33,38 @@ export const createReview = z.object({
   }),
 });
 
+const editReview = z.object({
+  body: z.object({
+    comment: z
+      .string({
+        required_error: 'Comment is required',
+        invalid_type_error: 'Comment must be a string',
+      })
+      .min(3, 'Comment must be at least 3 characters'),
+
+    rating: z
+      .number({
+        required_error: 'Rating is required',
+        invalid_type_error: 'Rating must be a number',
+      })
+      .min(1, 'Rating must be at least 1')
+      .max(5, 'Rating cannot exceed 5'),
+  }),
+});
+
+const addReply = z.object({
+  body: z.object({
+    reply: z
+      .string({
+        required_error: 'Reply is required',
+        invalid_type_error: 'Reply must be a string',
+      })
+      .min(3, 'Reply must be at least 3 characters'),
+  }),
+});
+
 export const reviewValidationSchema = {
   createReview,
+  editReview,
+  addReply,
 };

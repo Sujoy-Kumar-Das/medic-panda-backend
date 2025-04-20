@@ -24,7 +24,20 @@ const getAllReviewController = catchAsync(async (req, res) => {
   });
 });
 
+const deleteReviewController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const { productId } = req.params;
+  const result = await reviewService.deleteReviewService(productId, userId);
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: 200,
+    message: 'Review deleted successfully.',
+  });
+});
+
 export const reviewController = {
   createReviewController,
   getAllReviewController,
+  deleteReviewController,
 };

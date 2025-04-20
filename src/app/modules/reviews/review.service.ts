@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import AppError from '../../errors/AppError';
 import { productModel } from '../product/porduct.model';
 import { IReview } from './review.interface';
@@ -55,7 +56,24 @@ const getAllReviewService = async ({ productId }: { productId: string }) => {
   return result;
 };
 
+const deleteReviewService = async (id: string, userId: Types.ObjectId) => {
+  const review = await reviewModel.findById(id);
+
+  if (!review) {
+    throw new AppError(404, 'This review is not found.');
+  }
+
+  if (!userId.equals(review.user)) {
+    throw new AppError(403, "Access denied! You can't delete this comment.");
+  }
+
+  await reviewModel.findByIdAndDelete(id);
+
+  return null;
+};
+
 export const reviewService = {
   createReviewService,
   getAllReviewService,
+  deleteReviewService,
 };

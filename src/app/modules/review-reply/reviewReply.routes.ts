@@ -16,6 +16,17 @@ router.post(
 
 router.get('/review/reply/:reviewId', replyController.getAllReplyController);
 
+router.get(
+  '/review/reply/details/:replyId',
+  replyController.getSingleReplyController,
+);
+
+router.patch(
+  '/review/reply/:reviewId',
+  auth(USER_ROLE.user),
+  replyController.editReplyController,
+);
+
 router.delete(
   '/review/reply/:reviewId',
   auth(USER_ROLE.user),

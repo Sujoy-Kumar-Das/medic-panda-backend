@@ -2,7 +2,8 @@
 import { Types } from 'mongoose';
 import AppError from '../../errors/AppError';
 import { productModel } from '../product/porduct.model';
-import { IReply, IReview } from './review.interface';
+import { replyModel } from '../review-reply/reviewReply.model';
+import { IReview } from './review.interface';
 import { reviewModel } from './review.model';
 
 const createReviewService = async (payload: IReview) => {
@@ -146,6 +147,7 @@ const deleteReviewService = async (id: string, userId: Types.ObjectId) => {
     throw new AppError(403, "Access denied! You can't delete this comment.");
   }
 
+  await replyModel.deleteMany({ review: review._id });
   await reviewModel.findByIdAndDelete(id);
 
   return null;

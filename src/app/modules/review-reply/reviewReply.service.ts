@@ -55,6 +55,57 @@ const getAllReplyService = async (reviewId: string) => {
   }));
 };
 
+const getSingleReplyService = async (replyId: string) => {
+  const reply = await replyModel.findById(replyId).populate({
+    path: 'user',
+    select: '_id',
+    populate: {
+      path: 'customer',
+      select: 'name photo',
+    },
+  });
+
+  if (!reply) {
+    throw new AppError(404, 'This Reply is not found.');
+  }
+
+  const user = reply?.user as any;
+
+  return {
+    _id: reply._id,
+    reviewId: reply.review,
+    reply: reply.reply,
+    user: user.customer
+      ? {
+          _id: user._id,
+          name: user.customer.name,
+          photo: user.customer.photo,
+        }
+      : null,
+  };
+};
+
+const editReplyService = async (
+  userId: Types.ObjectId,
+  replyId: string,
+  payload: Partial<IReply>,
+) => {
+  const reply = await replyModel.findById(replyId);
+
+  if (!reply) {
+    throw new AppError(404, 'This reply is not found.');
+  }
+
+  if (!userId.equals(reply.user)) {
+    throw new AppError(403, "Access denied! You can't delete this comment.");
+  }
+
+  return await replyModel.findByIdAndUpdate(replyId, payload, {
+    new: true,
+    runValidators: true,
+  });
+};
+
 const deleteReplyService = async (userId: Types.ObjectId, replyId: string) => {
   const reply = await replyModel.findById(replyId);
 
@@ -74,5 +125,7 @@ const deleteReplyService = async (userId: Types.ObjectId, replyId: string) => {
 export const replyService = {
   addReplyService,
   getAllReplyService,
+  getSingleReplyService,
+  editReplyService,
   deleteReplyService,
 };

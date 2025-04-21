@@ -14,13 +14,6 @@ router.post(
   reviewController.createReviewController,
 );
 
-router.post(
-  '/review/:reviewId',
-  auth(USER_ROLE.user),
-  validateRequest(reviewValidationSchema.addReply),
-  reviewController.addReplyController,
-);
-
 // get products all reviews;
 router.get('/review/:productId', reviewController.getAllReviewController);
 

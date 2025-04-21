@@ -9,6 +9,7 @@ import { metaRouter } from '../modules/meta/meta.routes';
 import { orderRoutes } from '../modules/orders/order.routes';
 import { paymentRouter } from '../modules/payment/payment.routes';
 import { productRoutes } from '../modules/product/porduct.routes';
+import { replyRouter } from '../modules/review-reply/reviewReply.routes';
 import { reviewRouter } from '../modules/reviews/review.routes';
 import { userRoutes } from '../modules/user/user.routes';
 import { wishListRouter } from '../modules/wishList/wishList.routes';
@@ -31,6 +32,7 @@ const modulesRoutes = [
   { path: '/api/v1/', route: wishListRouter },
   { path: '/api/v1/', route: metaRouter },
   { path: '/api/v1/', route: reviewRouter },
+  { path: '/api/v1/', route: replyRouter },
 ];
 
 modulesRoutes.map((route) => router.use(route.path, route.route));

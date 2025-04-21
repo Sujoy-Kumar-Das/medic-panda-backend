@@ -19,39 +19,6 @@ const createReviewService = async (payload: IReview) => {
   return result;
 };
 
-const addReplyService = async (
-  reviewId: string,
-  userId: string,
-  payload: Partial<IReply>,
-) => {
-  const review = await reviewModel.findById(reviewId);
-
-  if (!review) {
-    throw new AppError(404, 'This review is not found.');
-  }
-
-  const replyData: IReply = {
-    reply: payload.reply as string,
-    user: new Types.ObjectId(userId),
-  };
-
-  const updatedReview = await reviewModel.findByIdAndUpdate(
-    reviewId,
-    {
-      $push: {
-        replies: replyData,
-      },
-    },
-    { new: true, runValidators: true },
-  );
-
-  if (!updatedReview) {
-    throw new AppError(404, 'Failed to add reply');
-  }
-
-  return updatedReview;
-};
-
 const getReviewDetailsService = async ({ reviewId }: { reviewId: string }) => {
   const review = await reviewModel.findById(reviewId).populate({
     path: 'user',
@@ -186,7 +153,6 @@ const deleteReviewService = async (id: string, userId: Types.ObjectId) => {
 
 export const reviewService = {
   createReviewService,
-  addReplyService,
   getAllReviewServiceByProduct,
   getReviewDetailsService,
   editReviewService,

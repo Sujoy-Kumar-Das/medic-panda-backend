@@ -12,20 +12,6 @@ const createReviewController = catchAsync(async (req, res) => {
   });
 });
 
-const addReplyController = catchAsync(async (req, res) => {
-  const result = await reviewService.addReplyService(
-    req.params.reviewId,
-    req.user.userId,
-    req.body,
-  );
-  sendResponse(res, {
-    data: null,
-    success: true,
-    statusCode: 200,
-    message: 'Reply added successfully.',
-  });
-});
-
 const getAllReviewController = catchAsync(async (req, res) => {
   const result = await reviewService.getAllReviewServiceByProduct({
     productId: req.params.productId,
@@ -81,7 +67,6 @@ const deleteReviewController = catchAsync(async (req, res) => {
 
 export const reviewController = {
   createReviewController,
-  addReplyController,
   getAllReviewController,
   getReviewDetailsController,
   editReviewController,

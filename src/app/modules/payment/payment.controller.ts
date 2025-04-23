@@ -19,13 +19,7 @@ const payNowController = catchAsync(async (req, res) => {
 });
 
 const successPaymentController = catchAsync(async (req, res) => {
-  const { userId, order } = await paymentService.successPaymentService(
-    req.body,
-  );
-
-  // emit socket event
-  emitSocketEvent(socketEvent.order, order, userId.toString());
-
+  await paymentService.successPaymentService(req.body);
   res.redirect(config.success_frontend_link as string);
 });
 

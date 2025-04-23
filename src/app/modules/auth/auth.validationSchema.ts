@@ -57,11 +57,11 @@ const passwordSchema = z
 const resetPasswordBodySchema = z
   .object({
     password: passwordSchema,
-    newPassword: passwordSchema,
+    confirmPassword: passwordSchema,
   })
-  .refine((data) => data.password !== data.newPassword, {
-    message: 'New password must be different from the old password.',
-    path: ['newPassword'],
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Password Do Not Match.',
+    path: ['confirmPassword'],
   });
 
 const resetPasswordValidationSchema = z.object({

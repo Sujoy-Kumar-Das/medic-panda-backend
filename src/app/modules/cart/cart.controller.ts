@@ -1,5 +1,3 @@
-import { emitSocketEvents } from '../../socket/emitSocket';
-import { socketEvent } from '../../socket/socket.event';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { cartService } from './cart.service';
@@ -15,18 +13,11 @@ const createCartController = catchAsync(async (req, res) => {
     quantity,
   });
 
-  const cartData = await result?.populate('product');
-
-  // emit socket event
-  emitSocketEvents([
-    { event: socketEvent.cart, data: result, userId: userId.toString() },
-  ]);
-
   sendResponse(res, {
     success: true,
     statusCode: 200,
     message: 'Product added in cart.',
-    data: cartData,
+    data: result,
   });
 });
 

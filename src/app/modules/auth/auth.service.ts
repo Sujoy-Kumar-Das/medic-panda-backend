@@ -2,6 +2,7 @@ import { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
 import resetPasswordEmailTemplate from '../../emailTemplate/resetPasswordEmailTemplate';
 import AppError from '../../errors/AppError';
+import { compareTime } from '../../utils';
 import {
   createAccessToken,
   createRefreshToken,
@@ -114,7 +115,7 @@ const forgotPassword = async (payload: { email: string }) => {
   const { email } = payload;
 
   // Find user by email
-  const user = await userModel.findOne({ email });
+  const user = await userModel.findOne({ email }).select('+resetTime');
   if (!user || user.isBlocked || user.isDeleted) {
     throw new AppError(
       404,
@@ -127,9 +128,7 @@ const forgotPassword = async (payload: { email: string }) => {
   }
 
   // Check if the reset request is within the 2-minute limit
-  const now = new Date();
-  const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
-  if (user.resetTime && user.resetTime > twoMinutesAgo) {
+  if (user.resetTime && !compareTime(user.resetTime, 2)) {
     throw new AppError(
       401,
       'You can request a password reset only once every 2 minutes.',
@@ -139,7 +138,7 @@ const forgotPassword = async (payload: { email: string }) => {
   // Update resetTime
   await userModel.findByIdAndUpdate(
     user._id,
-    { resetTime: now },
+    { resetTime: new Date() },
     { new: true },
   );
 

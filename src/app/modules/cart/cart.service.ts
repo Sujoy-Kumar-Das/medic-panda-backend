@@ -56,7 +56,9 @@ const createCartService = async (payload: ICart) => {
       await wishListModel.findOneAndDelete({ product, user: userId });
     }
 
-    return newCartItem;
+    const result = await newCartItem?.populate('product');
+
+    return result;
   }
 };
 

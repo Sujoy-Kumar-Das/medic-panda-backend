@@ -148,7 +148,7 @@ const forgotPassword = async (payload: { email: string }) => {
   const forgotPasswordVerificationToken = createToken({
     payload: jwtPayload,
     secret: config.access_token as string,
-    expiresIn: '2m',
+    expiresIn: '20m',
   });
 
   // Retrieve user information based on role
@@ -175,13 +175,15 @@ const forgotPassword = async (payload: { email: string }) => {
 
 const resetPassword = async (
   token: string,
-  payload: { newPassword: string },
+  payload: { password: string; confirmPassword: string },
 ) => {
   const decoded = verifyToken(token, config.access_token as string);
 
   const { role, userId } = decoded;
 
-  const user = await userModel.findOne({ _id: userId, role });
+  const user = await userModel
+    .findOne({ _id: userId, role })
+    .select('+isBlocked +isDeleted');
 
   if (!user) {
     throw new AppError(404, 'This user is not exists');
@@ -195,7 +197,7 @@ const resetPassword = async (
     throw new AppError(404, 'This user is not found.');
   }
 
-  const newHashedPassword = await hashPassword(payload.newPassword);
+  const newHashedPassword = await hashPassword(payload.confirmPassword);
 
   return await userModel.findOneAndUpdate(
     { _id: user._id, role: user.role },

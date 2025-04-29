@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import AppError from '../errors/AppError';
 
@@ -9,8 +8,8 @@ const verifyToken = (token: string, secret: string) => {
     }
     const decoded = jwt.verify(token, secret) as JwtPayload;
     return decoded;
-  } catch (error) {
-    throw new AppError(401, 'unauthorize access');
+  } catch {
+    throw new AppError(401, 'Invalid token.Please try again.');
   }
 };
 

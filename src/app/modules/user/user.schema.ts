@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const phoneRegex = /^(\+?\d{1,3}[- ]?)?\d{10}$/;
+
 const userAddressValidationSchema = z.object({
   city: z.string({ required_error: 'City is required.' }).optional(),
   street: z.string({ required_error: 'State is required.' }).optional(),
@@ -59,7 +61,8 @@ const updateUserValidationSchema = z.object({
         .url({ message: 'Image URL is invalid.' })
         .optional(),
       contact: z
-        .number({ required_error: 'Contact number is required.' })
+        .string({ required_error: 'Contact number is required.' })
+        .regex(phoneRegex, { message: 'Contact number is invalid.' })
         .optional(),
       address: userAddressValidationSchema.optional(),
     })

@@ -148,7 +148,7 @@ const forgotPassword = async (payload: { email: string }) => {
   const forgotPasswordVerificationToken = createToken({
     payload: jwtPayload,
     secret: config.access_token as string,
-    expiresIn: '20m',
+    expiresIn: '2m',
   });
 
   // Retrieve user information based on role

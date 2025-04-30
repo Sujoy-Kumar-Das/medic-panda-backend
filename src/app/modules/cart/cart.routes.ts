@@ -16,34 +16,39 @@ router.post(
 
 router.get(
   '/cart',
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.user),
   cartController.getAllCartProductController,
 );
 
 router.get(
   '/cart-length',
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.user),
   cartController.getCartLengthController,
 );
 
 router.get(
   '/cart/:id',
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.user),
   cartController.getSingleCartProductController,
 );
 
 router.patch(
-  '/cart/:id',
+  '/cart/increment/:id',
   validateRequest(cartValidationSchema.updateCartValidationSchema),
   auth(USER_ROLE.user),
   cartController.incrementCartProductController,
 );
 
+router.patch(
+  '/cart/decrement/:id',
+  auth(USER_ROLE.user),
+  cartController.decrementCartController,
+);
+
 router.delete(
   '/cart/:id',
-  validateRequest(cartValidationSchema.updateCartValidationSchema),
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
-  cartController.removeCartProductController,
+  auth(USER_ROLE.user),
+  cartController.deleteCartController,
 );
 
 export const cartRouter = router;

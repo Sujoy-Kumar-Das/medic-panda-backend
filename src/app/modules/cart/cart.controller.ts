@@ -22,9 +22,9 @@ const createCartController = catchAsync(async (req, res) => {
 });
 
 const getAllCartProductController = catchAsync(async (req, res) => {
-  const { userId, role } = req.user;
+  const { userId } = req.user;
 
-  const result = await cartService.getAllCartProductService(userId, role);
+  const result = await cartService.getAllCartProductService(userId);
 
   sendResponse(res, {
     success: true,
@@ -79,17 +79,11 @@ const incrementCartProductController = catchAsync(async (req, res) => {
   });
 });
 
-const removeCartProductController = catchAsync(async (req, res) => {
+const decrementCartController = catchAsync(async (req, res) => {
   const { userId } = req.user;
   const { id } = req.params;
 
-  const { quantity } = req.body;
-
-  const result = await cartService.removeFromCartService({
-    user: userId,
-    product: id,
-    quantity: quantity || 1,
-  });
+  const result = await cartService.decrementCartService(id, userId);
 
   sendResponse(res, {
     success: true,
@@ -99,11 +93,26 @@ const removeCartProductController = catchAsync(async (req, res) => {
   });
 });
 
+const deleteCartController = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const { id } = req.params;
+
+  const result = await cartService.deleteCartService(id, userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Product removed from your cart successfully.',
+    data: result,
+  });
+});
+
 export const cartController = {
   createCartController,
   getSingleCartProductController,
   getAllCartProductController,
-  removeCartProductController,
+  decrementCartController,
   incrementCartProductController,
   getCartLengthController,
+  deleteCartController,
 };

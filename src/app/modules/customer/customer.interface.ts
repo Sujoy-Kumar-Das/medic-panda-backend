@@ -11,6 +11,6 @@ export interface ICustomer {
   user: Types.ObjectId;
   name: string;
   photo: string;
-  contact?: number | null;
+  contact?: string | null;
   address: IUserPermanentAddress;
 }

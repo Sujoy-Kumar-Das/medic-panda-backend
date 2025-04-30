@@ -7,7 +7,7 @@ import { cartModel } from './cart.model';
 
 interface ICartPayload {
   user: string;
-  product: string;
+  id: string;
   quantity: number;
 }
 
@@ -62,7 +62,7 @@ const createCartService = async (payload: ICart) => {
   }
 };
 
-const getAllCartProductService = async (id: string, role: string) => {
+const getAllCartProductService = async (id: string) => {
   const result = await cartModel
     .find({ user: id })
     .populate({ path: 'product' });
@@ -137,23 +137,20 @@ const incrementCartItemService = async (
   }
 };
 
-const removeFromCartService = async (payload: ICartPayload) => {
-  const { user: userId, product: productId, quantity } = payload;
-
-  const existingCartItem = await cartModel.findOne({
-    user: userId,
-    product: productId,
-  });
-
-  const price =
-    Number(existingCartItem?.totalPrice) / Number(existingCartItem?.quantity);
+const decrementCartService = async (id: string, userId: string) => {
+  const existingCartItem = await cartModel.findOne({ _id: id, user: userId });
 
   if (!existingCartItem) {
     throw new AppError(404, 'Cart item not found.');
   }
 
+  const price =
+    Number(existingCartItem?.totalPrice) / Number(existingCartItem?.quantity);
+
+  const quantity = existingCartItem.quantity;
+
   if (quantity) {
-    const newQuantity = Number(existingCartItem?.quantity) - quantity;
+    const newQuantity = Number(existingCartItem?.quantity) - 1;
 
     if (newQuantity <= 0) {
       return await cartModel.findByIdAndDelete(existingCartItem._id);
@@ -161,10 +158,8 @@ const removeFromCartService = async (payload: ICartPayload) => {
       const updatedCart = await cartModel.findByIdAndUpdate(
         existingCartItem._id,
         {
-          $set: {
-            quantity: newQuantity,
-            totalPrice: (price * newQuantity).toFixed(2),
-          },
+          quantity: newQuantity,
+          totalPrice: (price * newQuantity).toFixed(2),
         },
         { new: true },
       );
@@ -176,11 +171,24 @@ const removeFromCartService = async (payload: ICartPayload) => {
   }
 };
 
+const deleteCartService = async (id: string, userId: string) => {
+  const cart = await cartModel.findOne({ _id: id, user: userId });
+
+  if (!cart) {
+    throw new AppError(404, 'This item is not found.');
+  }
+
+  await cartModel.findOneAndDelete({ _id: id, user: userId });
+
+  return null;
+};
+
 export const cartService = {
   createCartService,
   getAllCartProductService,
   getSingleCartProductService,
-  removeFromCartService,
+  decrementCartService,
   incrementCartItemService,
   getCartLengthService,
+  deleteCartService,
 };

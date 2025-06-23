@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.orderRoutes = void 0;
+const express_1 = require("express");
+const auth_1 = __importDefault(require("../../middlewares/auth"));
+const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
+const user_constant_1 = require("../user/user.constant");
+const order_controller_1 = require("./order.controller");
+const order_validationSchema_1 = require("./order.validationSchema");
+const router = (0, express_1.Router)();
+router.post('/order', (0, auth_1.default)(user_constant_1.USER_ROLE.user), (0, validateRequest_1.default)(order_validationSchema_1.orderValidationSchema.createOrderValidationSchema), order_controller_1.orderController.createOrderController);
+router.get('/order/admin', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), order_controller_1.orderController.getAllOrderControllerByAdmin);
+router.get('/order', (0, auth_1.default)(user_constant_1.USER_ROLE.user), order_controller_1.orderController.getAllOrderController);
+router.get('/order/:id', (0, auth_1.default)(user_constant_1.USER_ROLE.user), order_controller_1.orderController.getSingleOrderController);
+router.get('/order/:id/admin', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), order_controller_1.orderController.getSingleOrderControllerByAdmin);
+router.patch('/order/cancel/:id', (0, auth_1.default)(user_constant_1.USER_ROLE.user), order_controller_1.orderController.cancelOrderController);
+router.patch('/order/change-status/:id', (0, validateRequest_1.default)(order_validationSchema_1.orderValidationSchema.changeOrderStatusValidationSchema), (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), order_controller_1.orderController.changeOrderStatusController);
+router.delete('/order/:id', (0, auth_1.default)(user_constant_1.USER_ROLE.user), order_controller_1.orderController.deleteOrderController);
+exports.orderRoutes = router;

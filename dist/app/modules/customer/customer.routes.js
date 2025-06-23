@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.customerRoutes = void 0;
+const express_1 = __importDefault(require("express"));
+const auth_1 = __importDefault(require("../../middlewares/auth"));
+const user_constant_1 = require("../user/user.constant");
+const customer_controller_1 = require("./customer.controller");
+const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
+const user_schema_1 = require("../user/user.schema");
+const router = express_1.default.Router();
+router.get('/', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), customer_controller_1.customerController.getAllCustomerController);
+router.get('/detail/:id', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), customer_controller_1.customerController.getSingleCustomerController);
+router.get('/block', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), customer_controller_1.customerController.getBlockCustomerController);
+router.get('/delete', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), customer_controller_1.customerController.getDeletedCustomerController);
+router.patch('/block/:id', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), customer_controller_1.customerController.blockCustomerController);
+router.delete('/delete/:id', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), customer_controller_1.customerController.deleteCustomerController);
+router.patch('/', (0, validateRequest_1.default)(user_schema_1.userValidationSchema.updateUserValidationSchema), (0, auth_1.default)(user_constant_1.USER_ROLE.user, user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), customer_controller_1.customerController.updateCustomerController);
+exports.customerRoutes = router;

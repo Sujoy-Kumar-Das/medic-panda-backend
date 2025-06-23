@@ -4,12 +4,8 @@ import app from './app';
 import config from './app/config';
 import seedSupperAdmin from './app/DB';
 import AppError from './app/errors/AppError';
-import { initializeSocket } from './app/socket/socket';
 
 export const server = createServer(app);
-
-// initialize socket
-initializeSocket(server);
 
 async function main() {
   try {

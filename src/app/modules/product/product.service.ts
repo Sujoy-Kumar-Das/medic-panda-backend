@@ -2,10 +2,12 @@ import mongoose from 'mongoose';
 import QueryBuilder from '../../builder/queryBuilder';
 import AppError from '../../errors/AppError';
 import calculateDiscount from '../../utils/calcutlateDiscount';
+
 import { categoryModel } from '../category/category.model';
 import { manufacturerModel } from '../manufacturer/manufacturer.model';
 import { IProductDetail } from '../porductDetail/productDetail.interface';
 import { productDetailModel } from '../porductDetail/productDetail.model';
+import getProductsWithWishlistStatus from './getProductsWithWishlistStatus';
 import { productModel } from './porduct.model';
 import { IProduct } from './product.interface';
 
@@ -86,7 +88,10 @@ const createProductService = async (payload: IProductPayload) => {
   }
 };
 
-const getAllProductService = async (query: Record<string, unknown>) => {
+const getAllProductService = async (
+  userId: string,
+  query: Record<string, unknown>,
+) => {
   // Check if 'category' is in the query
   if (query.category) {
     const categoryFilter = query.category as string;
@@ -103,17 +108,20 @@ const getAllProductService = async (query: Record<string, unknown>) => {
     }
   }
 
-  const productQuery = new QueryBuilder(
-    productModel
-      .find({ isDeleted: false })
-      .populate('category')
-      .populate('manufacturer'),
-    query,
-  );
-  const products = productQuery.search(['name']).filter().paginate();
-  const meta = await productQuery.countTotal();
+  const baseQuery = productModel
+    .find({ isDeleted: false })
+    .populate('category')
+    .populate('manufacturer')
+    .lean();
 
-  const result = await products.modelQuery;
+  const productQuery = new QueryBuilder(baseQuery, query);
+  const products = productQuery.search(['name']).filter().paginate();
+
+  const meta = await productQuery.countTotal({ isDeleted: false });
+
+  const productResult = await products.modelQuery;
+
+  const result = await getProductsWithWishlistStatus(productResult, userId);
 
   return { result, meta };
 };
@@ -213,32 +221,34 @@ const updateProductService = async (
 };
 
 const deleteProductService = async (id: string) => {
-  const product = await productModel.findById(id);
+  setTimeout(async () => {
+    const product = await productModel.findById(id);
 
-  if (!product) {
-    throw new AppError(404, 'This product is not found.');
-  }
+    if (!product) {
+      throw new AppError(404, 'This product is not found.');
+    }
 
-  const isDeleted = product.isDeleted;
+    const isDeleted = product.isDeleted;
 
-  if (isDeleted) {
-    throw new AppError(409, 'This product already deleted.');
-  }
+    if (isDeleted) {
+      throw new AppError(409, 'This product already deleted.');
+    }
 
-  const result = await productModel
-    .findByIdAndUpdate(
-      id,
-      {
-        isDeleted: true,
-      },
-      { new: true },
-    )
-    .select('+isDeleted');
+    const result = await productModel
+      .findByIdAndUpdate(
+        id,
+        {
+          isDeleted: true,
+        },
+        { new: true },
+      )
+      .select('+isDeleted');
 
-  if (!result?.isDeleted) {
-    throw new AppError(400, `Failed to delete ${product.name} `);
-  }
-  return null;
+    if (!result?.isDeleted) {
+      throw new AppError(400, `Failed to delete ${product.name} `);
+    }
+    return null;
+  }, 5000);
 };
 
 export const productService = {

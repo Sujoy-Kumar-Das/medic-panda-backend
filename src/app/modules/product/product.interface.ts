@@ -4,8 +4,8 @@ export interface IDiscount {
   discountStatus: boolean;
   percentage: number;
   discountPrice?: number;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
   startTime: string;
   endTime: string;
 }
@@ -13,7 +13,7 @@ export interface IDiscount {
 export interface IProduct {
   name: string;
   price: number;
-  discount?: IDiscount | undefined;
+  discount?: IDiscount | null;
   stockStatus?: boolean;
   thumbnail: string;
   category: Types.ObjectId;

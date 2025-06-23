@@ -53,14 +53,10 @@ const getSingleWishListProductController = catchAsync(async (req, res) => {
 });
 
 const removeWishListProductController = catchAsync(async (req, res) => {
-  const { userId, role } = req.user;
+  const { userId } = req.user;
   const { id } = req.params;
 
-  const result = await wishListService.removeFromWishListService(
-    userId,
-    id,
-    role,
-  );
+  const result = await wishListService.removeFromWishListService(userId, id);
 
   sendResponse(res, {
     success: true,

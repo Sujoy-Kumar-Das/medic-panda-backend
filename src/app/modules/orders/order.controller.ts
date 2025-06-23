@@ -6,6 +6,7 @@ import { orderService } from './order.service';
 
 const createOrderController = catchAsync(async (req, res) => {
   const { userId } = req.user;
+
   const result = await orderService.createOrderService(userId, req.body);
 
   sendResponse(res, {
@@ -17,7 +18,7 @@ const createOrderController = catchAsync(async (req, res) => {
 });
 
 const getAllOrderControllerByAdmin = catchAsync(async (req, res) => {
-  const result = await orderService.getAllOrderServiceByAdmin();
+  const result = await orderService.getAllOrderServiceByAdmin(req.query);
 
   sendResponse(res, {
     success: true,

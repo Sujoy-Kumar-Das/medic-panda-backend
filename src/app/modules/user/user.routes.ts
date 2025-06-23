@@ -22,8 +22,6 @@ router.get(
 
 router.get('/user/:id', userController.getSingleUserController);
 
-// router.get('/users/blocked-user', userController.getAllBlockedUserController);
-
 router.post(
   '/user/customer',
   validateRequest(userValidationSchema.createUserValidationSchema),

@@ -21,28 +21,15 @@ router.get(
 );
 
 router.get(
-  '/cart-length',
+  '/cart/:id',
   auth(USER_ROLE.user),
-  cartController.getCartLengthController,
+  cartController.getSingleCartDetailsController,
 );
 
 router.get(
-  '/cart/:id',
+  '/cart-length',
   auth(USER_ROLE.user),
-  cartController.getSingleCartProductController,
-);
-
-router.patch(
-  '/cart/increment/:id',
-  validateRequest(cartValidationSchema.updateCartValidationSchema),
-  auth(USER_ROLE.user),
-  cartController.incrementCartProductController,
-);
-
-router.patch(
-  '/cart/decrement/:id',
-  auth(USER_ROLE.user),
-  cartController.decrementCartController,
+  cartController.getCartLengthController,
 );
 
 router.delete(

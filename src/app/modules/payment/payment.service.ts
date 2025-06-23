@@ -100,13 +100,6 @@ const payNowService = async (userId: string, orderId: string) => {
     throw new AppError(208, 'You already paid for this product.');
   }
 
-  // check is the user exists
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new AppError(403, `This user is not found.`);
-  }
-
   //   check is the product is available
 
   const isProductExists = await productModel.findById(orderItem?.product);
@@ -164,6 +157,7 @@ const payNowService = async (userId: string, orderId: string) => {
   const {
     address: { city, country, postalCode, street },
     contact,
+    email,
   } = orderItem?.shippingInfo as IShippingInfo;
 
   const paymentData = {
@@ -173,7 +167,7 @@ const payNowService = async (userId: string, orderId: string) => {
     country: country,
     phone: contact,
     city: city,
-    userEmail: user.email,
+    userEmail: email,
     userAddress: `${street}-${postalCode}-${street}-${city}-${country}`,
     transactionId: paymentId as string,
   };

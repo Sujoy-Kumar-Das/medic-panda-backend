@@ -1,0 +1,197 @@
+[{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f98f"
+  },
+  "name": "Baby Essentials",
+  "thumbnail": "https://i.ibb.co/vQt5L3C/61-D4mkn-Qwr-L-AC-UF894-1000-QL80-removebg-preview-min.png",
+  "popularity": false
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f990"
+  },
+  "name": "First Aidd",
+  "thumbnail": "https://i.ibb.co/3kxQbc9/5720770-removebg-preview-min.png",
+  "popularity": true,
+  "updatedAt": {
+    "$date": "2025-05-30T19:12:57.271Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f989"
+  },
+  "name": "Prescription Drugs",
+  "thumbnail": "https://i.ibb.co/0qnf5F4/images-10-min.jpg",
+  "popularity": false
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f991"
+  },
+  "name": "Skin Care",
+  "thumbnail": "https://i.ibb.co/3SLrcnd/product-categories-img2-new-no-removebg-preview-min.png",
+  "popularity": true
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f994"
+  },
+  "name": "Eye Care",
+  "thumbnail": "https://i.ibb.co/MgFPL8G/istockphoto-1489731410-612x612-min.jpg",
+  "popularity": true
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f98a"
+  },
+  "name": "Health Basics",
+  "thumbnail": "https://i.ibb.co/mchjvQN/premium-photo-1663036947585-68594f738f67-min.jpg",
+  "popularity": false
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f98d"
+  },
+  "name": "Personal Care",
+  "thumbnail": "https://i.ibb.co/SsmW0LB/360-F-47301594-m-Lvjo-He-B4-Uv-Nv-Z0z-Ootvrh-Pfq-LQl-IDRv-removebg-preview-min.png",
+  "popularity": true
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f993"
+  },
+  "name": "Weight Management",
+  "thumbnail": "https://i.ibb.co/K08SVyX/weight-loss-3270825-removebg-preview-min.png",
+  "popularity": true
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f98b"
+  },
+  "name": "Vitamins & Supplements",
+  "thumbnail": "https://i.ibb.co/DRjs7tC/images-11-min.jpg",
+  "popularity": false
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f98c"
+  },
+  "name": "Herbal Remedies",
+  "thumbnail": "https://i.ibb.co/4gZrK3Z/images-12-min.jpg",
+  "popularity": false
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f992"
+  },
+  "name": "Health Devices",
+  "thumbnail": "https://i.ibb.co/3TnnJvj/images-13-removebg-preview-min.png",
+  "popularity": true
+},
+{
+  "_id": {
+    "$oid": "671dedca1853a24619a9f98e"
+  },
+  "name": "Wellness Products",
+  "thumbnail": "https://i.ibb.co/sVVd14p/istockphoto-1249579132-612x612-removebg-preview-min.png",
+  "popularity": true
+},
+{
+  "_id": {
+    "$oid": "67cc5eb9d7c1134c35071b26"
+  },
+  "name": "new category",
+  "thumbnail": "https://i.ibb.co.com/VpC62SMD/Screenshot-from-2024-11-20-20-18-48.png",
+  "popularity": false,
+  "createdAt": {
+    "$date": "2025-03-08T15:14:01.197Z"
+  },
+  "updatedAt": {
+    "$date": "2025-03-08T15:14:01.197Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67ce9b1fb2103a1a932fb24f"
+  },
+  "name": " result result",
+  "thumbnail": "https://i.ibb.co.com/bjB4HQWV/Screenshot-from-2024-11-27-17-54-05.png",
+  "popularity": false,
+  "createdAt": {
+    "$date": "2025-03-10T07:56:15.198Z"
+  },
+  "updatedAt": {
+    "$date": "2025-03-17T15:22:37.173Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67ce9b89b2103a1a932fb253"
+  },
+  "name": "result1",
+  "thumbnail": "https://i.ibb.co.com/F4hTBH4y/Screenshot-from-2024-11-20-20-18-48.png",
+  "popularity": false,
+  "createdAt": {
+    "$date": "2025-03-10T07:58:01.877Z"
+  },
+  "updatedAt": {
+    "$date": "2025-03-10T07:58:01.877Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67ce9ea3b2103a1a932fb25f"
+  },
+  "name": "new catewgory updated",
+  "thumbnail": "https://i.ibb.co.com/pBPjkwJ0/Screenshot-from-2024-11-27-17-54-05.png",
+  "popularity": false,
+  "createdAt": {
+    "$date": "2025-03-10T08:11:15.657Z"
+  },
+  "updatedAt": {
+    "$date": "2025-03-23T11:35:05.483Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67dff739a184882a4361e378"
+  },
+  "name": "i am new category ",
+  "thumbnail": "https://i.ibb.co.com/yFxwtJ14/Screenshot-from-2025-03-19-17-17-43.png",
+  "popularity": false,
+  "createdAt": {
+    "$date": "2025-03-23T11:57:45.808Z"
+  },
+  "updatedAt": {
+    "$date": "2025-03-23T11:57:45.808Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67e14a4c6e10c73cbd5bbed3"
+  },
+  "name": "new cateatealjojofaopd",
+  "thumbnail": "https://i.ibb.co.com/wZhrWzQV/istockphoto-1170902285-612x612.jpg",
+  "popularity": false,
+  "createdAt": {
+    "$date": "2025-03-24T12:04:28.881Z"
+  },
+  "updatedAt": {
+    "$date": "2025-03-24T12:04:28.881Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "683a02a41ff796ebdee14378"
+  },
+  "name": "ok added a new category",
+  "thumbnail": "https://i.ibb.co/ZpgjhYzn/e-commerce.png",
+  "popularity": false,
+  "createdAt": {
+    "$date": "2025-05-30T19:10:28.899Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-30T19:10:28.899Z"
+  }
+}]

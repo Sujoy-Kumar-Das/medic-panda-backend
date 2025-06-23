@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import auth from '../../middlewares/auth';
+import productUser from '../../middlewares/product-user';
 import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
 import { ProductController } from './porduct.controller';
@@ -14,7 +15,11 @@ router.post(
   ProductController.createProductController,
 );
 
-router.get('/product', ProductController.getAllProductController);
+router.get(
+  '/product',
+  productUser(),
+  ProductController.getAllProductController,
+);
 
 router.get('/product/:id', ProductController.getSingleProductController);
 

@@ -1,0 +1,47 @@
+[{
+  "_id": {
+    "$oid": "681089a2a310df0b9f586c15"
+  },
+  "email": "sujoykumardas90@gmail.com",
+  "password": "$2b$10$bMYltnP7/bXyJarFPruUFuhttFwbOn0IlyIDtWvHHxSeCGdPLTbZW",
+  "role": "admin",
+  "isBlocked": false,
+  "isDeleted": false,
+  "isVerified": true,
+  "otpCode": 238383,
+  "otpTime": {
+    "$date": "2025-04-30T07:31:19.833Z"
+  },
+  "wrongOTPAttempt": 0,
+  "resetTime": null,
+  "createdAt": {
+    "$date": "2025-04-29T08:11:14.632Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-29T14:07:14.073Z"
+  },
+  "passwordChangeAt": {
+    "$date": "2025-05-08T13:14:09.765Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68108b229c0c11ef01193fb9"
+  },
+  "email": "sujoykumardas75@gmail.com",
+  "password": "$2b$10$OPtsn.BqDmdWWzp372Us1Oux9pBk3ZIDpTTKt4420fj0zuNVo3hVG",
+  "role": "superAdmin",
+  "isBlocked": false,
+  "isDeleted": false,
+  "isVerified": false,
+  "otpCode": null,
+  "otpTime": null,
+  "wrongOTPAttempt": 0,
+  "resetTime": null,
+  "createdAt": {
+    "$date": "2025-04-29T08:17:38.772Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-29T08:17:38.772Z"
+  }
+}]

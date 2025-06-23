@@ -7,8 +7,6 @@ import { productService } from './product.service';
 const createProductController = catchAsync(async (req, res) => {
   const result = await productService.createProductService(req.body);
 
-  emitSocketEvents([{ event: socketEvent.product, data: result }]);
-
   sendResponse(res, {
     success: true,
     statusCode: 200,
@@ -18,7 +16,10 @@ const createProductController = catchAsync(async (req, res) => {
 });
 
 const getAllProductController = catchAsync(async (req, res) => {
-  const result = await productService.getAllProductService(req.query);
+  const result = await productService.getAllProductService(
+    req.user.userId,
+    req.query,
+  );
 
   sendResponse(res, {
     success: true,

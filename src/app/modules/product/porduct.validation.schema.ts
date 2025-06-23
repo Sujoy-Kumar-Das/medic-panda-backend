@@ -1,16 +1,33 @@
 import { z } from 'zod';
 
-const discountValidationSchema = z.object({
+const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
+const timeOnlyRegex = /^([0-1]\d|2[0-3]):[0-5]\d$/;
+
+export const discountValidationSchema = z.object({
   percentage: z
     .number({ required_error: 'Product discount percentage is required.' })
     .min(0, { message: 'Product discount percentage must be at least 0.' })
-    .max(100, {
-      message: 'Product discount percentage must be at most 100.',
+    .max(100, { message: 'Product discount percentage must be at most 100.' }),
+
+  startDate: z
+    .string({ required_error: 'Discount start date is required.' })
+    .regex(dateOnlyRegex, {
+      message: 'Start date must be in YYYY-MM-DD format.',
     }),
-  startDate: z.string({ required_error: 'Discount start date is required.' }),
-  endDate: z.string({ required_error: 'Discount end date is required.' }),
-  startTime: z.string({ required_error: 'Discount end time is required.' }),
-  endTime: z.string({ required_error: 'Discount end' }),
+
+  endDate: z
+    .string({ required_error: 'Discount end date is required.' })
+    .regex(dateOnlyRegex, {
+      message: 'End date must be in YYYY-MM-DD format.',
+    }),
+
+  startTime: z
+    .string({ required_error: 'Discount start time is required.' })
+    .regex(timeOnlyRegex, { message: 'Start time must be in HH:mm format.' }),
+
+  endTime: z
+    .string({ required_error: 'Discount end time is required.' })
+    .regex(timeOnlyRegex, { message: 'End time must be in HH:mm format.' }),
 });
 
 const createProductValidationSchema = z.object({

@@ -87,6 +87,7 @@ const getSingleUserController = catchAsync(async (req, res) => {
   const { id } = req.params;
 
   const result = await userService.getSingleUser(id);
+
   sendResponse(res, {
     statusCode: 200,
     success: true,

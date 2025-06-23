@@ -1,4 +1,5 @@
 import mongoose, { model, Schema } from 'mongoose';
+import updateExpiredDiscounts from '../../utils/updateExpiredDiscounts';
 import { IDiscount, IProduct, IProductModel } from './product.interface';
 
 const discountSchema = new Schema<IDiscount>(
@@ -16,11 +17,11 @@ const discountSchema = new Schema<IDiscount>(
       required: false,
     },
     startDate: {
-      type: String,
+      type: Date,
       required: [true, 'Start date is required.'],
     },
     endDate: {
-      type: String,
+      type: Date,
       required: [true, 'End date is required.'],
     },
     startTime: {
@@ -54,7 +55,7 @@ const productSchema = new Schema<IProduct, IProductModel>({
   discount: {
     type: discountSchema,
     required: false,
-    default: undefined,
+    default: null,
   },
   stockStatus: {
     type: Boolean,
@@ -85,18 +86,21 @@ const productSchema = new Schema<IProduct, IProductModel>({
   },
 });
 
-// Query Middleware
-productSchema.pre('find', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
+// Pre-query middleware to clean up expired discounts
 
-productSchema.pre('findOne', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
+productSchema.pre(
+  ['find', 'findOne', 'findOneAndUpdate'],
+  async function (next) {
+    await updateExpiredDiscounts(this.model);
 
-productSchema.pre('aggregate', function (next) {
+    this.find({ isDeleted: { $ne: true } });
+    next();
+  },
+);
+
+productSchema.pre('aggregate', async function (next) {
+  await updateExpiredDiscounts(this.model);
+
   this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
   next();
 });

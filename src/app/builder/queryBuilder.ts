@@ -70,8 +70,9 @@ class QueryBuilder<T> {
     return this;
   }
 
-  async countTotal() {
-    const total = await this.modelQuery.model.countDocuments();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async countTotal(fields?: Record<string, any> | undefined) {
+    const total = await this.modelQuery.model.countDocuments(fields);
     const page = Number(this?.query?.page) || 1;
     const limit = Number(this?.query?.limit) || 10;
     const totalPage = Math.ceil(total / limit);

@@ -8,7 +8,6 @@ import verifyToken from '../utils/verifyJwtToken';
 const auth = (...requiredRoles: IUserRoles[]) => {
   return catchAsync(async (req, res, next) => {
     const token = req.cookies.accessToken;
-
     if (!token) {
       throw new AppError(404, 'You are not authorize.');
     }

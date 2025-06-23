@@ -25,6 +25,8 @@ const successPaymentController = catchAsync(async (req, res) => {
 
 const cancelPaymentController = catchAsync(async (req, res) => {
   const result = await paymentService.failedPaymentService(req.body.tran_id);
+
+  console.log(result);
   res.redirect(result);
 });
 

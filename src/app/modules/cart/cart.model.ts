@@ -10,14 +10,6 @@ const cartSchema = new Schema<ICart>({
     required: [true, 'Product is required.'],
     ref: 'product',
   },
-  quantity: {
-    type: Number,
-    default: 1,
-  },
-  totalPrice: {
-    type: Number,
-    default: 0,
-  },
 });
 
 export const cartModel = model<ICart>('cart', cartSchema);

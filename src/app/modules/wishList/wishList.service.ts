@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
 import { productModel } from '../product/porduct.model';
 import { USER_ROLE } from '../user/user.constant';
@@ -67,38 +68,25 @@ const getSingleWishListProductService = async (
   return result;
 };
 
-const removeFromWishListService = async (
-  userId: string,
-  productId: string,
-  role: string,
-) => {
-  let result = null;
-
+const removeFromWishListService = async (userId: string, productId: string) => {
   const product = await wishListModel.findOne({
-    product: productId,
     user: userId,
+    product: productId,
   });
 
   if (!product) {
     throw new AppError(404, 'This product is already deleted.');
   }
 
-  if (role === USER_ROLE.user) {
-    result = await wishListModel.findOneAndDelete(
-      { user: userId, product: productId },
-      { new: true },
-    );
+  const covetedUserId = new mongoose.Types.ObjectId(userId);
+
+  if (!product.user.equals(covetedUserId)) {
+    throw new AppError(403, 'You not authorized for this operation!.');
   }
 
-  if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    result = await wishListModel.find(
-      { product: productId },
-      { isDeleted: true },
-    );
-  }
-
-  return result;
+  return await wishListModel.findByIdAndDelete(product._id);
 };
+
 export const wishListService = {
   createWishListService,
   getAllWishListProductService,

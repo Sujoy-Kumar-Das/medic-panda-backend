@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import QueryBuilder from '../../builder/queryBuilder';
 import AppError from '../../errors/AppError';
 import { IManufacturer } from './manufacturer.interface';
 import { manufacturerModel } from './manufacturer.model';
@@ -18,9 +20,14 @@ const createManufacturer = async (payload: IManufacturer) => {
   return result;
 };
 
-const getAllManufacturer = async () => {
-  const result = await manufacturerModel.find();
-  return result;
+const getAllManufacturer = async (query: Record<string, any>) => {
+  const manufacturerQueryBuilder = new QueryBuilder(
+    manufacturerModel.find(),
+    query,
+  ).search(['name']);
+  const result = await manufacturerQueryBuilder.modelQuery;
+  const meta = await manufacturerQueryBuilder.countTotal(undefined);
+  return { result, meta };
 };
 
 const getSingleManufacturer = async (id: string) => {

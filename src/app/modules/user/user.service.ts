@@ -258,19 +258,16 @@ const getSingleUser = async (id: string) => {
   if (!user) {
     throw new AppError(404, 'This user is not found.');
   }
+  console.log({ id, user });
 
   const role = user.role;
 
   if (role === USER_ROLE.user) {
-    return await customerModel
-      .findOne({ user: id, role })
-      .populate('user', '+isBlocked');
+    return await customerModel.findOne({ user: id }).populate('user');
   }
 
   if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await adminModel
-      .findOne({ user: id })
-      .populate('user', '+isBlocked');
+    return await adminModel.findOne({ user: id }).populate('user');
   }
 };
 

@@ -1,4 +1,5 @@
 import mongoose, { Types } from 'mongoose';
+import { AggregationQueryBuilder } from '../../builder/ AggregationQueryBuilder';
 import QueryBuilder from '../../builder/queryBuilder';
 import AppError from '../../errors/AppError';
 import { sslInitPaymentService } from '../../ssl/ssl.service';
@@ -8,27 +9,17 @@ import { customerModel } from '../customer/customer.model';
 import { PaymentModel } from '../payment/payment.model';
 import { productDetailModel } from '../porductDetail/productDetail.model';
 import { productModel } from '../product/porduct.model';
-import { userModel } from '../user/user.model';
 import { allowedOrderStatusTransitions } from './allowedOrderStatusTransitions';
 import { IOrder, IShippingInfo, OrderStatus } from './order.interface';
 import { orderModel } from './order.model';
 
-const createOrderService = async (id: string, payload: Partial<IOrder>) => {
+const createOrderService = async (userId: string, payload: Partial<IOrder>) => {
   const session = await mongoose.startSession();
 
-  const { product, quantity } = payload;
+  const { product, quantity, shippingInfo } = payload;
 
   try {
     session.startTransaction(); //start session
-
-    // check is the user exists
-    const user = await userModel.findUserWithID(id, session);
-
-    const validUser = !user || user.isBlocked || user.isDeleted;
-
-    if (validUser) {
-      throw new AppError(404, 'User not found.');
-    }
 
     //   check is the product is available
 
@@ -83,7 +74,7 @@ const createOrderService = async (id: string, payload: Partial<IOrder>) => {
       );
     }
 
-    payload.user = user?._id;
+    payload.user = new Types.ObjectId(userId);
 
     payload.total =
       Number(quantity) *
@@ -98,7 +89,8 @@ const createOrderService = async (id: string, payload: Partial<IOrder>) => {
     const {
       address: { city, country, street, postalCode },
       contact,
-    } = payload.shippingInfo as IShippingInfo;
+      email,
+    } = shippingInfo as IShippingInfo;
 
     const paymentData = {
       total: payload.total,
@@ -107,7 +99,7 @@ const createOrderService = async (id: string, payload: Partial<IOrder>) => {
       country: country,
       phone: contact,
       city: city,
-      userEmail: user.email,
+      userEmail: email,
       userAddress: `${street}-${postalCode}-${street}-${city}-${country}`,
       transactionId: payload.paymentId,
     };
@@ -128,7 +120,7 @@ const createOrderService = async (id: string, payload: Partial<IOrder>) => {
     const cartRes = await cartModel
       .findOneAndDelete({
         product,
-        user: user._id,
+        user: new Types.ObjectId(userId),
       })
       .session(session);
 
@@ -140,18 +132,13 @@ const createOrderService = async (id: string, payload: Partial<IOrder>) => {
     await session.commitTransaction();
     session.endSession();
 
-    const order = await orderModel.findById(result[0]._id).populate('product');
-
     return {
       paymentUrl,
-      order,
-      cartId: cartRes._id,
     };
-  } catch (error) {
+  } catch {
     await session.abortTransaction(); // Rollback transaction on error
     session.endSession();
     throw new AppError(403, 'Failed To place order');
-    console.log(error);
   }
 };
 
@@ -175,18 +162,23 @@ const getAllOrderService = async (
   query: Record<string, unknown>,
 ) => {
   // Build the query with filters
-  const ordersQuery = new QueryBuilder(
-    orderModel.find({ user: id }).populate('product'),
-    query,
-  )
+  const builder = new AggregationQueryBuilder(orderModel, query)
+    .match({ user: new Types.ObjectId(id) })
+    .lookup('products', 'product', '_id', 'product')
+    .unwind('product')
+    .search('product.name')
     .filter()
     .sort()
     .paginate();
 
-  // Execute the query
-  const orders = await ordersQuery.modelQuery;
+  const result = await builder.exec();
 
-  return orders;
+  const meta = await builder.countTotal();
+
+  return {
+    result,
+    meta,
+  };
 };
 
 // get all order by user

@@ -14,7 +14,7 @@ const createManufacturerController = catchAsync(async (req, res) => {
 });
 
 const getAllManufacturerController = catchAsync(async (req, res) => {
-  const result = await manufacturerService.getAllManufacturer();
+  const result = await manufacturerService.getAllManufacturer(req.query);
 
   sendResponse(res, {
     success: true,

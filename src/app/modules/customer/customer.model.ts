@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { model, Schema } from 'mongoose';
 import { ICustomer, IUserPermanentAddress } from './customer.interface';
 
@@ -44,12 +43,6 @@ const customerSchema = new Schema<ICustomer>(
     contact: {
       type: String,
       default: null,
-      validate: {
-        validator: function (v: string) {
-          return /^(\+?\d{1,3}[- ]?)?\d{10}$/.test(v);
-        },
-        message: (props: any) => `${props.value} is not a valid phone number.`,
-      },
     },
     address: {
       type: addressSchema,

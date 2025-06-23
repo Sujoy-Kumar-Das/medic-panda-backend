@@ -99,7 +99,7 @@ productSchema.pre(
 );
 
 productSchema.pre('aggregate', async function (next) {
-  await updateExpiredDiscounts(this.model);
+  await updateExpiredDiscounts(this.model());
 
   this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
   next();

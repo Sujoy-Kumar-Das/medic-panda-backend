@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const updateExpiredDiscounts = async function (model: any) {
+import { Model } from 'mongoose';
+
+const updateExpiredDiscounts = async function (model: Model<any>) {
   const now = new Date();
   const currentDateStr = now.toISOString().split('T')[0];
   const currentTimeStr = now.toTimeString().substring(0, 5);

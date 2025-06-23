@@ -1,5 +1,4 @@
 import config from '../../config';
-import { socketEvent } from '../../socket/socket.event';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { paymentService } from './payment.service';

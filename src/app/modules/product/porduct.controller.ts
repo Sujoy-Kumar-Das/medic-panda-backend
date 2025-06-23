@@ -1,5 +1,3 @@
-import { emitSocketEvents } from '../../socket/emitSocket';
-import { socketEvent } from '../../socket/socket.event';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { productService } from './product.service';
@@ -45,8 +43,6 @@ const updateProductController = catchAsync(async (req, res) => {
   const { id } = req.params;
   const result = await productService.updateProductService(id, req.body);
 
-  emitSocketEvents([{ event: socketEvent.product, data: result }]);
-
   sendResponse(res, {
     success: true,
     statusCode: 200,
@@ -58,8 +54,6 @@ const updateProductController = catchAsync(async (req, res) => {
 const deleteProductController = catchAsync(async (req, res) => {
   const { id } = req.params;
   const result = await productService.deleteProductService(id);
-
-  emitSocketEvents([{ event: socketEvent.product, data: result }]);
 
   sendResponse(res, {
     success: true,

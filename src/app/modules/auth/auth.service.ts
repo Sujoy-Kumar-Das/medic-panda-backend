@@ -61,6 +61,10 @@ const loginService = async (payload: ILogin) => {
   };
 };
 
+const logoutService = async () => {
+  return { message: 'Logout Successfully.' };
+};
+
 const changePasswordService = async (
   userData: JwtPayload,
   payload: IChangePassword,
@@ -258,6 +262,7 @@ const refreshTokenService = async (token: string) => {
 
 export const authService = {
   loginService,
+  logoutService,
   changePasswordService,
   forgotPassword,
   resetPassword,

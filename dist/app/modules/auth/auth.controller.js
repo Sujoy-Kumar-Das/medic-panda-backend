@@ -20,23 +20,19 @@ const setCookie_1 = require("../../utils/setCookie");
 const auth_service_1 = require("./auth.service");
 const loginController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { refreshToken, accessToken } = yield auth_service_1.authService.loginService(req.body);
-    // set access token to the cookie;
+    // Set access token cookie
     (0, setCookie_1.setCookie)({
         res,
         name: 'accessToken',
         value: String(accessToken),
-        options: {
-            httpOnly: true,
-            sameSite: true,
-            secure: true,
-        },
+        maxAge: 15 * 60 * 1000,
     });
-    // set refresh token to the cookie;
+    // Set refresh token cookie
     (0, setCookie_1.setCookie)({
         res,
         name: 'refreshToken',
         value: String(refreshToken),
-        options: { httpOnly: true, sameSite: true, secure: true },
+        maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     (0, sendResponse_1.default)(res, {
         statusCode: 200,

@@ -1,17 +1,10 @@
 import { Response } from 'express';
-import config from '../config';
 
-interface ISetCookieParams {
+interface SetCookieParams {
   res: Response;
   name: string;
   value: string;
   maxAge?: number;
-  options?: {
-    httpOnly?: boolean;
-    secure?: boolean;
-    sameSite?: boolean | 'lax' | 'strict' | 'none';
-    path?: string;
-  };
 }
 
 export function setCookie({
@@ -19,13 +12,16 @@ export function setCookie({
   name,
   value,
   maxAge = 24 * 60 * 60 * 1000,
-  options = {},
-}: ISetCookieParams): void {
-  res.cookie(name, value, {
-    httpOnly: options.httpOnly ?? true,
-    secure: options.secure ?? config.node_env === 'production',
-    sameSite: options.sameSite ?? 'strict',
-    path: options.path ?? '/',
+}: SetCookieParams): void {
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? ('none' as const) : ('lax' as const),
+    path: '/',
     maxAge,
-  });
+  };
+
+  res.cookie(name, value, cookieOptions);
 }

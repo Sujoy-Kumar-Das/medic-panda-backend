@@ -13,6 +13,8 @@ router.post(
   authController.loginController,
 );
 
+router.post('/logout', authController.logoutController);
+
 router.post(
   '/change-password',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.user),

@@ -1,4 +1,3 @@
-import config from '../../config';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { setCookie } from '../../utils/setCookie';
@@ -9,24 +8,20 @@ const loginController = catchAsync(async (req, res) => {
     req.body,
   );
 
-  // set access token to the cookie;
+  // Set access token cookie
   setCookie({
     res,
     name: 'accessToken',
     value: String(accessToken),
-    options: {
-      httpOnly: true,
-      sameSite: true,
-      secure: true,
-    },
+    maxAge: 15 * 60 * 1000,
   });
 
-  // set refresh token to the cookie;
+  // Set refresh token cookie
   setCookie({
     res,
     name: 'refreshToken',
     value: String(refreshToken),
-    options: { httpOnly: true, sameSite: true, secure: true },
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   sendResponse(res, {
@@ -34,6 +29,29 @@ const loginController = catchAsync(async (req, res) => {
     success: true,
     message: 'User logged in successfully.',
     data: accessToken,
+  });
+});
+
+const logoutController = catchAsync(async (req, res) => {
+  const result = await authService.logoutService();
+
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? ('none' as const) : ('lax' as const),
+    path: '/',
+  };
+
+  res.clearCookie('accessToken', cookieOptions);
+  res.clearCookie('refreshToken', cookieOptions);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User logout successfully.',
+    data: result,
   });
 });
 
@@ -76,10 +94,12 @@ const refreshTokenController = catchAsync(async (req, res) => {
   const { refreshToken } = req.cookies;
   const { accessToken } = await authService.refreshTokenService(refreshToken);
 
-  res.cookie('accessToken', accessToken, {
-    secure: config.node_env === 'production',
-    httpOnly: true,
-    sameSite: true,
+  // Set access token cookie
+  setCookie({
+    res,
+    name: 'accessToken',
+    value: String(accessToken),
+    maxAge: 15 * 60 * 1000,
   });
 
   sendResponse(res, {
@@ -92,6 +112,7 @@ const refreshTokenController = catchAsync(async (req, res) => {
 
 export const authController = {
   loginController,
+  logoutController,
   changePasswordController,
   forgotPasswordController,
   resetPasswordController,

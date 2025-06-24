@@ -9,7 +9,7 @@ const verifyToken = (token: string, secret: string) => {
     const decoded = jwt.verify(token, secret) as JwtPayload;
     return decoded;
   } catch {
-    throw new AppError(401, 'Invalid token.Please try again.');
+    throw new AppError(500, 'Invalid token.Please try again.');
   }
 };
 

@@ -8,24 +8,20 @@ const createCustomerController = catchAsync(async (req, res) => {
     req.body,
   );
 
-  // set access token to the cookie;
+  // Set access token cookie
   setCookie({
     res,
     name: 'accessToken',
     value: String(accessToken),
-    options: {
-      httpOnly: true,
-      sameSite: true,
-      secure: true,
-    },
+    maxAge: 15 * 60 * 1000,
   });
 
-  // set refresh token to the cookie;
+  // Set refresh token cookie
   setCookie({
     res,
     name: 'refreshToken',
     value: String(refreshToken),
-    options: { httpOnly: true, sameSite: true, secure: true },
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   sendResponse(res, {

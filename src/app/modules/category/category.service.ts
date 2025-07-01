@@ -20,7 +20,7 @@ const createCategoryService = async (payload: ICategory) => {
 
 const getAllCategoryService = async (query: Record<string, unknown>) => {
   const categoryQuery = new QueryBuilder(categoryModel.find(), query);
-  const category = categoryQuery.search(['name']).filter().paginate();
+  const category = categoryQuery.search(['name']).filter().limit();
 
   const meta = await categoryQuery.countTotal(undefined);
   const result = await category.modelQuery;

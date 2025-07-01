@@ -11,9 +11,7 @@ const user_constant_1 = require("../user/user.constant");
 const category_controller_1 = require("./category.controller");
 const category_schema_1 = require("./category.schema");
 const router = (0, express_1.Router)();
-router.post('/category', 
-// auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-(0, validateRequest_1.default)(category_schema_1.categoryValidationSchema.createCategoryValidationSchema), category_controller_1.categoryController.createCategoryController);
+router.post('/category', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), (0, validateRequest_1.default)(category_schema_1.categoryValidationSchema.createCategoryValidationSchema), category_controller_1.categoryController.createCategoryController);
 router.get('/category', category_controller_1.categoryController.getAllCategoryController);
 router.get('/category/:id', category_controller_1.categoryController.getSingleCategoryController);
 router.patch('/category/:id', (0, auth_1.default)(user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.superAdmin), (0, validateRequest_1.default)(category_schema_1.categoryValidationSchema.updateCategoryValidationSchema), category_controller_1.categoryController.updateCategoryController);

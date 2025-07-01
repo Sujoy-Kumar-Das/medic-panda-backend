@@ -94,7 +94,6 @@ const createCustomerService = async (payload: ICustomerPayload) => {
   } catch (error) {
     await session.abortTransaction();
     await session.endSession();
-    console.log(error);
     throw new AppError(
       400,
       'Something went wrong for create user. Please try again.',
@@ -182,7 +181,6 @@ const createAdminService = async (payload: { email: string }) => {
   } catch (error) {
     await session.abortTransaction();
     await session.endSession();
-    console.log(error);
     throw new AppError(
       400,
       'Something went wrong for create admin. Please try again.',
@@ -258,7 +256,6 @@ const getSingleUser = async (id: string) => {
   if (!user) {
     throw new AppError(404, 'This user is not found.');
   }
-  console.log({ id, user });
 
   const role = user.role;
 

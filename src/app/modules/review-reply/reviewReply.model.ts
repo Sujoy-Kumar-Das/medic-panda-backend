@@ -8,7 +8,7 @@ const replySchema = new Schema<IReply>(
       ref: 'review',
       required: [true, 'Review ID is required.'],
     },
-    reply: {
+    comment: {
       type: String,
       required: [true, 'Reply Required.'],
       min: 3,

@@ -24,7 +24,7 @@ const addReplyService = (reviewId, userId, payload) => __awaiter(void 0, void 0,
         throw new AppError_1.default(404, 'This review is not found.');
     }
     const replyData = {
-        reply: payload.reply,
+        comment: payload.comment,
         review: review._id,
         user: new mongoose_1.Types.ObjectId(userId),
     };
@@ -48,7 +48,8 @@ const getAllReplyService = (reviewId) => __awaiter(void 0, void 0, void 0, funct
         return ({
             _id: reply._id,
             reviewId: reply.review,
-            reply: reply.reply,
+            comment: reply.comment,
+            createdAt: reply.createdAt,
             user: ((_a = reply.user) === null || _a === void 0 ? void 0 : _a.customer)
                 ? {
                     _id: reply.user._id,
@@ -75,7 +76,7 @@ const getSingleReplyService = (replyId) => __awaiter(void 0, void 0, void 0, fun
     return {
         _id: reply._id,
         reviewId: reply.review,
-        reply: reply.reply,
+        reply: reply.comment,
         user: user.customer
             ? {
                 _id: user._id,

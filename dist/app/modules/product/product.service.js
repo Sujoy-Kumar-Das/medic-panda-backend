@@ -67,7 +67,6 @@ const createProductService = (payload) => __awaiter(void 0, void 0, void 0, func
     catch (error) {
         yield session.abortTransaction();
         yield session.endSession();
-        console.log(error);
         throw new AppError_1.default(400, 'Something went wrong for create user. Please try again.');
     }
 });
@@ -149,13 +148,11 @@ const updateProductService = (id, payload) => __awaiter(void 0, void 0, void 0, 
         }
         yield session.commitTransaction();
         session.endSession();
-        console.log({ updatedProduct });
         return updatedProduct;
     }
     catch (error) {
         yield session.abortTransaction();
         session.endSession();
-        console.log(error);
         throw new AppError_1.default(400, 'Something went wrong while updating the product. Please try again.');
     }
 });

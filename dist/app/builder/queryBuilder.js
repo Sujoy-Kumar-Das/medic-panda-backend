@@ -49,6 +49,14 @@ class QueryBuilder {
         this.modelQuery = this.modelQuery.sort(sort);
         return this;
     }
+    limit() {
+        const isLimit = this.query.limit;
+        console.log({ isLimit });
+        if (isLimit) {
+            this.modelQuery = this.modelQuery.limit(Number(isLimit));
+        }
+        return this;
+    }
     paginate() {
         var _a, _b;
         const page = Number((_a = this === null || this === void 0 ? void 0 : this.query) === null || _a === void 0 ? void 0 : _a.page) || 1;
@@ -69,7 +77,7 @@ class QueryBuilder {
             var _a, _b;
             const total = yield this.modelQuery.model.countDocuments(fields);
             const page = Number((_a = this === null || this === void 0 ? void 0 : this.query) === null || _a === void 0 ? void 0 : _a.page) || 1;
-            const limit = Number((_b = this === null || this === void 0 ? void 0 : this.query) === null || _b === void 0 ? void 0 : _b.limit) || 10;
+            const limit = Number((_b = this === null || this === void 0 ? void 0 : this.query) === null || _b === void 0 ? void 0 : _b.limit) || total;
             const totalPage = Math.ceil(total / limit);
             return {
                 page,

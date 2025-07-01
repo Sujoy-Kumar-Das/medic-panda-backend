@@ -80,7 +80,6 @@ const createProductService = async (payload: IProductPayload) => {
   } catch (error) {
     await session.abortTransaction();
     await session.endSession();
-    console.log(error);
     throw new AppError(
       400,
       'Something went wrong for create user. Please try again.',
@@ -207,12 +206,10 @@ const updateProductService = async (
     await session.commitTransaction();
     session.endSession();
 
-    console.log({ updatedProduct });
     return updatedProduct;
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    console.log(error);
     throw new AppError(
       400,
       'Something went wrong while updating the product. Please try again.',

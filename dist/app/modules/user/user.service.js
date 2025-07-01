@@ -84,7 +84,6 @@ const createCustomerService = (payload) => __awaiter(void 0, void 0, void 0, fun
     catch (error) {
         yield session.abortTransaction();
         yield session.endSession();
-        console.log(error);
         throw new AppError_1.default(400, 'Something went wrong for create user. Please try again.');
     }
 });
@@ -147,7 +146,6 @@ const createAdminService = (payload) => __awaiter(void 0, void 0, void 0, functi
     catch (error) {
         yield session.abortTransaction();
         yield session.endSession();
-        console.log(error);
         throw new AppError_1.default(400, 'Something went wrong for create admin. Please try again.');
     }
 });
@@ -192,7 +190,6 @@ const getSingleUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
     if (!user) {
         throw new AppError_1.default(404, 'This user is not found.');
     }
-    console.log({ id, user });
     const role = user.role;
     if (role === user_constant_1.USER_ROLE.user) {
         return yield customer_model_1.customerModel.findOne({ user: id }).populate('user');

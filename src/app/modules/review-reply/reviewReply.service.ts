@@ -17,7 +17,7 @@ const addReplyService = async (
   }
 
   const replyData: IReply = {
-    reply: payload.reply as string,
+    comment: payload.comment as string,
     review: review._id,
     user: new Types.ObjectId(userId),
   };
@@ -44,7 +44,8 @@ const getAllReplyService = async (reviewId: string) => {
   return replies.map((reply: any) => ({
     _id: reply._id,
     reviewId: reply.review,
-    reply: reply.reply,
+    comment: reply.comment,
+    createdAt: reply.createdAt,
     user: reply.user?.customer
       ? {
           _id: reply.user._id,
@@ -74,7 +75,7 @@ const getSingleReplyService = async (replyId: string) => {
   return {
     _id: reply._id,
     reviewId: reply.review,
-    reply: reply.reply,
+    reply: reply.comment,
     user: user.customer
       ? {
           _id: user._id,

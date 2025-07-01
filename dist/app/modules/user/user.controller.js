@@ -24,14 +24,12 @@ const createCustomerController = (0, catchAsync_1.default)((req, res) => __await
         res,
         name: 'accessToken',
         value: String(accessToken),
-        maxAge: 15 * 60 * 1000,
     });
     // Set refresh token cookie
     (0, setCookie_1.setCookie)({
         res,
         name: 'refreshToken',
         value: String(refreshToken),
-        maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     (0, sendResponse_1.default)(res, {
         statusCode: 200,

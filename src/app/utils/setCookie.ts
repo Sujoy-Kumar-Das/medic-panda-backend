@@ -4,15 +4,9 @@ interface SetCookieParams {
   res: Response;
   name: string;
   value: string;
-  maxAge?: number;
 }
 
-export function setCookie({
-  res,
-  name,
-  value,
-  maxAge = 24 * 60 * 60 * 1000,
-}: SetCookieParams): void {
+export function setCookie({ res, name, value }: SetCookieParams): void {
   const isProduction = process.env.NODE_ENV === 'production';
 
   const cookieOptions = {
@@ -20,7 +14,7 @@ export function setCookie({
     secure: isProduction,
     sameSite: isProduction ? ('none' as const) : ('lax' as const),
     path: '/',
-    maxAge,
+    maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
   };
 
   res.cookie(name, value, cookieOptions);

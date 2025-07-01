@@ -1,6 +1,11 @@
-import mongoose, { model, Schema } from 'mongoose';
-import updateExpiredDiscounts from '../../utils/updateExpiredDiscounts';
-import { IDiscount, IProduct, IProductModel } from './product.interface';
+import mongoose, { CallbackError, model, Schema } from 'mongoose';
+import { updateExpiredDiscountsForFetchedProducts } from '../../utils/updateExpiredDiscounts';
+import {
+  IDiscount,
+  IProduct,
+  IProductModel,
+  IRating,
+} from './product.interface';
 
 const discountSchema = new Schema<IDiscount>(
   {
@@ -34,9 +39,18 @@ const discountSchema = new Schema<IDiscount>(
     },
   },
   {
-    id: false,
+    _id: false,
     versionKey: false,
   },
+);
+
+const ratingSchema = new Schema<IRating>(
+  {
+    average: { type: Number, default: 0, min: 0, max: 5 },
+    count: { type: Number, default: 0 },
+    lastUpdated: { type: Date, default: Date.now },
+  },
+  { _id: false, versionKey: false, timestamps: true },
 );
 
 const productSchema = new Schema<IProduct, IProductModel>({
@@ -72,8 +86,8 @@ const productSchema = new Schema<IProduct, IProductModel>({
     ref: 'manufacturer',
   },
   rating: {
-    type: Number,
-    default: 0,
+    type: ratingSchema,
+    default: { average: 0, count: 0, lastUpdated: new Date() },
   },
   isWishList: {
     type: Boolean,
@@ -86,36 +100,39 @@ const productSchema = new Schema<IProduct, IProductModel>({
   },
 });
 
-// Pre-query middleware to clean up expired discounts
+// Post-query middleware to clean up expired discounts
 
-productSchema.pre(
-  ['find', 'findOne', 'findOneAndUpdate'],
-  async function (next) {
-    await updateExpiredDiscounts(this.model);
+productSchema.post(['find', 'findOne'], async function (docs, next) {
+  try {
+    if (!docs) return next();
 
-    this.find({ isDeleted: { $ne: true } });
+    await updateExpiredDiscountsForFetchedProducts(docs);
+
     next();
-  },
-);
-
-productSchema.pre('aggregate', async function (next) {
-  await updateExpiredDiscounts(this.model());
-
-  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
-  next();
+  } catch (err) {
+    next(err as CallbackError);
+  }
 });
 
-// product statics methods
-productSchema.statics.isProductExistsByName = async function (name: string) {
-  return await productModel
-    .findOne({
-      name: {
-        $regex: name,
-        $options: 'i',
-      },
-    })
-    .select('+isDeleted');
-};
+productSchema.post('findOneAndUpdate', async function (doc, next) {
+  try {
+    if (!doc) return next();
+    await updateExpiredDiscountsForFetchedProducts(doc);
+    next();
+  } catch (err) {
+    next(err as CallbackError);
+  }
+});
+
+productSchema.post('aggregate', async function (doc, next) {
+  try {
+    if (!doc) return next();
+    await updateExpiredDiscountsForFetchedProducts(doc);
+    next();
+  } catch (err) {
+    next(err as CallbackError);
+  }
+});
 
 productSchema.statics.isProductExistsById = async function (
   id: string,

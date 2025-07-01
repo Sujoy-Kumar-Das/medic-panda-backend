@@ -14,7 +14,7 @@ const verifyToken = (token, secret) => {
         return decoded;
     }
     catch (_a) {
-        throw new AppError_1.default(401, 'Invalid token.Please try again.');
+        throw new AppError_1.default(500, 'Invalid token.Please try again.');
     }
 };
 exports.default = verifyToken;

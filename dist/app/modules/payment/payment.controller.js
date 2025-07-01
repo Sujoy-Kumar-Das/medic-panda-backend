@@ -34,7 +34,6 @@ const successPaymentController = (0, catchAsync_1.default)((req, res) => __await
 }));
 const cancelPaymentController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield payment_service_1.paymentService.failedPaymentService(req.body.tran_id);
-    console.log(result);
     res.redirect(result);
 }));
 const failedPaymentController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authController = void 0;
-const config_1 = __importDefault(require("../../config"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const setCookie_1 = require("../../utils/setCookie");
@@ -25,20 +24,36 @@ const loginController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
         res,
         name: 'accessToken',
         value: String(accessToken),
-        maxAge: 15 * 60 * 1000,
     });
     // Set refresh token cookie
     (0, setCookie_1.setCookie)({
         res,
         name: 'refreshToken',
         value: String(refreshToken),
-        maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
         message: 'User logged in successfully.',
         data: accessToken,
+    });
+}));
+const logoutController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield auth_service_1.authService.logoutService();
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        path: '/',
+    };
+    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('refreshToken', cookieOptions);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: 'User logout successfully.',
+        data: result,
     });
 }));
 const changePasswordController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -72,10 +87,11 @@ const resetPasswordController = (0, catchAsync_1.default)((req, res) => __awaite
 const refreshTokenController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { refreshToken } = req.cookies;
     const { accessToken } = yield auth_service_1.authService.refreshTokenService(refreshToken);
-    res.cookie('accessToken', accessToken, {
-        secure: config_1.default.node_env === 'production',
-        httpOnly: true,
-        sameSite: true,
+    // Set access token cookie
+    (0, setCookie_1.setCookie)({
+        res,
+        name: 'accessToken',
+        value: String(accessToken),
     });
     (0, sendResponse_1.default)(res, {
         success: true,
@@ -86,6 +102,7 @@ const refreshTokenController = (0, catchAsync_1.default)((req, res) => __awaiter
 }));
 exports.authController = {
     loginController,
+    logoutController,
     changePasswordController,
     forgotPasswordController,
     resetPasswordController,

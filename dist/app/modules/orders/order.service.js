@@ -145,6 +145,7 @@ const createOrderService = (userId, payload) => __awaiter(void 0, void 0, void 0
 const getAllOrderServiceByAdmin = (query) => __awaiter(void 0, void 0, void 0, function* () {
     // Build the query with filters
     const ordersQuery = new queryBuilder_1.default(order_model_1.orderModel.find(), query)
+        .search(['_id'])
         .filter()
         .sort()
         .paginate();

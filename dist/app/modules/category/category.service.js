@@ -27,7 +27,7 @@ const createCategoryService = (payload) => __awaiter(void 0, void 0, void 0, fun
 });
 const getAllCategoryService = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const categoryQuery = new queryBuilder_1.default(category_model_1.categoryModel.find(), query);
-    const category = categoryQuery.search(['name']).filter().paginate();
+    const category = categoryQuery.search(['name']).filter().limit();
     const meta = yield categoryQuery.countTotal(undefined);
     const result = yield category.modelQuery;
     return { meta, result };

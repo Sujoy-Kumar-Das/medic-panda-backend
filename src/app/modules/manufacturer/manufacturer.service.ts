@@ -25,6 +25,7 @@ const getAllManufacturer = async (query: Record<string, any>) => {
     manufacturerModel.find(),
     query,
   ).search(['name']);
+
   const result = await manufacturerQueryBuilder.modelQuery;
   const meta = await manufacturerQueryBuilder.countTotal(undefined);
   return { result, meta };

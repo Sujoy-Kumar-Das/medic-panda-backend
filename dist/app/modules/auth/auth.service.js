@@ -55,6 +55,9 @@ const loginService = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         refreshToken,
     };
 });
+const logoutService = () => __awaiter(void 0, void 0, void 0, function* () {
+    return { message: 'Logout Successfully.' };
+});
 const changePasswordService = (userData, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { oldPassword, newPassword } = payload;
     const { email, role, userId } = userData;
@@ -176,6 +179,7 @@ const refreshTokenService = (token) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.authService = {
     loginService,
+    logoutService,
     changePasswordService,
     forgotPassword,
     resetPassword,

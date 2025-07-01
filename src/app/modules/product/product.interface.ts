@@ -10,6 +10,12 @@ export interface IDiscount {
   endTime: string;
 }
 
+export interface IRating {
+  average: number;
+  count: number;
+  lastUpdated: Date;
+}
+
 export interface IProduct {
   name: string;
   price: number;
@@ -18,7 +24,7 @@ export interface IProduct {
   thumbnail: string;
   category: Types.ObjectId;
   manufacturer: Types.ObjectId;
-  rating: number;
+  rating?: IRating;
   isWishList: boolean;
   isDeleted?: boolean;
 }

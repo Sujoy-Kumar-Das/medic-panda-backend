@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Model } from 'mongoose';
+import { productModel } from '../modules/product/porduct.model';
 
-const updateExpiredDiscounts = async function (model: Model<any>) {
+export const updateExpiredDiscountsBulk = async function (model: Model<any>) {
   const now = new Date();
   const currentDateStr = now.toISOString().split('T')[0];
   const currentTimeStr = now.toTimeString().substring(0, 5);
@@ -25,4 +26,44 @@ const updateExpiredDiscounts = async function (model: Model<any>) {
   return result;
 };
 
-export default updateExpiredDiscounts;
+export const updateExpiredDiscountsForFetchedProducts = async (
+  products: any,
+): Promise<any[]> => {
+  if (!products) return [];
+
+  const normalizedProducts = Array.isArray(products) ? products : [products];
+  const now = new Date();
+  const currentDate = now.toISOString().split('T')[0];
+  const currentTime = now.toTimeString().substring(0, 5);
+
+  const expiredIds = normalizedProducts
+    .filter((product) => {
+      const discount = product.discount;
+      if (!discount) return false;
+
+      const discountEndDate = new Date(discount.endDate)
+        .toISOString()
+        .split('T')[0];
+
+      return (
+        discountEndDate < currentDate ||
+        (discountEndDate === currentDate && discount.endTime < currentTime)
+      );
+    })
+    .map((p) => p._id);
+
+  if (expiredIds.length > 0) {
+    await productModel.updateMany(
+      { _id: { $in: expiredIds } },
+      { $set: { discount: null } },
+    );
+
+    normalizedProducts.forEach((p) => {
+      if (expiredIds.some((id) => id.equals(p._id))) {
+        p.discount = null;
+      }
+    });
+  }
+
+  return normalizedProducts;
+};

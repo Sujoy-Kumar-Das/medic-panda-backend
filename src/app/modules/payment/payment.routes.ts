@@ -9,7 +9,10 @@ router.post('/success-payment', paymentController.successPaymentController);
 
 router.post('/success-cancel', paymentController.cancelPaymentController);
 
-router.post('/failed-payment', paymentController.failedPaymentController);
+router.post(
+  '/success-payment/failed-payment',
+  paymentController.failedPaymentController,
+);
 
 router.post(
   '/pay-now/:id',

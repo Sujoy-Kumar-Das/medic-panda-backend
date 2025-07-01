@@ -146,6 +146,7 @@ const createOrderService = async (userId: string, payload: Partial<IOrder>) => {
 const getAllOrderServiceByAdmin = async (query: Record<string, unknown>) => {
   // Build the query with filters
   const ordersQuery = new QueryBuilder(orderModel.find(), query)
+    .search(['_id'])
     .filter()
     .sort()
     .paginate();

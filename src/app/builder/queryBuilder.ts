@@ -53,6 +53,16 @@ class QueryBuilder<T> {
     return this;
   }
 
+  limit() {
+    const isLimit = this.query.limit;
+
+    console.log({ isLimit });
+    if (isLimit) {
+      this.modelQuery = this.modelQuery.limit(Number(isLimit));
+    }
+    return this;
+  }
+
   paginate() {
     const page = Number(this?.query?.page) || 1;
     const limit = Number(this?.query?.limit) || 10;
@@ -74,7 +84,7 @@ class QueryBuilder<T> {
   async countTotal(fields?: Record<string, any> | undefined) {
     const total = await this.modelQuery.model.countDocuments(fields);
     const page = Number(this?.query?.page) || 1;
-    const limit = Number(this?.query?.limit) || 10;
+    const limit = Number(this?.query?.limit) || total;
     const totalPage = Math.ceil(total / limit);
 
     return {

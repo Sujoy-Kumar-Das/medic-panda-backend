@@ -13,7 +13,6 @@ const createCustomerController = catchAsync(async (req, res) => {
     res,
     name: 'accessToken',
     value: String(accessToken),
-    maxAge: 15 * 60 * 1000,
   });
 
   // Set refresh token cookie
@@ -21,7 +20,6 @@ const createCustomerController = catchAsync(async (req, res) => {
     res,
     name: 'refreshToken',
     value: String(refreshToken),
-    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   sendResponse(res, {

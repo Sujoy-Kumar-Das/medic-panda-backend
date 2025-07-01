@@ -8,13 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.productModel = void 0;
 const mongoose_1 = require("mongoose");
-const updateExpiredDiscounts_1 = __importDefault(require("../../utils/updateExpiredDiscounts"));
+const updateExpiredDiscounts_1 = require("../../utils/updateExpiredDiscounts");
 const discountSchema = new mongoose_1.Schema({
     discountStatus: {
         type: Boolean,
@@ -45,9 +42,14 @@ const discountSchema = new mongoose_1.Schema({
         required: [true, 'End time is required.'],
     },
 }, {
-    id: false,
+    _id: false,
     versionKey: false,
 });
+const ratingSchema = new mongoose_1.Schema({
+    average: { type: Number, default: 0, min: 0, max: 5 },
+    count: { type: Number, default: 0 },
+    lastUpdated: { type: Date, default: Date.now },
+}, { _id: false, versionKey: false, timestamps: true });
 const productSchema = new mongoose_1.Schema({
     name: {
         type: String,
@@ -81,8 +83,8 @@ const productSchema = new mongoose_1.Schema({
         ref: 'manufacturer',
     },
     rating: {
-        type: Number,
-        default: 0,
+        type: ratingSchema,
+        default: { average: 0, count: 0, lastUpdated: new Date() },
     },
     isWishList: {
         type: Boolean,
@@ -94,34 +96,46 @@ const productSchema = new mongoose_1.Schema({
         select: false,
     },
 });
-// Pre-query middleware to clean up expired discounts
-productSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function (next) {
+// Post-query middleware to clean up expired discounts
+productSchema.post(['find', 'findOne'], function (docs, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield (0, updateExpiredDiscounts_1.default)(this.model);
-        this.find({ isDeleted: { $ne: true } });
-        next();
+        try {
+            if (!docs)
+                return next();
+            yield (0, updateExpiredDiscounts_1.updateExpiredDiscountsForFetchedProducts)(docs);
+            next();
+        }
+        catch (err) {
+            next(err);
+        }
     });
 });
-productSchema.pre('aggregate', function (next) {
+productSchema.post('findOneAndUpdate', function (doc, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield (0, updateExpiredDiscounts_1.default)(this.model());
-        this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
-        next();
+        try {
+            if (!doc)
+                return next();
+            yield (0, updateExpiredDiscounts_1.updateExpiredDiscountsForFetchedProducts)(doc);
+            next();
+        }
+        catch (err) {
+            next(err);
+        }
     });
 });
-// product statics methods
-productSchema.statics.isProductExistsByName = function (name) {
+productSchema.post('aggregate', function (doc, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield exports.productModel
-            .findOne({
-            name: {
-                $regex: name,
-                $options: 'i',
-            },
-        })
-            .select('+isDeleted');
+        try {
+            if (!doc)
+                return next();
+            yield (0, updateExpiredDiscounts_1.updateExpiredDiscountsForFetchedProducts)(doc);
+            next();
+        }
+        catch (err) {
+            next(err);
+        }
     });
-};
+});
 productSchema.statics.isProductExistsById = function (id, session) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield exports.productModel

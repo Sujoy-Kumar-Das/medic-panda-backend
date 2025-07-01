@@ -98,37 +98,37 @@ src/
 
 │ └── modules/
 
-| └── admin/
+| | └── admin/
 
-| └── auth/
+| | └── auth/
 
-| └── blog/
+| | └── blog/
 
-| └── cart/
+| | └── cart/
 
-| └── category/
+| | └── category/
 
-| └── customer/
+| | └── customer/
 
-| └── manufacturer/
+| | └── manufacturer/
 
-| └── meta/
+| | └── meta/
 
-| └── orders/
+| | └── orders/
 
-| └── payment/
+| | └── payment/
 
-| └── productDetails/
+| | └── productDetails/
 
-| └── product/
+| | └── product/
 
-| └── review-reply/
+| | └── review-reply/
 
-| └── reviews/
+| | └── reviews/
 
-| └── user/
+| | └── user/
 
-| └── wishList/
+| | └── wishList/
 
 │ └── middlewares/
 

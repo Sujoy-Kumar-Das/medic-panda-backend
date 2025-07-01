@@ -79,36 +79,67 @@
 ## 📁 Project Structure (Frontend)
 
 src/
+
 ├── app/
+
 │ └── builder/
+
 │ └── config/
+
 │ └── DB/
+
 │ └── emailTemplate/
+
 │ └── errors/
+
 │ └── helpers/
+
 │ └── interface/
+
 │ └── modules/
+
 | └── admin/
+
 | └── auth/
+
 | └── blog/
+
 | └── cart/
+
 | └── category/
+
 | └── customer/
+
 | └── manufacturer/
+
 | └── meta/
+
 | └── orders/
+
 | └── payment/
+
 | └── productDetails/
+
 | └── product/
+
 | └── review-reply/
+
 | └── reviews/
+
 | └── user/
+
 | └── wishList/
+
 │ └── middlewares/
+
 │ └── routes/
+
 │ └── ssl/
+
 │ └── utils/
+
 ├── app.ts
+
 └── server.ts
 
 ---
@@ -178,7 +209,7 @@ supper_admin_password=YourAdminPassword123
 npm run dev
 ```
 
-Visit the app at: http://localhost:3000
+Visit the app at: http://localhost:5000
 
 ---
 

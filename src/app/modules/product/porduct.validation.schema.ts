@@ -47,9 +47,18 @@ const createProductValidationSchema = z.object({
       discount: discountValidationSchema.optional(),
     }),
     productDetail: z.object({
-      description: z
+      shortDescription: z
         .string({ required_error: 'Description is required.' })
-        .min(100, {
+        .min(200, {
+          message: 'Short Description should be minimum 200 characters long.',
+        })
+        .max(600, {
+          message:
+            'Short Description should not be minimum 600 characters long.',
+        }),
+      detailedDescription: z
+        .string({ required_error: 'Description is required.' })
+        .min(500, {
           message: 'Description should be minimum 100 characters long.',
         }),
       stock: z
@@ -75,36 +84,45 @@ const updateProductValidationSchema = z.object({
           message: 'Product name should be at least 3 characters long.',
         })
         .optional(),
-
+      category: z
+        .string({ required_error: 'Category id is required.' })
+        .optional(),
+      manufacturer: z
+        .string({ required_error: 'Manufacture id is required.' })
+        .optional(),
       price: z
         .number({ required_error: 'Product price is required.' })
         .positive({ message: 'Product price must be a positive number.' })
         .optional(),
-      discountPercentage: z
-        .number({ required_error: 'Product discount percentage is required.' })
-        .min(0, { message: 'Product discount percentage must be at least 0.' })
-        .max(100, {
-          message: 'Product discount percentage must be at most 100.',
-        })
-        .optional(),
+      discount: discountValidationSchema.optional(),
     }),
     productDetail: z.object({
-      category: z
-        .string({ required_error: 'Category id is required.' })
-        .optional(),
-      manufacture: z
-        .string({ required_error: 'Manufacture id is required.' })
-        .optional(),
-
-      description: z
+      shortDescription: z
         .string({ required_error: 'Description is required.' })
-        .min(100, {
+        .min(200, {
+          message: 'Short Description should be minimum 200 characters long.',
+        })
+        .max(600, {
+          message:
+            'Short Description should not be minimum 600 characters long.',
+        })
+        .optional(),
+      detailedDescription: z
+        .string({ required_error: 'Description is required.' })
+        .min(500, {
           message: 'Description should be minimum 100 characters long.',
         })
         .optional(),
       stock: z
         .number({ required_error: 'Stock is required.' })
         .nonnegative({ message: 'Stock should be positive.' })
+        .optional(),
+      images: z
+        .array(
+          z
+            .string({ required_error: 'Photo is required.' })
+            .url({ message: 'Each photo must be a valid URL.' }),
+        )
         .optional(),
     }),
   }),

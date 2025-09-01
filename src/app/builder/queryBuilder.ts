@@ -56,7 +56,6 @@ class QueryBuilder<T> {
   limit() {
     const isLimit = this.query.limit;
 
-    console.log({ isLimit });
     if (isLimit) {
       this.modelQuery = this.modelQuery.limit(Number(isLimit));
     }

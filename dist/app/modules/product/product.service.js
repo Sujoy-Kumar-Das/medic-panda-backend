@@ -54,20 +54,20 @@ const createProductService = (payload) => __awaiter(void 0, void 0, void 0, func
             throw new AppError_1.default(400, 'Flailed to create product.');
         }
         productDetail.product = createProduct[0]._id;
-        const createCustomer = yield productDetail_model_1.productDetailModel.create([productDetail], {
+        const createProductDetails = yield productDetail_model_1.productDetailModel.create([productDetail], {
             session,
         });
-        if (!createCustomer.length) {
+        if (!createProductDetails.length) {
             throw new AppError_1.default(400, 'Failed to create product.');
         }
         yield session.commitTransaction();
         yield session.endSession();
-        return createCustomer[0];
+        return createProductDetails[0];
     }
-    catch (error) {
+    catch (_a) {
         yield session.abortTransaction();
         yield session.endSession();
-        throw new AppError_1.default(400, 'Something went wrong for create user. Please try again.');
+        throw new AppError_1.default(400, 'Something went wrong for create product. Please try again.');
     }
 });
 const getAllProductService = (userId, query) => __awaiter(void 0, void 0, void 0, function* () {
@@ -150,32 +150,30 @@ const updateProductService = (id, payload) => __awaiter(void 0, void 0, void 0, 
         session.endSession();
         return updatedProduct;
     }
-    catch (error) {
+    catch (_a) {
         yield session.abortTransaction();
         session.endSession();
         throw new AppError_1.default(400, 'Something went wrong while updating the product. Please try again.');
     }
 });
 const deleteProductService = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
-        const product = yield porduct_model_1.productModel.findById(id);
-        if (!product) {
-            throw new AppError_1.default(404, 'This product is not found.');
-        }
-        const isDeleted = product.isDeleted;
-        if (isDeleted) {
-            throw new AppError_1.default(409, 'This product already deleted.');
-        }
-        const result = yield porduct_model_1.productModel
-            .findByIdAndUpdate(id, {
-            isDeleted: true,
-        }, { new: true })
-            .select('+isDeleted');
-        if (!(result === null || result === void 0 ? void 0 : result.isDeleted)) {
-            throw new AppError_1.default(400, `Failed to delete ${product.name} `);
-        }
-        return null;
-    }), 5000);
+    const product = yield porduct_model_1.productModel.findById(id);
+    if (!product) {
+        throw new AppError_1.default(404, 'This product is not found.');
+    }
+    const isDeleted = product.isDeleted;
+    if (isDeleted) {
+        throw new AppError_1.default(409, 'This product already deleted.');
+    }
+    const result = yield porduct_model_1.productModel
+        .findByIdAndUpdate(id, {
+        isDeleted: true,
+    }, { new: true })
+        .select('+isDeleted');
+    if (!(result === null || result === void 0 ? void 0 : result.isDeleted)) {
+        throw new AppError_1.default(400, `Failed to delete ${product.name} `);
+    }
+    return null;
 });
 exports.productService = {
     createProductService,

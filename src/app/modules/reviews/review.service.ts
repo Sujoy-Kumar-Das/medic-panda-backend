@@ -19,7 +19,18 @@ const createReviewService = async (payload: IReview) => {
   const result = await reviewModel.create(payload);
   return result;
 };
+const getAllReviewService = async () => {
+  const review = await reviewModel.find().populate({
+    path: 'user',
+    select: '_id',
+    populate: {
+      path: 'customer',
+      select: 'name photo',
+    },
+  });
 
+  return review;
+};
 const getReviewDetailsService = async ({ reviewId }: { reviewId: string }) => {
   const review = await reviewModel.findById(reviewId).populate({
     path: 'user',
@@ -155,6 +166,7 @@ const deleteReviewService = async (id: string, userId: Types.ObjectId) => {
 
 export const reviewService = {
   createReviewService,
+  getAllReviewService,
   getAllReviewServiceByProduct,
   getReviewDetailsService,
   editReviewService,

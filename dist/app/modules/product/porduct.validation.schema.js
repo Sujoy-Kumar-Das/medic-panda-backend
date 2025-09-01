@@ -43,9 +43,14 @@ const createProductValidationSchema = zod_1.z.object({
             discount: exports.discountValidationSchema.optional(),
         }),
         productDetail: zod_1.z.object({
-            description: zod_1.z
+            shortDescription: zod_1.z
                 .string({ required_error: 'Description is required.' })
-                .min(100, {
+                .min(200, {
+                message: 'Description should be minimum 100 characters long.',
+            }),
+            detailedDescription: zod_1.z
+                .string({ required_error: 'Description is required.' })
+                .min(500, {
                 message: 'Description should be minimum 100 characters long.',
             }),
             stock: zod_1.z

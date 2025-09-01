@@ -28,6 +28,17 @@ const createReviewService = (payload) => __awaiter(void 0, void 0, void 0, funct
     const result = yield review_model_1.reviewModel.create(payload);
     return result;
 });
+const getAllReviewService = () => __awaiter(void 0, void 0, void 0, function* () {
+    const review = yield review_model_1.reviewModel.find().populate({
+        path: 'user',
+        select: '_id',
+        populate: {
+            path: 'customer',
+            select: 'name photo',
+        },
+    });
+    return review;
+});
 const getReviewDetailsService = (_a) => __awaiter(void 0, [_a], void 0, function* ({ reviewId }) {
     const review = yield review_model_1.reviewModel.findById(reviewId).populate({
         path: 'user',
@@ -133,6 +144,7 @@ const deleteReviewService = (id, userId) => __awaiter(void 0, void 0, void 0, fu
 });
 exports.reviewService = {
     createReviewService,
+    getAllReviewService,
     getAllReviewServiceByProduct,
     getReviewDetailsService,
     editReviewService,

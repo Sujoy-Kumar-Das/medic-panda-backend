@@ -1,31 +1,45 @@
 import { model, Schema } from 'mongoose';
 import { IProductDetail } from './productDetail.interface';
 
-const productDetailSchema = new Schema<IProductDetail>({
-  product: {
-    type: Schema.Types.ObjectId,
-    ref: 'product',
+const productDetailSchema = new Schema<IProductDetail>(
+  {
+    product: {
+      type: Schema.Types.ObjectId,
+      ref: 'product',
+      required: [true, 'Product reference is required.'],
+      unique: true,
+    },
+
+    images: {
+      type: [String],
+      required: false,
+    },
+    shortDescription: {
+      type: String,
+      required: [true, 'Short description is required.'],
+      minlength: [200, 'Short description must be at least 10 characters.'],
+      maxlength: [600, 'Short description cannot exceed 200 characters.'],
+      trim: true,
+    },
+    detailedDescription: {
+      type: String,
+      required: [true, 'Detailed description is required.'],
+      minlength: [500, 'Detailed description must be at least 20 characters.'],
+      trim: true,
+    },
+
+    stock: {
+      type: Number,
+      required: [true, 'Stock quantity is required.'],
+      min: [0, 'Stock quantity cannot be negative.'],
+    },
   },
-  images: {
-    type: [String],
+  {
+    timestamps: true,
   },
-  description: {
-    type: String,
-    required: [true, 'Product description is required.'],
-  },
-  stock: {
-    type: Number,
-    required: [true, 'Stock quantity is required.'],
-    min: [0, 'Stock quantity cannot be negative.'],
-  },
-  status: {
-    type: String,
-    enum: ['active', 'inactive'],
-    default: 'active',
-  },
-});
+);
 
 export const productDetailModel = model<IProductDetail>(
-  'productDetail',
+  'ProductDetail',
   productDetailSchema,
 );

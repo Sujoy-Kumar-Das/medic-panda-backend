@@ -7,6 +7,8 @@ import { reviewValidationSchema } from './review.validation';
 
 const router = Router();
 
+router.get('/review/public', reviewController.getAllReviewController);
+
 router.post(
   '/review',
   auth(USER_ROLE.user),
@@ -15,7 +17,10 @@ router.post(
 );
 
 // get products all reviews;
-router.get('/review/:productId', reviewController.getAllReviewController);
+router.get(
+  '/review/:productId',
+  reviewController.getAllReviewByProductController,
+);
 
 // get the review details data;
 router.get(

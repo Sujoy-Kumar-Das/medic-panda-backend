@@ -26,6 +26,15 @@ const createReviewController = (0, catchAsync_1.default)((req, res) => __awaiter
     });
 }));
 const getAllReviewController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield review_service_1.reviewService.getAllReviewService();
+    (0, sendResponse_1.default)(res, {
+        data: result,
+        success: true,
+        statusCode: 200,
+        message: 'Review fetched successfully.',
+    });
+}));
+const getAllReviewByProductController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield review_service_1.reviewService.getAllReviewServiceByProduct({
         productId: req.params.productId,
     });
@@ -71,6 +80,7 @@ const deleteReviewController = (0, catchAsync_1.default)((req, res) => __awaiter
 }));
 exports.reviewController = {
     createReviewController,
+    getAllReviewByProductController,
     getAllReviewController,
     getReviewDetailsController,
     editReviewController,

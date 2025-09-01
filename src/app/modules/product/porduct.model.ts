@@ -144,6 +144,12 @@ productSchema.statics.isProductExistsById = async function (
     .session(session || null);
 };
 
+productSchema.statics.isProductExistsByName = async function (name: string) {
+  return await productModel
+    .findOne({ name: { $regex: `^${name}$`, $options: 'i' } })
+    .select('+isDeleted');
+};
+
 // method for remove sensitive fields
 productSchema.methods.toJSON = function () {
   const product = this.toObject();

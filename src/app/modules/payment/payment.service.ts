@@ -132,11 +132,6 @@ const payNowService = async (userId: string, orderId: string) => {
   }
 
   //   is product active
-  const isActive = productDetails?.status;
-
-  if (isActive === 'inactive') {
-    throw new AppError(403, 'This product has been closed.');
-  }
 
   //   is stock available
   const stockProduct = productDetails?.stock;

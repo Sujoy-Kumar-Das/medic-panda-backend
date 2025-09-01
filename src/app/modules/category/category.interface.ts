@@ -2,7 +2,9 @@ import { Model } from 'mongoose';
 
 export interface ICategory {
   name: string;
+  icon: string;
   thumbnail: string;
+  description: string;
   popularity?: boolean;
 }
 

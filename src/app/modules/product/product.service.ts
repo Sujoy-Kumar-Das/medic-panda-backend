@@ -65,24 +65,27 @@ const createProductService = async (payload: IProductPayload) => {
 
     productDetail.product = createProduct[0]._id;
 
-    const createCustomer = await productDetailModel.create([productDetail], {
-      session,
-    });
+    const createProductDetails = await productDetailModel.create(
+      [productDetail],
+      {
+        session,
+      },
+    );
 
-    if (!createCustomer.length) {
+    if (!createProductDetails.length) {
       throw new AppError(400, 'Failed to create product.');
     }
 
     await session.commitTransaction();
     await session.endSession();
 
-    return createCustomer[0];
-  } catch (error) {
+    return createProductDetails[0];
+  } catch {
     await session.abortTransaction();
     await session.endSession();
     throw new AppError(
       400,
-      'Something went wrong for create user. Please try again.',
+      'Something went wrong for create product. Please try again.',
     );
   }
 };
@@ -112,6 +115,8 @@ const getAllProductService = async (
     .populate('category')
     .populate('manufacturer')
     .lean();
+
+  console.log({ query });
 
   const productQuery = new QueryBuilder(baseQuery, query);
   const products = productQuery.search(['name']).filter().paginate();
@@ -207,7 +212,7 @@ const updateProductService = async (
     session.endSession();
 
     return updatedProduct;
-  } catch (error) {
+  } catch {
     await session.abortTransaction();
     session.endSession();
     throw new AppError(
@@ -218,34 +223,32 @@ const updateProductService = async (
 };
 
 const deleteProductService = async (id: string) => {
-  setTimeout(async () => {
-    const product = await productModel.findById(id);
+  const product = await productModel.findById(id);
 
-    if (!product) {
-      throw new AppError(404, 'This product is not found.');
-    }
+  if (!product) {
+    throw new AppError(404, 'This product is not found.');
+  }
 
-    const isDeleted = product.isDeleted;
+  const isDeleted = product.isDeleted;
 
-    if (isDeleted) {
-      throw new AppError(409, 'This product already deleted.');
-    }
+  if (isDeleted) {
+    throw new AppError(409, 'This product already deleted.');
+  }
 
-    const result = await productModel
-      .findByIdAndUpdate(
-        id,
-        {
-          isDeleted: true,
-        },
-        { new: true },
-      )
-      .select('+isDeleted');
+  const result = await productModel
+    .findByIdAndUpdate(
+      id,
+      {
+        isDeleted: true,
+      },
+      { new: true },
+    )
+    .select('+isDeleted');
 
-    if (!result?.isDeleted) {
-      throw new AppError(400, `Failed to delete ${product.name} `);
-    }
-    return null;
-  }, 5000);
+  if (!result?.isDeleted) {
+    throw new AppError(400, `Failed to delete ${product.name} `);
+  }
+  return null;
 };
 
 export const productService = {

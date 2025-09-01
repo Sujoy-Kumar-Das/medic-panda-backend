@@ -16,30 +16,18 @@ const productUser = () =>
 
     try {
       const decoded = verifyToken(token, config.access_token as string);
-      const { userId, iat } = decoded;
+
+      const { userId } = decoded;
 
       const user = await userModel.findUserWithID(userId);
 
-      const isInvalid =
-        !user ||
-        user.isBlocked ||
-        user.isDeleted ||
-        (user.passwordChangeAt &&
-          userModel.isJwtIssuedBeforePasswordChange(
-            user.passwordChangeAt,
-            iat as number,
-          ));
+      req.user = { email: user?.email, role: user?.role, userId: user?._id };
 
-      if (isInvalid) {
-        req.user = ANONYMOUS_USER;
-      } else {
-        req.user = { email: user.email, role: user.role, userId: user._id };
-      }
+      next();
     } catch {
       req.user = ANONYMOUS_USER;
+      return next();
     }
-
-    next();
   });
 
 export default productUser;

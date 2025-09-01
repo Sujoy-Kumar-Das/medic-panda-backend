@@ -10,7 +10,7 @@ const router = Router();
 
 router.post(
   '/product',
-  // auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   validateRequest(productValidationSchema.createProductValidationSchema),
   ProductController.createProductController,
 );
@@ -25,7 +25,7 @@ router.get('/product/:id', ProductController.getSingleProductController);
 
 router.patch(
   '/product/:id',
-  // validateRequest(productValidationSchema.updateProductValidationSchema),
+  validateRequest(productValidationSchema.updateProductValidationSchema),
   ProductController.updateProductController,
 );
 

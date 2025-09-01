@@ -25,23 +25,14 @@ const productUser = () => (0, catchAsync_1.default)((req, res, next) => __awaite
     }
     try {
         const decoded = (0, verifyJwtToken_1.default)(token, config_1.default.access_token);
-        const { userId, iat } = decoded;
+        const { userId } = decoded;
         const user = yield user_model_1.userModel.findUserWithID(userId);
-        const isInvalid = !user ||
-            user.isBlocked ||
-            user.isDeleted ||
-            (user.passwordChangeAt &&
-                user_model_1.userModel.isJwtIssuedBeforePasswordChange(user.passwordChangeAt, iat));
-        if (isInvalid) {
-            req.user = ANONYMOUS_USER;
-        }
-        else {
-            req.user = { email: user.email, role: user.role, userId: user._id };
-        }
+        req.user = { email: user === null || user === void 0 ? void 0 : user.email, role: user === null || user === void 0 ? void 0 : user.role, userId: user === null || user === void 0 ? void 0 : user._id };
+        next();
     }
     catch (_a) {
         req.user = ANONYMOUS_USER;
+        return next();
     }
-    next();
 }));
 exports.default = productUser;

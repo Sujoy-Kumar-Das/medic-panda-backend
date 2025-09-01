@@ -105,10 +105,6 @@ const payNowService = (userId, orderId) => __awaiter(void 0, void 0, void 0, fun
         throw new AppError_1.default(404, 'This product is not found.');
     }
     //   is product active
-    const isActive = productDetails === null || productDetails === void 0 ? void 0 : productDetails.status;
-    if (isActive === 'inactive') {
-        throw new AppError_1.default(403, 'This product has been closed.');
-    }
     //   is stock available
     const stockProduct = productDetails === null || productDetails === void 0 ? void 0 : productDetails.stock;
     if (!stockProduct) {

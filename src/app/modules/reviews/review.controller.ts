@@ -13,6 +13,16 @@ const createReviewController = catchAsync(async (req, res) => {
 });
 
 const getAllReviewController = catchAsync(async (req, res) => {
+  const result = await reviewService.getAllReviewService();
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: 200,
+    message: 'Review fetched successfully.',
+  });
+});
+
+const getAllReviewByProductController = catchAsync(async (req, res) => {
   const result = await reviewService.getAllReviewServiceByProduct({
     productId: req.params.productId,
   });
@@ -67,6 +77,7 @@ const deleteReviewController = catchAsync(async (req, res) => {
 
 export const reviewController = {
   createReviewController,
+  getAllReviewByProductController,
   getAllReviewController,
   getReviewDetailsController,
   editReviewController,

@@ -144,6 +144,13 @@ productSchema.statics.isProductExistsById = function (id, session) {
             .session(session || null);
     });
 };
+productSchema.statics.isProductExistsByName = function (name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield exports.productModel
+            .findOne({ name: { $regex: `^${name}$`, $options: 'i' } })
+            .select('+isDeleted');
+    });
+};
 // method for remove sensitive fields
 productSchema.methods.toJSON = function () {
     const product = this.toObject();

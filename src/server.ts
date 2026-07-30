@@ -1,30 +1,47 @@
-import { Server } from 'http';
+import { createServer, Server } from 'http';
 import mongoose from 'mongoose';
 import app from './app';
 import config from './app/config';
 import seedSupperAdmin from './app/DB';
 import AppError from './app/errors/AppError';
 import { startCronJobs, stopAllCronJobs } from './app/helpers/corn.jobs';
+import { initSocket } from './app/socket';
+import socketEventService from './app/socket/socket.event.service';
 
-let server: Server;
+const server: Server = createServer(app);
+
+// socket config
+const io = initSocket(server);
+
+// calling the socket events.
+socketEventService(io);
+
+
+
 
 async function main() {
   try {
+
+    // make connection with mongoose
      await mongoose.connect(config.db_url as string);
 
-     if(mongoose.connection.readyState === 1 ){
-       await seedSupperAdmin();
-      startCronJobs();
-      console.log('Database connected successfully.');
-      server = app.listen(config.port, () => {
-        console.log(`server is running on port ${config.port}`);
-      });
-     }
+    //  seeding superadmin for every server starts
+    await seedSupperAdmin();
+
+    startCronJobs();
+    console.log('Database connected successfully.');
+    server.listen(config.port, () => {
+      console.log(`server is running on port ${config.port}`);
+    });
+
   } catch (error) {
     console.log(error);
     throw new AppError(404, 'Server error.');
   }
 }
+
+
+
 
 main();
 

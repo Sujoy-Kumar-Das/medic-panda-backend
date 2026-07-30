@@ -1,19 +1,19 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { urlencoded } from 'express';
+import config from './app/config';
 import globalErrorHandler from './app/middlewares/globalErrrorHandler';
 import notFound from './app/middlewares/not-found';
 import router from './app/routes';
 
 const app = express();
 
+// allowed origins
+export const allowdOrigins = config.node_env === "production" ? [String(config.baseFrontendLinkProd)] : [String(config.baseFrontendLinkDev)]
+
 app.use(
   cors({
-    origin: [
-      'http://localhost:3000',
-      'https://medic-panda.vercel.app',
-      'https://medic-panda-bkpopvgwo-sujoykumardas-projects.vercel.app',
-    ],
+    origin:allowdOrigins,
     credentials: true,
   }),
 );

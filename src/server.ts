@@ -23,13 +23,13 @@ async function main() {
   try {
 
     // make connection with mongoose
-     await mongoose.connect(config.db_url as string);
+    await mongoose.connect(config.db_url as string);
 
     //  seeding superadmin for every server starts
-    await seedSupperAdmin();
+    // await seedSupperAdmin();
 
     startCronJobs();
-    console.log('Database connected successfully.');
+    console.log('Database connected successfullyyyyy.');
     server.listen(config.port, () => {
       console.log(`server is running on port ${config.port}`);
     });

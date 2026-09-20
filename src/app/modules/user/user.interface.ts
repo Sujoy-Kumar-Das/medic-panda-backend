@@ -1,18 +1,20 @@
 import mongoose, { Model, Types } from 'mongoose';
 
+
 export interface IUser {
+  _id?: Types.ObjectId;
   email: string;
   password: string;
   role: 'user' | 'admin' | 'superAdmin';
-  isDeleted?: boolean;
-  isBlocked?: boolean;
-  passwordChangeAt: Date;
+  passwordChangeAt?: Date;
+  lastLoginAt?: Date | null;
+  isEmailVerified: boolean;
+  isActive: boolean;
+  isDeleted: boolean;
   passwordWrongAttempt: number;
-  isVerified: boolean;
-  otpCode: number | null;
-  otpTime: Date | null;
-  wrongOTPAttempt: number;
-  resetTime: null | Date;
+  passwordChangeBlockTime: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 type TFindUserMethods = (IUser & { _id: Types.ObjectId }) | null;

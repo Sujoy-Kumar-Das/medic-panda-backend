@@ -19,7 +19,13 @@ const userSchema = new Schema<IUser, IUserMethods>(
     },
     password: {
       type: String,
-      required: [true, 'Password is required.'],
+      required: [false, 'Password is required.'],
+      validate: {
+        validator: function (value: string) {
+          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value);
+        },
+        message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+      },
       select: false,
     },
     role: {
@@ -27,10 +33,19 @@ const userSchema = new Schema<IUser, IUserMethods>(
       enum: ['user', 'admin', 'superAdmin'],
       default: 'user',
     },
-    isBlocked: {
+    isActive: {
       type: Boolean,
-      default: false,
-      select: false,
+      default: true,
+    },
+    passwordWrongAttempt: {
+      type: Number,
+      default: 0,
+      select: false
+    },
+    passwordChangeBlockTime: {
+      type: Date,
+      default: null,
+      select: false
     },
     isDeleted: {
       type: Boolean,
@@ -39,32 +54,19 @@ const userSchema = new Schema<IUser, IUserMethods>(
     },
     passwordChangeAt: {
       type: Date,
+      default: null,
       select: false,
     },
-    isVerified: {
+    lastLoginAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+    isEmailVerified: {
       type: Boolean,
-      default: false,
-    },
-    otpCode: {
-      type: Number,
-      default: null,
-      select: false,
-    },
-    otpTime: {
-      type: Date,
-      default: null,
-      select: false,
-    },
-    wrongOTPAttempt: {
-      type: Number,
-      default: 0,
-      select: false,
-    },
-    resetTime: {
-      type: Date,
-      default: null,
-      select: false,
-    },
+      default: false
+    }
+
   },
   {
     versionKey: false,
@@ -75,19 +77,19 @@ const userSchema = new Schema<IUser, IUserMethods>(
 );
 
 // using virtuals for link customer to user
-userSchema.virtual('customer', {
-  ref: 'customer',
-  localField: '_id',
-  foreignField: 'user',
-  justOne: true,
-});
+// userSchema.virtual('customer', {
+//   ref: 'customer',
+//   localField: '_id',
+//   foreignField: 'user',
+//   justOne: true,
+// });
 
-// is user exists statics
+// find users via email
 userSchema.statics.isUserExists = function (email: string) {
-  return userModel
+  return USER
     .findOne({ email })
     .select(
-      '+isBlocked +isDeleted +passwordChangeAt +otpCode +otpTime +wrongOTPAttempt +resetTime',
+      '+passwordWrongAttempt +passwordChangeBlockTime +isDeleted +passwordChangeAt +lastLoginAt',
     );
 };
 
@@ -96,10 +98,10 @@ userSchema.statics.findUserWithID = function (
   id: string,
   session?: mongoose.ClientSession,
 ) {
-  return userModel
+  return USER
     .findById(id)
     .select(
-      '+isBlocked +isDeleted +passwordChangeAt +otpCode +otpTime +wrongOTPAttempt +resetTime',
+      '+passwordWrongAttempt +passwordChangeBlockTime +isDeleted +passwordChangeAt +lastLoginAt',
     )
     .session(session || null);
 };
@@ -131,4 +133,4 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-export const userModel = model<IUser, IUserMethods>('user', userSchema);
+export const USER = model<IUser, IUserMethods>('user', userSchema);

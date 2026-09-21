@@ -1,4 +1,4 @@
-import mongoose, { Model, Types } from 'mongoose';
+import mongoose, { FilterQuery, Model, Types } from 'mongoose';
 
 
 export interface IUser {
@@ -17,18 +17,31 @@ export interface IUser {
   updatedAt?: Date;
 }
 
-type TFindUserMethods = (IUser & { _id: Types.ObjectId }) | null;
+type TFindUserResult = (IUser & { _id: Types.ObjectId }) | null;
+
 
 export interface IUserMethods extends Model<IUser> {
-  isUserExists(email: string): Promise<TFindUserMethods>;
-  findUserWithID(
-    id: string,
+
+  // find the user with sensitive fields
+  findUserWithSensitiveFields(
+    query: FilterQuery<IUser>,
     session?: mongoose.ClientSession,
-  ): Promise<TFindUserMethods>;
+  ): Promise<TFindUserResult>;
+
+  // find the user with sensitive fields, validate and throw error
+  findAndValidateUser(
+    query: FilterQuery<IUser>,
+    session?: mongoose.ClientSession,
+  ): Promise<IUser & { _id: Types.ObjectId }>;
+
+
+  // check the jwt token valid or not after changing password
   isJwtIssuedBeforePasswordChange(
     passwordChangeAt: Date,
     jwtIssuedTime: number,
   ): boolean;
+
+  // check password match or not
   isPasswordMatched(
     plainTextPassword: string,
     hashedPassword: string,

@@ -1,7 +1,13 @@
 import bcrypt from 'bcrypt';
-import mongoose, { model, Schema } from 'mongoose';
+import mongoose, { FilterQuery, model, Schema } from 'mongoose';
+import AppError from '../../errors/AppError';
 import hashPassword from '../../utils/hashPassword';
 import { IUser, IUserMethods } from './user.interface';
+
+// users sensitive fileds
+
+const SENSITIVE_FIELDS =
+  '+passwordWrongAttempt +passwordChangeBlockTime +isDeleted +passwordChangeAt +lastLoginAt' as const;
 
 const userSchema = new Schema<IUser, IUserMethods>(
   {
@@ -84,26 +90,35 @@ const userSchema = new Schema<IUser, IUserMethods>(
 //   justOne: true,
 // });
 
-// find users via email
-userSchema.statics.isUserExists = function (email: string) {
-  return USER
-    .findOne({ email })
-    .select(
-      '+passwordWrongAttempt +passwordChangeBlockTime +isDeleted +passwordChangeAt +lastLoginAt',
-    );
-};
 
-// find user by id
-userSchema.statics.findUserWithID = function (
-  id: string,
+userSchema.statics.findUserWithSensitiveFields = function (
+  query: FilterQuery<IUser>,
   session?: mongoose.ClientSession,
 ) {
-  return USER
-    .findById(id)
-    .select(
-      '+passwordWrongAttempt +passwordChangeBlockTime +isDeleted +passwordChangeAt +lastLoginAt',
-    )
+  return this.findOne(query)
+    .select(SENSITIVE_FIELDS)
     .session(session || null);
+};
+
+userSchema.statics.findAndValidateUser = async function (
+  query: FilterQuery<IUser>,
+  session?: mongoose.ClientSession,
+) {
+  const user = await this.findUserWithSensitiveFields(query, session);
+
+  if (!user) {
+    throw new AppError(404, 'User not found.');
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(410, 'This user has been deleted.');
+  }
+
+  if (!user.isActive) {
+    throw new AppError(403, 'This user is not active.');
+  }
+
+  return user;
 };
 
 // is password matched method

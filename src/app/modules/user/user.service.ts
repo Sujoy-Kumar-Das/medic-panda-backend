@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import mongoose, { Model } from 'mongoose';
 import QueryBuilder from '../../builder/queryBuilder';
-import sendOtpEmailTemplate from '../../emailTemplate/verifyUserEmailTemplate';
 import AppError from '../../errors/AppError';
 import { IUserRoles } from '../../interface/user.roles.interface';
 import {
   createAccessToken,
   createRefreshToken,
 } from '../../utils/createJwtToken';
-import generateOTP from '../../utils/generateOTP';
-import { sendEmail } from '../../utils/sendEmail';
 import { IAdmin } from '../admin/admin.interface';
 import { adminModel } from '../admin/admin.model';
 import {
@@ -17,7 +14,7 @@ import {
   IUserPermanentAddress,
 } from '../customer/customer.interface';
 import { customerModel } from '../customer/customer.model';
-import { userModel } from '../user/user.model';
+import { USER } from '../user/user.model';
 import { USER_ROLE } from './user.constant';
 import { IUser } from './user.interface';
 
@@ -38,7 +35,7 @@ const createCustomerService = async (payload: ICustomerPayload) => {
   const { email, password, name, photo, contact } = payload;
 
   // check is the user already exists
-  const isUserExists = await userModel.isUserExists(email);
+  const isUserExists = await USER.findUserWithSensitiveFields({ email });
 
   if (isUserExists) {
     throw new AppError(403, `${name} already have an account.`);
@@ -58,7 +55,7 @@ const createCustomerService = async (payload: ICustomerPayload) => {
     };
 
     // create the user
-    const createUser = await userModel.create([userData], { session });
+    const createUser = await USER.create([userData], { session });
 
     if (!createUser.length) {
       throw new AppError(400, 'Flailed to create customer.');
@@ -106,7 +103,7 @@ const createAdminService = async (payload: { email: string }) => {
   const { email } = payload;
 
   // check is the user already exists
-  const user = await userModel.isUserExists(email);
+  const user = await USER.findUserWithSensitiveFields({ email });
 
   if (!user) {
     throw new AppError(403, `This user is not exists.`);
@@ -116,11 +113,11 @@ const createAdminService = async (payload: { email: string }) => {
     throw new AppError(403, `This user is already a ${user.role}`);
   }
 
-  if (!user.isVerified) {
+  if (!user.isEmailVerified) {
     throw new AppError(403, 'This user is not verified.');
   }
 
-  if (user.isBlocked) {
+  if (user.isActive) {
     throw new AppError(403, 'This user is blocked.');
   }
 
@@ -136,7 +133,7 @@ const createAdminService = async (payload: { email: string }) => {
     session.startTransaction();
 
     // update the user role as a admin
-    const updateRole = await userModel.findOneAndUpdate(
+    const updateRole = await USER.findOneAndUpdate(
       { email },
       { role: USER_ROLE.admin },
       { new: true, session },
@@ -188,16 +185,17 @@ const createAdminService = async (payload: { email: string }) => {
   }
 };
 
+// TODO: refine the update email funciton.
 const updateUserEmail = async (userId: string, payload: { email: string }) => {
   const { email } = payload;
 
-  const isUserExistsByEmail = await userModel.findOne({ email });
+  const isUserExistsByEmail = await USER.findUserWithSensitiveFields({ email });
 
   if (isUserExistsByEmail) {
     throw new AppError(401, 'This email already exists.');
   }
 
-  const result = await userModel.findByIdAndUpdate(
+  const result = await USER.findByIdAndUpdate(
     userId,
     { email, isVerified: false },
     { new: true },
@@ -208,7 +206,7 @@ const updateUserEmail = async (userId: string, payload: { email: string }) => {
 
 // get me
 const getMeService = async (id: string, role: IUserRoles) => {
-  const user = await userModel.findOne({ _id: id, role });
+  const user = await USER.findOne({ _id: id, role });
 
   if (!user) {
     throw new AppError(404, 'This user not found.');
@@ -234,7 +232,7 @@ const getMeService = async (id: string, role: IUserRoles) => {
 // get all users
 const getAllUsers = async (query: Record<string, unknown>) => {
   const userQuery = new QueryBuilder(
-    userModel.find({ isDeleted: false }),
+    USER.find({ isDeleted: false }),
     query,
   );
 
@@ -251,21 +249,21 @@ const getAllUsers = async (query: Record<string, unknown>) => {
 
 // get single users
 const getSingleUser = async (id: string) => {
-  const user = await userModel.findUserWithID(id);
+  const user = await USER.findAndValidateUser({ _id: id });
 
-  if (!user) {
-    throw new AppError(404, 'This user is not found.');
-  }
 
   const role = user.role;
+  let result = null;
 
   if (role === USER_ROLE.user) {
-    return await customerModel.findOne({ user: id }).populate('user');
+    result = await customerModel.findOne({ user: id }).populate('user');
   }
 
   if (role === USER_ROLE.admin || role === USER_ROLE.superAdmin) {
-    return await adminModel.findOne({ user: id }).populate('user');
+    result = await adminModel.findOne({ user: id }).populate('user');
   }
+
+  return result;
 };
 
 // get all block users
@@ -273,6 +271,7 @@ const getAllBlockedUsers = async () => {
   const customer = await customerModel
     .find({ isBlocked: { $eq: true } })
     .populate('user');
+
   const admin = await adminModel
     .find({ isBlocked: { $eq: true } })
     .populate('user');
@@ -284,7 +283,7 @@ const getAllBlockedUsers = async () => {
 const blockUsrService = async (payload: { id: string }) => {
   const { id } = payload;
   // Check if the user exists
-  const user = await userModel.findUserWithID(id);
+  const user = await USER.findOne({ _id: id });
 
   if (!user) {
     throw new AppError(404, 'This account is not found.');
@@ -294,7 +293,7 @@ const blockUsrService = async (payload: { id: string }) => {
     throw new AppError(404, 'This account has been deleted.');
   }
 
-  if (user.isBlocked) {
+  if (user.isActive) {
     throw new AppError(400, 'This account is already blocked.');
   }
 
@@ -304,11 +303,11 @@ const blockUsrService = async (payload: { id: string }) => {
     session.startTransaction();
 
     // Block the user
-    const updatedUser = await userModel
-      .findByIdAndUpdate(id, { isBlocked: true }, { session, new: true })
-      .select('+isBlocked');
+    const updatedUser = await USER
+      .findByIdAndUpdate(id, { isActive: true }, { session, new: true })
+      .select('+isActive');
 
-    if (!updatedUser?.isBlocked) {
+    if (!updatedUser?.isActive) {
       throw new AppError(400, 'Failed to block the user.');
     }
 
@@ -330,7 +329,7 @@ const blockUsrService = async (payload: { id: string }) => {
 const unBlockUsrService = async (payload: { id: string }) => {
   const { id } = payload;
   // Check if the user exists
-  const user = await userModel.findUserWithID(id);
+  const user = await USER.findUserWithSensitiveFields({ _id: id });
 
   if (!user) {
     throw new AppError(404, 'This account is not found.');
@@ -340,7 +339,7 @@ const unBlockUsrService = async (payload: { id: string }) => {
     throw new AppError(404, 'This account has been deleted.');
   }
 
-  if (!user.isBlocked) {
+  if (!user.isActive) {
     throw new AppError(400, 'This account is already unblocked.');
   }
 
@@ -350,11 +349,11 @@ const unBlockUsrService = async (payload: { id: string }) => {
     session.startTransaction();
 
     // Unblock the user
-    const updatedUser = await userModel
+    const updatedUser = await USER
       .findByIdAndUpdate(id, { isBlocked: false }, { session, new: true })
       .select('+isBlocked');
 
-    if (updatedUser?.isBlocked) {
+    if (updatedUser?.isActive) {
       throw new AppError(400, 'Failed to unblock the user.');
     }
 
@@ -376,7 +375,7 @@ const unBlockUsrService = async (payload: { id: string }) => {
 const deleteUsrService = async (payload: { id: string }) => {
   const { id } = payload;
   // Check if the user exists
-  const user = await userModel.findUserWithID(id);
+  const user = await USER.findUserWithSensitiveFields({ _id: id });
 
   if (!user) {
     throw new AppError(404, 'This account is not found.');
@@ -392,7 +391,7 @@ const deleteUsrService = async (payload: { id: string }) => {
     session.startTransaction();
 
     // user as deleted
-    const updatedUser = await userModel
+    const updatedUser = await USER
       .findByIdAndUpdate(id, { isDeleted: true }, { session, new: true })
       .select('+isDeleted');
 
@@ -414,53 +413,53 @@ const deleteUsrService = async (payload: { id: string }) => {
 
 // createVerifyEmailLink
 const createEmailVerificationOTP = async (id: string) => {
-  const user = await userModel.findUserWithID(id);
+  // const user = await USER.findUserWithSensitiveFields(id);
 
-  if (!user) {
-    throw new AppError(404, 'User not found.');
-  }
-  if (user.isVerified) {
-    throw new AppError(201, 'Already verified.');
-  }
+  // if (!user) {
+  //   throw new AppError(404, 'User not found.');
+  // }
+  // if (user.isEmailVerified) {
+  //   throw new AppError(201, 'Already verified.');
+  // }
 
-  const now = new Date();
-  const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+  // const now = new Date();
+  // const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
 
-  if (user.otpTime && user.otpTime > twoMinutesAgo) {
-    throw new AppError(401, 'Please wait 2 minutes before requesting again.');
-  }
+  // if (user.otpTime && user.otpTime > twoMinutesAgo) {
+  //   throw new AppError(401, 'Please wait 2 minutes before requesting again.');
+  // }
 
-  const userInfo =
-    user.role === USER_ROLE.user
-      ? await customerModel.findOne({ user: user._id })
-      : await adminModel.findOne({ user: user._id });
+  // const userInfo =
+  //   user.role === USER_ROLE.user
+  //     ? await customerModel.findOne({ user: user._id })
+  //     : await adminModel.findOne({ user: user._id });
 
-  if (!userInfo) {
-    throw new AppError(404, 'User information not found.');
-  }
+  // if (!userInfo) {
+  //   throw new AppError(404, 'User information not found.');
+  // }
 
-  const otpCode = generateOTP();
+  // const otpCode = generateOTP();
 
-  const result = await userModel
-    .findOneAndUpdate(
-      { _id: user._id },
-      { otpCode, otpTime: new Date() },
-      { new: true },
-    )
-    .select('+otpCode +otpTime');
+  // const result = await USER
+  //   .findOneAndUpdate(
+  //     { _id: user._id },
+  //     { otpCode, otpTime: new Date() },
+  //     { new: true },
+  //   )
+  //   .select('+otpCode +otpTime');
 
-  if (!result?.otpCode || !result.otpTime) {
-    throw new AppError(404, 'OTP generation failed.');
-  }
+  // if (!result?.otpCode || !result.otpTime) {
+  //   throw new AppError(404, 'OTP generation failed.');
+  // }
 
-  sendEmail(
-    user.email,
-    'Verify your account',
-    sendOtpEmailTemplate({
-      name: userInfo.name,
-      otpCode,
-    }),
-  );
+  // sendEmail(
+  //   user.email,
+  //   'Verify your account',
+  //   sendOtpEmailTemplate({
+  //     name: userInfo.name,
+  //     otpCode,
+  //   }),
+  // );
 };
 
 // confirmVerification
@@ -469,66 +468,66 @@ const confirmVerification = async (
   role: string,
   payload: { otp: number },
 ) => {
-  const { otp } = payload;
+  // const { otp } = payload;
 
-  const user = await userModel.findUserWithID(userId);
+  // const user = await USER.findUserWithID(userId);
 
   // Check if user exists
-  if (!user) {
-    throw new AppError(404, 'User not found.');
-  }
+  // if (!user) {
+  //   throw new AppError(404, 'User not found.');
+  // }
 
   // Check if user is already verified
-  if (user.isVerified) {
-    throw new AppError(401, 'Already verified.');
-  }
+  // if (user.isVerified) {
+  //   throw new AppError(401, 'Already verified.');
+  // }
 
   const now = new Date(); // Current time
 
   // Check if otpTime is available and parse it
-  if (!user.otpTime) {
-    throw new AppError(401, 'OTP has not been sent yet.');
-  }
+  // if (!user.otpTime) {
+  //   throw new AppError(401, 'OTP has not been sent yet.');
+  // }
 
-  const otpSentTime = new Date(user.otpTime); // Parse the otpTime from the user object
-  const twoMinutesAfterOtpSent = new Date(
-    otpSentTime.getTime() + 2 * 60 * 1000,
-  );
+  // const otpSentTime = new Date(user.otpTime); // Parse the otpTime from the user object
+  // const twoMinutesAfterOtpSent = new Date(
+  //   otpSentTime.getTime() + 2 * 60 * 1000,
+  // );
 
   // Check if OTP is expired (it should be less than or equal to 2 minutes after it was sent)
-  if (now > twoMinutesAfterOtpSent) {
-    throw new AppError(401, 'This OTP is expired. Please try again.');
-  }
+  // if (now > twoMinutesAfterOtpSent) {
+  //   throw new AppError(401, 'This OTP is expired. Please try again.');
+  // }
 
   // Allow OTP attempts only if wrong attempts are within the time frame
-  if (user.wrongOTPAttempt > 3 && now < twoMinutesAfterOtpSent) {
-    throw new AppError(401, 'Too many attempts. Please wait 2 minutes.');
-  }
+  // if (user.wrongOTPAttempt > 3 && now < twoMinutesAfterOtpSent) {
+  //   throw new AppError(401, 'Too many attempts. Please wait 2 minutes.');
+  // }
 
   // Check if the provided OTP matches the stored OTP
-  if (user.otpCode !== otp) {
-    // Increment wrong OTP attempt count
-    await userModel.findByIdAndUpdate(userId, {
-      $inc: { wrongOTPAttempt: 1 },
-    });
-    throw new AppError(401, 'Incorrect OTP.');
-  }
+  // if (user.otpCode !== otp) {
+  // Increment wrong OTP attempt count
+  // await USER.findByIdAndUpdate(userId, {
+  //   $inc: { wrongOTPAttempt: 1 },
+  // });
+  // throw new AppError(401, 'Incorrect OTP.');
+  // }
 
   // Mark user as verified and reset the wrong attempt counter
-  const result = await userModel
-    .findOneAndUpdate(
-      { _id: user._id, role },
-      { isVerified: true, wrongOTPAttempt: 0 },
-      { new: true },
-    )
-    .select('+isVerified');
+  // const result = await USER
+  //   .findOneAndUpdate(
+  //     { _id: user._id, role },
+  //     { isVerified: true, wrongOTPAttempt: 0 },
+  //     { new: true },
+  //   )
+  //   .select('+isVerified');
 
   // Check if the update was successful
-  if (!result?.isVerified) {
-    throw new AppError(404, 'Verification failed.');
-  }
+  // if (!result?.isVerified) {
+  //   throw new AppError(404, 'Verification failed.');
+  // }
 
-  return result;
+  // return result;
 };
 
 // update user info

@@ -32,14 +32,16 @@ interface IUpdateCustomerPayload extends IUser {
 
 // create customer
 const createCustomerService = async (payload: ICustomerPayload) => {
-  const { email, password, name, photo, contact } = payload;
+  const { email, password, name } = payload;
 
-  // check is the user already exists
+  // check is the user already exists in DB
   const isUserExists = await USER.findUserWithSensitiveFields({ email });
 
   if (isUserExists) {
-    throw new AppError(403, `${name} already have an account.`);
+    throw new AppError(409, `${name} already have an account. Please login.`);
   }
+
+
 
   // create a session
   const session = await mongoose.startSession();

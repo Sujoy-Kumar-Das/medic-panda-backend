@@ -2,6 +2,11 @@ import { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
 import resetPasswordEmailTemplate from '../../emailTemplate/resetPasswordEmailTemplate';
 import AppError from '../../errors/AppError';
+import generateOtp from '../../helpers/OTP';
+import generateHash from '../../helpers/hash';
+import { IOtpJobData, QUEUEKEY } from '../../queue';
+import { otpQueue } from '../../queue/queues';
+import { RedisClient, redisSingupKey } from '../../redis';
 import { compareTime } from '../../utils';
 import {
   createAccessToken,
@@ -14,13 +19,110 @@ import verifyToken from '../../utils/verifyJwtToken';
 import { adminModel } from '../admin/admin.model';
 import { customerModel } from '../customer/customer.model';
 import { USER_ROLE } from '../user/user.constant';
-import { userModel } from '../user/user.model';
+import { USER } from '../user/user.model';
 import { IChangePassword, ILogin } from './auth.interface';
+
+interface ISingupPayload {
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface IotpData {
+  password: string;
+  oTP: string;
+  otpSentAt: number;
+  attampt: number;
+  name: string;
+  email: string
+}
+
+// redis time config
+const SINGUP_OTP_EXPIRE = 300;
+
+const singup = async (payload: ISingupPayload) => {
+
+  const { email, password, name } = payload;
+
+  // find the user from db and check;
+  const user = await USER.findUserWithSensitiveFields({ email });
+
+  if (user) {
+    throw new AppError(409, `${name} already have an account. Please login.`);
+  }
+
+  // find and check is the key exists in the redis store or not
+  const existsInRedis = await RedisClient.hgetall(redisSingupKey(email));
+
+
+  if (existsInRedis && Object.keys(existsInRedis).length > 0) {
+    // check how long the key valid
+    const ttl = await RedisClient.ttl(redisSingupKey(email));
+
+    throw new AppError(429, `Please wait ${ttl}s before requesting another OTP.`);
+  }
+
+  // prepare oTP and singup data for redis store
+
+  const otp = generateOtp();
+  const hasedPassword = await hashPassword(password);
+
+  const singupData: IotpData = {
+    ...payload,
+    password: hasedPassword,
+    oTP: generateHash(otp),
+    otpSentAt: Date.now(),
+    attampt: 0,
+  };
+
+  // store data in redis store with transaction pipline
+  const redisTransaction = RedisClient.pipeline();
+
+  redisTransaction.hset(redisSingupKey(email), singupData)
+  redisTransaction.expire(redisSingupKey(email), SINGUP_OTP_EXPIRE)
+
+  const results = await redisTransaction.exec();
+
+  // redis hset, expire error and expire result
+  const hsetErr = results?.[0]?.[0];
+  const expireErr = results?.[1]?.[0];
+  const expireResult = results?.[1]?.[1];
+
+  // check is any error happend for set data or expire time
+  if (hsetErr || expireErr) {
+    throw new AppError(500, "Failed to store signup data. Please try again.");
+  }
+
+  // check expire result if failed then delete the key
+  if (expireResult !== 1) {
+
+    // if failed to set expire time then delete the key
+    await RedisClient.del(redisSingupKey(email));
+    throw new AppError(500, "Failed to set expiration. Please try again.");
+  }
+
+
+  // todo set bull MQ for emails
+
+  const otpData: IOtpJobData = {
+    subject: `Use code ${otp} to verify your account`,
+    name,
+    email,
+    otp
+  }
+
+  await otpQueue.add(QUEUEKEY.OTP, otpData)
+
+  return results;
+
+
+
+}
 
 const loginService = async (payload: ILogin) => {
   const { email, password } = payload;
 
-  const user = await userModel
+  const user = await USER
     .findOne({ email })
     .select('+isBlocked +isDeleted +password');
 
@@ -37,7 +139,7 @@ const loginService = async (payload: ILogin) => {
   }
 
   //   check is the password matched
-  const isPasswordMatched = await userModel.isPasswordMatched(
+  const isPasswordMatched = await USER.isPasswordMatched(
     password,
     user.password,
   );
@@ -72,7 +174,7 @@ const changePasswordService = async (
   const { oldPassword, newPassword } = payload;
   const { email, role, userId } = userData;
 
-  const user = await userModel
+  const user = await USER
     .findOne({ _id: userId, email, role })
     .select('+password');
 
@@ -81,7 +183,7 @@ const changePasswordService = async (
   }
 
   //   check is the password matched
-  const isPasswordMatched = await userModel.isPasswordMatched(
+  const isPasswordMatched = await USER.isPasswordMatched(
     oldPassword,
     user.password,
   );
@@ -90,7 +192,7 @@ const changePasswordService = async (
     throw new AppError(403, 'Old password is wrong.');
   }
 
-  const isOldAndNewPasswordAreSame = await userModel.isPasswordMatched(
+  const isOldAndNewPasswordAreSame = await USER.isPasswordMatched(
     newPassword,
     user.password,
   );
@@ -101,7 +203,7 @@ const changePasswordService = async (
 
   const newHashedPassword = await hashPassword(newPassword);
 
-  await userModel.findOneAndUpdate(
+  await USER.findOneAndUpdate(
     {
       email: user.email,
       role: user.role,
@@ -119,7 +221,7 @@ const forgotPassword = async (payload: { email: string }) => {
   const { email } = payload;
 
   // Find user by email
-  const user = await userModel.findOne({ email }).select('+resetTime');
+  const user = await USER.findOne({ email }).select('+resetTime');
   if (!user || user.isBlocked || user.isDeleted) {
     throw new AppError(
       404,
@@ -140,7 +242,7 @@ const forgotPassword = async (payload: { email: string }) => {
   }
 
   // Update resetTime
-  await userModel.findByIdAndUpdate(
+  await USER.findByIdAndUpdate(
     user._id,
     { resetTime: new Date() },
     { new: true },
@@ -185,7 +287,7 @@ const resetPassword = async (
 
   const { role, userId } = decoded;
 
-  const user = await userModel
+  const user = await USER
     .findOne({ _id: userId, role })
     .select('+isBlocked +isDeleted');
 
@@ -203,7 +305,7 @@ const resetPassword = async (
 
   const newHashedPassword = await hashPassword(payload.confirmPassword);
 
-  return await userModel.findOneAndUpdate(
+  return await USER.findOneAndUpdate(
     { _id: user._id, role: user.role },
     {
       password: newHashedPassword,
@@ -222,7 +324,7 @@ const refreshTokenService = async (token: string) => {
 
   const { userId, iat } = decodedToken;
 
-  const user = await userModel.findById(userId);
+  const user = await USER.findById(userId);
 
   if (!user) {
     throw new AppError(404, 'This user is not exists');
@@ -238,7 +340,7 @@ const refreshTokenService = async (token: string) => {
 
   if (
     user.passwordChangeAt &&
-    userModel.isJwtIssuedBeforePasswordChange(
+    USER.isJwtIssuedBeforePasswordChange(
       user.passwordChangeAt,
       iat as number,
     )
@@ -261,6 +363,7 @@ const refreshTokenService = async (token: string) => {
 };
 
 export const authService = {
+  singup,
   loginService,
   logoutService,
   changePasswordService,

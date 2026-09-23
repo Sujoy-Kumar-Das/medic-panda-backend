@@ -8,6 +8,12 @@ import { authValidationSchema } from './auth.validationSchema';
 const router = express.Router();
 
 router.post(
+  '/singup',
+  // validateRequest(authValidationSchema.loginValidationSchema),
+  authController.singup,
+);
+
+router.post(
   '/login',
   validateRequest(authValidationSchema.loginValidationSchema),
   authController.loginController,

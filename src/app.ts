@@ -6,6 +6,7 @@ import globalErrorHandler from './app/middlewares/globalErrrorHandler';
 import notFound from './app/middlewares/not-found';
 import router from './app/routes';
 
+
 const app = express();
 
 // allowed origins
@@ -13,7 +14,7 @@ export const allowdOrigins = config.node_env === "production" ? [String(config.b
 
 app.use(
   cors({
-    origin:allowdOrigins,
+    origin: allowdOrigins,
     credentials: true,
   }),
 );

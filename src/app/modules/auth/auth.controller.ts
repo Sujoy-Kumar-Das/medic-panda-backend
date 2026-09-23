@@ -3,6 +3,33 @@ import sendResponse from '../../utils/sendResponse';
 import { setCookie } from '../../utils/setCookie';
 import { authService } from './auth.service';
 
+const singup = catchAsync(async (req, res) => {
+  const result = await authService.singup(
+    req.body,
+  );
+
+  // // Set access token cookie
+  // setCookie({
+  //   res,
+  //   name: 'accessToken',
+  //   value: String(accessToken),
+  // });
+
+  // // Set refresh token cookie
+  // setCookie({
+  //   res,
+  //   name: 'refreshToken',
+  //   value: String(refreshToken),
+  // });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'OTP sent your email successfully.',
+    data: result,
+  });
+});
+
 const loginController = catchAsync(async (req, res) => {
   const { refreshToken, accessToken } = await authService.loginService(
     req.body,
@@ -108,6 +135,7 @@ const refreshTokenController = catchAsync(async (req, res) => {
 });
 
 export const authController = {
+  singup,
   loginController,
   logoutController,
   changePasswordController,

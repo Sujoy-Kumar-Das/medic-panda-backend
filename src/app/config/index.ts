@@ -27,9 +27,12 @@ export default {
   authUserPassword: process.env.auth_user_password,
   emailVerificationRedirectLink: process.env.email_verification_redirect_link,
   baseFrontendLinkProd: process.env.base_frontend_link_prod,
-  baseFrontendLinkDev:process.env.base_frontend_link_dev,
+  baseFrontendLinkDev: process.env.base_frontend_link_dev,
   accessTokenValidation: process.env.jwt_access_token_validation,
   refreshTokenValidation: process.env.jwt_refresh_token_validation,
   supperAdminPassword: process.env.supper_admin_password,
   supperAdminEmail: process.env.supper_admin_email,
+
+  // redis
+  redisUrl: process.env.REDIS_URL,
 };

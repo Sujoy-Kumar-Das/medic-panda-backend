@@ -39,7 +39,7 @@ const createUserValidationSchema = z.object({
         message: 'Password should not be longer than 32 characters.',
       }),
   }),
-});
+})
 
 const createAdminValidationSchema = z.object({
   body: z.object({

@@ -8,24 +8,23 @@ const singup = catchAsync(async (req, res) => {
     req.body,
   );
 
-  // // Set access token cookie
-  // setCookie({
-  //   res,
-  //   name: 'accessToken',
-  //   value: String(accessToken),
-  // });
-
-  // // Set refresh token cookie
-  // setCookie({
-  //   res,
-  //   name: 'refreshToken',
-  //   value: String(refreshToken),
-  // });
-
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: 'OTP sent your email successfully.',
+    data: result,
+  });
+});
+
+const verifyOtp = catchAsync(async (req, res) => {
+  const result = await authService.verifyOtp(
+    req.body,
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `welcome ${result?.name} your account created successfully.`,
     data: result,
   });
 });
@@ -136,6 +135,7 @@ const refreshTokenController = catchAsync(async (req, res) => {
 
 export const authController = {
   singup,
+  verifyOtp,
   loginController,
   logoutController,
   changePasswordController,

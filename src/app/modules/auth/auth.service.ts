@@ -1,4 +1,5 @@
 import { JwtPayload } from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import config from '../../config';
 import resetPasswordEmailTemplate from '../../emailTemplate/resetPasswordEmailTemplate';
 import AppError from '../../errors/AppError';
@@ -17,10 +18,16 @@ import hashPassword from '../../utils/hashPassword';
 import { sendEmail } from '../../utils/sendEmail';
 import verifyToken from '../../utils/verifyJwtToken';
 import { adminModel } from '../admin/admin.model';
-import { customerModel } from '../customer/customer.model';
+import { ICustomer } from '../customer/customer.interface';
+import { CUSTOMER, customerModel } from '../customer/customer.model';
 import { USER_ROLE } from '../user/user.constant';
+import { IUser } from '../user/user.interface';
 import { USER } from '../user/user.model';
 import { IChangePassword, ILogin } from './auth.interface';
+
+
+// auth service constranits
+const MAX_OTP_ATTEMPTS = 5;
 
 interface ISingupPayload {
   name: string;
@@ -35,6 +42,11 @@ interface IotpData {
   attampt: number;
   name: string;
   email: string
+}
+
+interface IVerifyOtp {
+  email: string;
+  otp: string;
 }
 
 // redis time config
@@ -113,11 +125,89 @@ const singup = async (payload: ISingupPayload) => {
 
   await otpQueue.add(QUEUEKEY.OTP, otpData)
 
-  return results;
+  return {
+    email,
+    expiresIn: `${SINGUP_OTP_EXPIRE} seconds`
+  };
 
 
 
 }
+
+const verifyOtp = async (payload: IVerifyOtp) => {
+  const { email, otp } = payload;
+
+  // find the user from redis store
+  const userFromRedis = await RedisClient.hgetall(redisSingupKey(email));
+
+  // check is the user exists or not
+  if (!userFromRedis || Object.keys(userFromRedis).length === 0) {
+    throw new AppError(404, "Your OTP session has expired. Please sign up again.");
+  }
+
+  // check wrong attampts
+  const attempts = parseInt(userFromRedis.attempt, 10);
+  if (attempts >= MAX_OTP_ATTEMPTS) {
+    const ttl = await RedisClient.ttl(redisSingupKey(email));
+    throw new AppError(429, `Too many incorrect attempts. Please try again after ${ttl} seconds`);
+  }
+
+  // check otp matched or not
+  const hashedInputOtp = generateHash(otp);
+  if (hashedInputOtp !== userFromRedis.oTP) {
+    await RedisClient.hincrby(redisSingupKey(email), "attempt", 1);
+    throw new AppError(400, "Invalid OTP.");
+  }
+
+  const session = await mongoose.startSession()
+  try {
+    session.startTransaction();
+
+    // prepare data for create user
+    const newUserData: IUser = {
+      email,
+      isEmailVerified: true,
+      role: "user",
+      password: userFromRedis.password
+
+    }
+
+    // create user with transaction
+    const [newUser] = await USER.create([newUserData], { session });
+
+    // prepare customer data
+    const customerData: ICustomer = {
+      name: userFromRedis.name,
+      user: newUser._id,
+
+    }
+
+    // create customer
+    const [newCustomer] = await CUSTOMER.create([customerData], { session });
+
+    await session.commitTransaction();
+
+    await RedisClient.del(redisSingupKey(email));
+
+
+    return {
+      _id: newUser._id,
+      name: newCustomer.name,
+      email: newUser.email,
+    };
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.log("user otp verify error", error)
+    throw new AppError(500, "Failed to create account. Please try again.");
+  } finally {
+    session.endSession()
+  }
+
+
+
+
+};
 
 const loginService = async (payload: ILogin) => {
   const { email, password } = payload;
@@ -364,6 +454,7 @@ const refreshTokenService = async (token: string) => {
 
 export const authService = {
   singup,
+  verifyOtp,
   loginService,
   logoutService,
   changePasswordService,

@@ -26,12 +26,6 @@ const userSchema = new Schema<IUser, IUserMethods>(
     password: {
       type: String,
       required: [false, 'Password is required.'],
-      validate: {
-        validator: function (value: string) {
-          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value);
-        },
-        message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
-      },
       select: false,
     },
     role: {
@@ -138,13 +132,26 @@ userSchema.statics.isJwtIssuedBeforePasswordChange = function (
   return jwtIssuedTime < passwordChangeTime;
 };
 
+const BCRYPT_HASH_PATTERN = /^\$2[aby]\$\d{2}\$/;
+
 // hash password middleware
 userSchema.pre('save', async function (next) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const user = this;
-  // hashing password and save into DB
-  user.password = await hashPassword(user.password);
 
+  if (!user.isModified('password')) {
+    return next();
+  }
+
+  // Already hashed (e.g. came from the Redis pending-signup flow,
+  // where it was hashed before being stored) — don't hash it again.
+  if (BCRYPT_HASH_PATTERN.test(user.password)) {
+    return next();
+  }
+
+  // A genuinely plain-text password (normal signup without the OTP
+  // flow, password reset, admin-created account, etc.) — hash it.
+  user.password = await hashPassword(user.password);
   next();
 });
 

@@ -8,11 +8,11 @@ export interface IUser {
   role: 'user' | 'admin' | 'superAdmin';
   passwordChangeAt?: Date;
   lastLoginAt?: Date | null;
-  isEmailVerified: boolean;
-  isActive: boolean;
-  isDeleted: boolean;
-  passwordWrongAttempt: number;
-  passwordChangeBlockTime: Date | null;
+  isEmailVerified?: boolean;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  passwordWrongAttempt?: number;
+  passwordChangeBlockTime?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -7,7 +7,7 @@ import generateOtp from '../../helpers/OTP';
 import generateHash from '../../helpers/hash';
 import { IOtpJobData, QUEUEKEY } from '../../queue';
 import { otpQueue } from '../../queue/queues';
-import { RedisClient, redisSingupKey } from '../../redis';
+import { RedisClient, redisRefreshKey, redisSingupKey } from '../../redis';
 import { compareTime } from '../../utils';
 import {
   createAccessToken,
@@ -28,6 +28,7 @@ import { IChangePassword, ILogin } from './auth.interface';
 
 // auth service constranits
 const MAX_OTP_ATTEMPTS = 5;
+const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 interface ISingupPayload {
   name: string;
@@ -137,6 +138,11 @@ const singup = async (payload: ISingupPayload) => {
 const verifyOtp = async (payload: IVerifyOtp) => {
   const { email, otp } = payload;
 
+
+  const data = await RedisClient.get(redisRefreshKey(email))
+
+  console.log(data)
+
   // find the user from redis store
   const userFromRedis = await RedisClient.hgetall(redisSingupKey(email));
 
@@ -185,15 +191,37 @@ const verifyOtp = async (payload: IVerifyOtp) => {
     // create customer
     const [newCustomer] = await CUSTOMER.create([customerData], { session });
 
+    const jwtPayload = {
+      role: newUser.role,
+      userId: newUser._id
+    }
+
+    // create access token
+    const accessToken = createAccessToken({ payload: jwtPayload });
+
+    // create refresh token
+    const refreshToken = createRefreshToken({ payload: jwtPayload });
+
+    // store the refresh token in redis store
+    await RedisClient.set(redisRefreshKey(email), refreshToken, "EX",
+      REFRESH_TOKEN_TTL_SECONDS);
+
+
+    // commint mongoose operation
     await session.commitTransaction();
 
+    // remvoe user from redis
     await RedisClient.del(redisSingupKey(email));
 
 
+
     return {
-      _id: newUser._id,
-      name: newCustomer.name,
-      email: newUser.email,
+      user: {
+        _id: newUser._id,
+        name: newCustomer.name,
+        email: newUser.email,
+      },
+      access_token: accessToken
     };
 
   } catch (error) {

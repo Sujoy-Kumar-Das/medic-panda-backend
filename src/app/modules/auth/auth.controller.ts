@@ -21,10 +21,21 @@ const verifyOtp = catchAsync(async (req, res) => {
     req.body,
   );
 
+
+  const { user, access_token } = result;
+
+
+  // Set access token cookie
+  setCookie({
+    res,
+    name: 'access_token',
+    value: String(access_token),
+  });
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: `welcome ${result?.name} your account created successfully.`,
+    message: `welcome ${user?.name} your account created successfully.`,
     data: result,
   });
 });

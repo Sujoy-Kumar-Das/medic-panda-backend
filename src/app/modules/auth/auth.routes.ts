@@ -9,13 +9,13 @@ const router = express.Router();
 
 router.post(
   '/singup',
-  // validateRequest(authValidationSchema.loginValidationSchema),
+  validateRequest(authValidationSchema.signup),
   authController.singup,
 );
 
 router.post(
   '/verify-otp',
-  // validateRequest(authValidationSchema.loginValidationSchema),
+  validateRequest(authValidationSchema.verifyOtp),
   authController.verifyOtp,
 );
 

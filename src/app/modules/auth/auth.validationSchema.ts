@@ -1,5 +1,58 @@
 import { z } from 'zod';
 
+const signup = z.object({
+  body: z.object({
+    name: z
+      .string({
+        required_error: "Name is required.",
+        invalid_type_error: "Name must be a text value.",
+      })
+      .trim()
+      .min(2, "Name must be at least 2 characters long.")
+      .max(100, "Name cannot exceed 100 characters."),
+
+    email: z
+      .string({
+        required_error: "Email is required.",
+        invalid_type_error: "Email must be a text value.",
+      })
+      .trim()
+      .email("Please provide a valid email address."),
+
+    password: z
+      .string({
+        required_error: "Password is required.",
+        invalid_type_error: "Password must be a text value.",
+      })
+      .min(8, "Password must be at least 8 characters long.")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter.")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
+      .regex(/\d/, "Password must contain at least one number.")
+      .regex(/[@$!%*?&#^()_\-+=]/, "Password must contain at least one special character."),
+  }),
+});
+
+const verifyOtp = z.object({
+  body: z.object({
+    email: z
+      .string({
+        required_error: "Email is required.",
+        invalid_type_error: "Email must be a text value.",
+      })
+      .trim()
+      .email("Please provide a valid email address."),
+
+    otp: z
+      .string({
+        required_error: "OTP is required.",
+        invalid_type_error: "OTP must be a text value.",
+      })
+      .trim()
+      .length(6, "OTP must be exactly 6 digits.")
+      .regex(/^\d{6}$/, "OTP must contain only numbers."),
+  }),
+});
+
 const loginValidationSchema = z.object({
   body: z.object({
     email: z
@@ -69,6 +122,8 @@ const resetPasswordValidationSchema = z.object({
 });
 
 export const authValidationSchema = {
+  signup,
+  verifyOtp,
   loginValidationSchema,
   changePasswordValidationSchema,
   forgotPasswordValidationSchema,

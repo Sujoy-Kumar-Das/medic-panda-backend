@@ -23,12 +23,17 @@ import { CUSTOMER, customerModel } from '../customer/customer.model';
 import { USER_ROLE } from '../user/user.constant';
 import { IUser } from '../user/user.interface';
 import { USER } from '../user/user.model';
-import { IChangePassword, ILogin } from './auth.interface';
+import { IChangePassword, ILogin, ILoginResponseData } from './auth.interface';
 
 
 // auth service constranits
 const MAX_OTP_ATTEMPTS = 5;
 const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCK_DURATION_MS = 5 * 60 * 1000;
+
+// redis time config
+const SINGUP_OTP_EXPIRE = 300;
 
 interface ISingupPayload {
   name: string;
@@ -50,9 +55,7 @@ interface IVerifyOtp {
   otp: string;
 }
 
-// redis time config
-const SINGUP_OTP_EXPIRE = 300;
-
+// singup user in redis and sent OTP via bullmq for verificaiton service
 const singup = async (payload: ISingupPayload) => {
 
   const { email, password, name } = payload;
@@ -135,13 +138,9 @@ const singup = async (payload: ISingupPayload) => {
 
 }
 
+// get the user from redis and verify OTP then permanently store in DB service
 const verifyOtp = async (payload: IVerifyOtp) => {
   const { email, otp } = payload;
-
-
-  const data = await RedisClient.get(redisRefreshKey(email))
-
-  console.log(data)
 
   // find the user from redis store
   const userFromRedis = await RedisClient.hgetall(redisSingupKey(email));
@@ -189,6 +188,7 @@ const verifyOtp = async (payload: IVerifyOtp) => {
     }
 
     // create customer
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [newCustomer] = await CUSTOMER.create([customerData], { session });
 
     const jwtPayload = {
@@ -202,11 +202,6 @@ const verifyOtp = async (payload: IVerifyOtp) => {
     // create refresh token
     const refreshToken = createRefreshToken({ payload: jwtPayload });
 
-    // store the refresh token in redis store
-    await RedisClient.set(redisRefreshKey(email), refreshToken, "EX",
-      REFRESH_TOKEN_TTL_SECONDS);
-
-
     // commint mongoose operation
     await session.commitTransaction();
 
@@ -214,15 +209,21 @@ const verifyOtp = async (payload: IVerifyOtp) => {
     await RedisClient.del(redisSingupKey(email));
 
 
+    // store the refresh token in redis store
+    await RedisClient.set(redisRefreshKey(newUser._id, newUser.email), refreshToken, "EX",
+      REFRESH_TOKEN_TTL_SECONDS);
 
-    return {
+    // prepare login data
+    const loginData: ILoginResponseData = {
+      access_token: accessToken,
       user: {
-        _id: newUser._id,
-        name: newCustomer.name,
+        id: newUser._id,
         email: newUser.email,
-      },
-      access_token: accessToken
-    };
+        isVerified: newUser.isEmailVerified as boolean,
+      }
+    }
+
+    return loginData;
 
   } catch (error) {
     await session.abortTransaction();
@@ -237,49 +238,83 @@ const verifyOtp = async (payload: IVerifyOtp) => {
 
 };
 
-const loginService = async (payload: ILogin) => {
+// check user exists then verify user then password then genrate auth and refresh token
+
+const login = async (payload: ILogin) => {
   const { email, password } = payload;
 
-  const user = await USER
-    .findOne({ email })
-    .select('+isBlocked +isDeleted +password');
+  const user = await USER.findAndValidateUser({ email }, true);
 
-  if (!user) {
-    throw new AppError(404, 'This user is not exists');
+  if (user.passwordChangeBlockTime && user.passwordChangeBlockTime > new Date()) {
+    const remainingSeconds = Math.ceil(
+      (user.passwordChangeBlockTime.getTime() - Date.now()) / 1000
+    );
+
+    throw new AppError(
+      423,
+      `Too many failed attempts. Please try again after ${remainingSeconds} seconds.`
+    );
   }
 
-  if (user?.isBlocked) {
-    throw new AppError(403, 'This user is blocked.');
-  }
-
-  if (user?.isDeleted) {
-    throw new AppError(404, 'This user is not found.');
-  }
-
-  //   check is the password matched
-  const isPasswordMatched = await USER.isPasswordMatched(
-    password,
-    user.password,
-  );
+  //  password check
+  const isPasswordMatched = await USER.isPasswordMatched(password, user.password);
 
   if (!isPasswordMatched) {
-    throw new AppError(403, 'Wrong password.');
+    const updatedAttempts = (user.passwordWrongAttempt || 0) + 1;
+
+    if (updatedAttempts >= MAX_LOGIN_ATTEMPTS) {
+      // Lock the account temporarily and reset the counter for next time
+      await USER.updateOne(
+        { _id: user._id },
+        {
+          passwordWrongAttempt: 0,
+          passwordChangeBlockTime: new Date(Date.now() + LOGIN_LOCK_DURATION_MS),
+        }
+      );
+      throw new AppError(423, "Too many failed attempts. Your account has been temporarily locked.");
+    }
+
+    await USER.updateOne({ _id: user._id }, { passwordWrongAttempt: updatedAttempts });
+    throw new AppError(403, "Invalid credentials. Email or password did not match.");
   }
 
-  const jwtPayload = {
-    role: user.role,
-    userId: user._id,
-  };
+  // login the user
+  await USER.updateOne(
+    { _id: user._id },
+    {
+      passwordWrongAttempt: 0,
+      passwordChangeBlockTime: null,
+      lastLoginAt: new Date(),
+    }
+  );
 
-  const accessToken = createAccessToken({ payload: jwtPayload });
+  // token payload
+  const tokenPayload = { role: user.role, userId: user._id };
 
-  const refreshToken = createRefreshToken({ payload: jwtPayload });
+  // create tokens
+  const accessToken = createAccessToken({ payload: tokenPayload });
+  const refreshToken = createRefreshToken({ payload: tokenPayload });
 
-  return {
-    accessToken,
+
+  await RedisClient.set(
+    redisRefreshKey(user._id, user.email),
     refreshToken,
+    "EX",
+    REFRESH_TOKEN_TTL_SECONDS
+  );
+
+  const loginData: ILoginResponseData = {
+    access_token: accessToken,
+    user: {
+      id: user._id,
+      email: user.email,
+      isVerified: user.isEmailVerified as boolean,
+    },
   };
+
+  return loginData;
 };
+
 
 const logoutService = async () => {
   return { message: 'Logout Successfully.' };
@@ -483,7 +518,7 @@ const refreshTokenService = async (token: string) => {
 export const authService = {
   singup,
   verifyOtp,
-  loginService,
+  login,
   logoutService,
   changePasswordService,
   forgotPassword,

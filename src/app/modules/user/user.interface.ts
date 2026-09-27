@@ -25,12 +25,14 @@ export interface IUserMethods extends Model<IUser> {
   // find the user with sensitive fields
   findUserWithSensitiveFields(
     query: FilterQuery<IUser>,
+    includePassword?: boolean,
     session?: mongoose.ClientSession,
   ): Promise<TFindUserResult>;
 
   // find the user with sensitive fields, validate and throw error
   findAndValidateUser(
     query: FilterQuery<IUser>,
+    includePassword?: boolean,
     session?: mongoose.ClientSession,
   ): Promise<IUser & { _id: Types.ObjectId }>;
 

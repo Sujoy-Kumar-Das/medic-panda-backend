@@ -5,8 +5,10 @@ import hashPassword from '../../utils/hashPassword';
 import { IUser, IUserMethods } from './user.interface';
 
 // users sensitive fileds
+const SENSITIVE_FIELDS_WITH_PASS =
+  '+password +passwordWrongAttempt +passwordChangeBlockTime +isDeleted +passwordChangeAt +lastLoginAt' as const;
 
-const SENSITIVE_FIELDS =
+const SENSITIVE_FIELDS_WITHOUT_PASS =
   '+passwordWrongAttempt +passwordChangeBlockTime +isDeleted +passwordChangeAt +lastLoginAt' as const;
 
 const userSchema = new Schema<IUser, IUserMethods>(
@@ -87,8 +89,11 @@ const userSchema = new Schema<IUser, IUserMethods>(
 
 userSchema.statics.findUserWithSensitiveFields = function (
   query: FilterQuery<IUser>,
+  includePassword: boolean = false,
   session?: mongoose.ClientSession,
 ) {
+  const SENSITIVE_FIELDS = includePassword ? SENSITIVE_FIELDS_WITH_PASS : SENSITIVE_FIELDS_WITHOUT_PASS;
+
   return this.findOne(query)
     .select(SENSITIVE_FIELDS)
     .session(session || null);
@@ -96,9 +101,10 @@ userSchema.statics.findUserWithSensitiveFields = function (
 
 userSchema.statics.findAndValidateUser = async function (
   query: FilterQuery<IUser>,
+  includePassword: boolean = false,
   session?: mongoose.ClientSession,
 ) {
-  const user = await this.findUserWithSensitiveFields(query, session);
+  const user = await this.findUserWithSensitiveFields(query, includePassword, session);
 
   if (!user) {
     throw new AppError(404, 'User not found.');

@@ -21,8 +21,8 @@ router.post(
 
 router.post(
   '/login',
-  validateRequest(authValidationSchema.loginValidationSchema),
-  authController.loginController,
+  validateRequest(authValidationSchema.login),
+  authController.login,
 );
 
 router.post('/logout', authController.logoutController);

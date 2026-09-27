@@ -1,7 +1,9 @@
+import config from '../../config';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { setCookie } from '../../utils/setCookie';
 import { authService } from './auth.service';
+
 
 const singup = catchAsync(async (req, res) => {
   const result = await authService.singup(
@@ -21,51 +23,59 @@ const verifyOtp = catchAsync(async (req, res) => {
     req.body,
   );
 
-
   const { user, access_token } = result;
 
+  // check access token and auto login after verification
+  if (access_token) {
+    // Set access token cookie
+    setCookie({
+      res,
+      name: config.access_key as string,
+      value: String(access_token),
+    });
 
-  // Set access token cookie
-  setCookie({
-    res,
-    name: 'access_token',
-    value: String(access_token),
-  });
+
+  }
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: `welcome ${user?.name} your account created successfully.`,
-    data: result,
+    message: `welcome ${req?.body?.name} your account created successfully.`,
+    data: {
+      access_token,
+      user
+    },
   });
 });
 
-const loginController = catchAsync(async (req, res) => {
-  const { refreshToken, accessToken } = await authService.loginService(
+const login = catchAsync(async (req, res) => {
+  const { access_token, user } = await authService.login(
     req.body,
   );
 
-  // Set access token cookie
-  setCookie({
-    res,
-    name: 'accessToken',
-    value: String(accessToken),
-  });
+  // check access token and auto login after verification
+  if (access_token) {
+    // Set access token cookie
+    setCookie({
+      res,
+      name: config.access_key as string,
+      value: String(access_token),
+    });
 
-  // Set refresh token cookie
-  setCookie({
-    res,
-    name: 'refreshToken',
-    value: String(refreshToken),
-  });
+
+  }
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'User logged in successfully.',
-    data: accessToken,
+    message: 'Log in successfully.',
+    data: {
+      access_token,
+      user
+    },
   });
 });
+
 
 const logoutController = catchAsync(async (req, res) => {
   const result = await authService.logoutService();
@@ -147,7 +157,7 @@ const refreshTokenController = catchAsync(async (req, res) => {
 export const authController = {
   singup,
   verifyOtp,
-  loginController,
+  login,
   logoutController,
   changePasswordController,
   forgotPasswordController,

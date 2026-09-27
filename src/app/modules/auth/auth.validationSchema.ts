@@ -53,12 +53,21 @@ const verifyOtp = z.object({
   }),
 });
 
-const loginValidationSchema = z.object({
+const login = z.object({
   body: z.object({
     email: z
       .string({ required_error: 'Email is required.' })
       .email({ message: 'Please enter a valid email.' }),
-    password: z.string({ required_error: 'Password is required.' }),
+    password: z
+      .string({
+        required_error: "Password is required.",
+        invalid_type_error: "Password must be a text value.",
+      })
+      .min(8, "Password must be at least 8 characters long.")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter.")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
+      .regex(/\d/, "Password must contain at least one number.")
+      .regex(/[@$!%*?&#^()_\-+=]/, "Password must contain at least one special character."),
   }),
 });
 
@@ -124,7 +133,7 @@ const resetPasswordValidationSchema = z.object({
 export const authValidationSchema = {
   signup,
   verifyOtp,
-  loginValidationSchema,
+  login,
   changePasswordValidationSchema,
   forgotPasswordValidationSchema,
   resetPasswordValidationSchema,

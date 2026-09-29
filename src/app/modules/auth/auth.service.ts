@@ -210,7 +210,7 @@ const verifyOtp = async (payload: IVerifyOtp) => {
 
 
     // store the refresh token in redis store
-    await RedisClient.set(redisRefreshKey(newUser._id, newUser.email), refreshToken, "EX",
+    await RedisClient.set(redisRefreshKey(newUser._id, newUser.email), generateHash(refreshToken), "EX",
       REFRESH_TOKEN_TTL_SECONDS);
 
     // prepare login data
@@ -223,7 +223,7 @@ const verifyOtp = async (payload: IVerifyOtp) => {
       }
     }
 
-    return loginData;
+    return { refresh_token: refreshToken, ...loginData };
 
   } catch (error) {
     await session.abortTransaction();
@@ -298,7 +298,7 @@ const login = async (payload: ILogin) => {
 
   await RedisClient.set(
     redisRefreshKey(user._id, user.email),
-    refreshToken,
+    generateHash(refreshToken),
     "EX",
     REFRESH_TOKEN_TTL_SECONDS
   );
@@ -312,7 +312,7 @@ const login = async (payload: ILogin) => {
     },
   };
 
-  return loginData;
+  return { refresh_token: refreshToken, ...loginData };
 };
 
 

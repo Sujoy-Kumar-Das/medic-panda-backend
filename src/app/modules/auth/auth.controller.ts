@@ -23,15 +23,27 @@ const verifyOtp = catchAsync(async (req, res) => {
     req.body,
   );
 
-  const { user, access_token } = result;
+  const { user, access_token, refresh_token } = result;
 
   // check access token and auto login after verification
-  if (access_token) {
-    // Set access token cookie
+  if (access_token && refresh_token) {
+    // Set access and refresh token in cookie
     setCookie({
       res,
       name: config.access_key as string,
       value: String(access_token),
+      options: {
+        maxAge: 15 * 60 * 1000
+      }
+    });
+
+    setCookie({
+      res,
+      name: config.refresh_key as string,
+      value: String(refresh_token),
+      options: {
+        maxAge: 15 * 24 * 60 * 60 * 1000
+      }
     });
 
 
@@ -49,17 +61,29 @@ const verifyOtp = catchAsync(async (req, res) => {
 });
 
 const login = catchAsync(async (req, res) => {
-  const { access_token, user } = await authService.login(
+  const { access_token, refresh_token, user } = await authService.login(
     req.body,
   );
 
   // check access token and auto login after verification
-  if (access_token) {
-    // Set access token cookie
+  if (access_token && refresh_token) {
+    // Set access and refresh token in cookie
     setCookie({
       res,
       name: config.access_key as string,
       value: String(access_token),
+      options: {
+        maxAge: 15 * 60 * 1000
+      }
+    });
+
+    setCookie({
+      res,
+      name: config.refresh_key as string,
+      value: String(refresh_token),
+      options: {
+        maxAge: 15 * 24 * 60 * 60 * 1000
+      }
     });
 
 
@@ -93,6 +117,7 @@ const logout = catchAsync(async (req, res) => {
   };
 
   res.clearCookie(config.access_key as string, cookieOptions);
+  res.clearCookie(config.refresh_key as string, cookieOptions);
 
   sendResponse(res, {
     statusCode: 200,
@@ -101,6 +126,8 @@ const logout = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+
 
 const changePasswordController = catchAsync(async (req, res) => {
   const result = await authService.changePasswordService(req.user, req.body);

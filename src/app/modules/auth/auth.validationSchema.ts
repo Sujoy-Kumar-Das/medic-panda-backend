@@ -93,7 +93,7 @@ const changePassword = z.object({
   }),
 });
 
-const forgotPasswordValidationSchema = z.object({
+const forgotPassword = z.object({
   body: z.object({
     email: z
       .string({ required_error: 'Email is required.' })
@@ -135,6 +135,6 @@ export const authValidationSchema = {
   verifyOtp,
   login,
   changePassword,
-  forgotPasswordValidationSchema,
+  forgotPassword,
   resetPasswordValidationSchema,
 };

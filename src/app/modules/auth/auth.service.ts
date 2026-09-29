@@ -7,8 +7,7 @@ import generateOtp from '../../helpers/OTP';
 import generateHash from '../../helpers/hash';
 import { IOtpJobData, QUEUEKEY } from '../../queue';
 import { otpQueue } from '../../queue/queues';
-import { RedisClient, redisRefreshKey, redisSingupKey } from '../../redis';
-import { compareTime } from '../../utils';
+import { RedisClient, redisForgotPasswordResethKey, redisRefreshKey, redisSingupKey } from '../../redis';
 import {
   createAccessToken,
   createRefreshToken,
@@ -17,10 +16,8 @@ import {
 import hashPassword from '../../utils/hashPassword';
 import { sendEmail } from '../../utils/sendEmail';
 import verifyToken from '../../utils/verifyJwtToken';
-import { adminModel } from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
-import { CUSTOMER, customerModel } from '../customer/customer.model';
-import { USER_ROLE } from '../user/user.constant';
+import { CUSTOMER } from '../customer/customer.model';
 import { IUser } from '../user/user.interface';
 import { USER } from '../user/user.model';
 import { IChangePassword, ILogin, ILoginResponseData } from './auth.interface';
@@ -239,7 +236,6 @@ const verifyOtp = async (payload: IVerifyOtp) => {
 };
 
 // check user exists then verify user then password then genrate auth and refresh token
-
 const login = async (payload: ILogin) => {
   const { email, password } = payload;
 
@@ -413,31 +409,24 @@ const forgotPassword = async (payload: { email: string }) => {
   const { email } = payload;
 
   // Find user by email
-  const user = await USER.findOne({ email }).select('+resetTime');
-  if (!user || user.isBlocked || user.isDeleted) {
-    throw new AppError(
-      404,
-      user
-        ? user.isBlocked
-          ? 'This user is blocked.'
-          : 'This user is deleted.'
-        : 'This user is not found.',
-    );
-  }
+  const user = await USER.findAndValidateUser({ email });
+
+  const findFromRedis = await RedisClient.get(redisForgotPasswordResethKey(user._id));
 
   // Check if the reset request is within the 2-minute limit
-  if (user.resetTime && !compareTime(user.resetTime, 2)) {
+  if (findFromRedis) {
     throw new AppError(
       401,
-      'You can request a password reset only once every 2 minutes.',
+      'You can request a password reset only once every 5 minutes.',
     );
   }
 
-  // Update resetTime
-  await USER.findByIdAndUpdate(
-    user._id,
-    { resetTime: new Date() },
-    { new: true },
+  // update resetTime
+  await RedisClient.set(
+    redisForgotPasswordResethKey(user._id),
+    'requested',
+    'EX',
+    120
   );
 
   const jwtPayload = { role: user.role, userId: user._id };
@@ -445,19 +434,10 @@ const forgotPassword = async (payload: { email: string }) => {
   // Generate reset token (valid for 2 minutes)
   const forgotPasswordVerificationToken = createToken({
     payload: jwtPayload,
-    secret: config.access_token as string,
+    secret: config.resetPasswordSecret as string,
     expiresIn: '2m',
   });
 
-  // Retrieve user information based on role
-  const userInfo =
-    user.role === USER_ROLE.user
-      ? await customerModel.findOne({ user: user._id })
-      : await adminModel.findOne({ user: user._id });
-
-  if (!userInfo) {
-    throw new AppError(404, 'User information not found.');
-  }
 
   // Prepare the reset link and email content
   const resetLink = `${config.forgotPasswordFrontendLink}?token=${forgotPasswordVerificationToken}`;
@@ -467,7 +447,7 @@ const forgotPassword = async (payload: { email: string }) => {
   sendEmail(
     user.email,
     subject,
-    resetPasswordEmailTemplate({ name: userInfo.name, resetLink }),
+    resetPasswordEmailTemplate({ resetLink }),
   );
 };
 

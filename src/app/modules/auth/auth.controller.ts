@@ -152,7 +152,7 @@ const changePassword = catchAsync(async (req, res) => {
   });
 });
 
-const forgotPasswordController = catchAsync(async (req, res) => {
+const forgotPassword = catchAsync(async (req, res) => {
   const result = await authService.forgotPassword(req.body);
 
   sendResponse(res, {
@@ -219,7 +219,7 @@ export const authController = {
   login,
   logout,
   changePassword,
-  forgotPasswordController,
+  forgotPassword,
   resetPasswordController,
   refreshToken,
 };

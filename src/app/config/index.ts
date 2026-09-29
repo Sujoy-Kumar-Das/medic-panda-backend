@@ -50,4 +50,7 @@ export default {
   // ---------- Frontend base URLs (per environment) ----------
   baseFrontendLinkProd: process.env.base_frontend_link_prod,
   baseFrontendLinkDev: process.env.base_frontend_link_dev,
+
+  // ---------- Reset password informations ----------
+  resetPasswordSecret: process.env.reset_password_secret
 };

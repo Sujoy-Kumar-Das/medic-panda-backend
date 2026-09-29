@@ -4,3 +4,9 @@ export interface IOtpJobData {
     name: string
     otp: string;
 }
+
+export interface IForgotPasswordJobData {
+    email: string;
+    subject: string;
+    resetLink: string;
+}

@@ -1,12 +1,11 @@
 import { JwtPayload } from 'jsonwebtoken';
 import mongoose, { Types } from 'mongoose';
 import config from '../../config';
-import resetPasswordEmailTemplate from '../../emailTemplate/resetPasswordEmailTemplate';
 import AppError from '../../errors/AppError';
 import generateOtp from '../../helpers/OTP';
 import generateHash from '../../helpers/hash';
 import { IOtpJobData, QUEUEKEY } from '../../queue';
-import { otpQueue } from '../../queue/queues';
+import { forgotPasswordEmailQueue, otpQueue } from '../../queue/queues';
 import { RedisClient, redisForgotPasswordResethKey, redisRefreshKey, redisSingupKey } from '../../redis';
 import {
   createAccessToken,
@@ -14,7 +13,6 @@ import {
   createToken,
 } from '../../utils/createJwtToken';
 import hashPassword from '../../utils/hashPassword';
-import { sendEmail } from '../../utils/sendEmail';
 import verifyToken from '../../utils/verifyJwtToken';
 import { ICustomer } from '../customer/customer.interface';
 import { CUSTOMER } from '../customer/customer.model';
@@ -443,12 +441,9 @@ const forgotPassword = async (payload: { email: string }) => {
   const resetLink = `${config.forgotPasswordFrontendLink}?token=${forgotPasswordVerificationToken}`;
   const subject = 'Please reset your password.';
 
-  // Send reset email
-  sendEmail(
-    user.email,
-    subject,
-    resetPasswordEmailTemplate({ resetLink }),
-  );
+  // Send reset email via queue
+
+  await forgotPasswordEmailQueue.add(QUEUEKEY.FORGOT_PASSWORD, { email: user.email, subject, resetLink })
 };
 
 const resetPassword = async (

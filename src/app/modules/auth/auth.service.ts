@@ -210,7 +210,7 @@ const verifyOtp = async (payload: IVerifyOtp) => {
 
 
     // store the refresh token in redis store
-    await RedisClient.set(redisRefreshKey(newUser._id, newUser.email), generateHash(refreshToken), "EX",
+    await RedisClient.set(redisRefreshKey(newUser._id), generateHash(refreshToken), "EX",
       REFRESH_TOKEN_TTL_SECONDS);
 
     // prepare login data
@@ -297,7 +297,7 @@ const login = async (payload: ILogin) => {
 
 
   await RedisClient.set(
-    redisRefreshKey(user._id, user.email),
+    redisRefreshKey(user._id),
     generateHash(refreshToken),
     "EX",
     REFRESH_TOKEN_TTL_SECONDS
@@ -475,47 +475,55 @@ const resetPassword = async (
   );
 };
 
-const refreshTokenService = async (token: string) => {
-  const decodedToken = verifyToken(token, config.refresh_token as string);
+const refreshToken = async (token: string) => {
+  // verify refresh token
+  const decoded = verifyToken(token, config.refresh_token as string);
+  const { userId, iat } = decoded;
 
-  const { userId, iat } = decodedToken;
+  // get the refresh redis key
+  const key = redisRefreshKey(userId);
 
-  const user = await USER.findById(userId);
+  // get the hash key from redis store
+  const storedHash = await RedisClient.getdel(key);
 
-  if (!user) {
-    throw new AppError(404, 'This user is not exists');
+  // check if the token is not available or not
+  if (!storedHash) {
+    throw new AppError(401, "Session expired. Please login again.");
   }
 
-  if (user?.isBlocked) {
-    throw new AppError(403, 'This user is blocked.');
+  // match both tokens
+  if (storedHash !== generateHash(token)) {
+    throw new AppError(401, "Invalid session. Please login again.");
   }
 
-  if (user?.isDeleted) {
-    throw new AppError(404, 'This user is not found.');
-  }
+  const user = await USER.findAndValidateUser({ _id: userId });
 
+  // check is users password changed before geting the access token
   if (
     user.passwordChangeAt &&
-    USER.isJwtIssuedBeforePasswordChange(
-      user.passwordChangeAt,
-      iat as number,
-    )
+    USER.isJwtIssuedBeforePasswordChange(user.passwordChangeAt, iat as number)
   ) {
-    throw new AppError(404, 'You are not authorized.');
+    throw new AppError(401, "Password changed. Please login again.");
   }
 
-  const jwtPayload = {
-    role: user.role,
-    userId: user._id,
-  };
+  // generate jwt payload for access and refresh token
+  const jwtPayload = { userId: user._id, role: user.role };
 
-  const accessToken = createToken({
+  const accessToken = createAccessToken({ payload: jwtPayload });
+
+  const newRefreshToken = createRefreshToken({
     payload: jwtPayload,
-    secret: config.access_token as string,
-    expiresIn: config.accessTokenValidation as string,
   });
 
-  return { accessToken };
+  // store token in redis
+  await RedisClient.set(
+    key,
+    generateHash(newRefreshToken),
+    "EX",
+    REFRESH_TOKEN_TTL_SECONDS
+  );
+
+  return { access_token: accessToken, refresh_token: newRefreshToken };
 };
 
 export const authService = {
@@ -526,5 +534,5 @@ export const authService = {
   changePasswordService,
   forgotPassword,
   resetPassword,
-  refreshTokenService,
+  refreshToken,
 };

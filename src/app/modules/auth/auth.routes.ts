@@ -46,6 +46,6 @@ router.post(
   authController.resetPasswordController,
 );
 
-router.post('/refresh-token', authController.refreshTokenController);
+router.post('/refresh-token', authController.refreshToken);
 
 export const authRoutes = router;

@@ -164,22 +164,40 @@ const resetPasswordController = catchAsync(async (req, res) => {
   });
 });
 
-const refreshTokenController = catchAsync(async (req, res) => {
-  const { refreshToken } = req.cookies;
-  const { accessToken } = await authService.refreshTokenService(refreshToken);
+const refreshToken = catchAsync(async (req, res) => {
+  const { refresh_token: currentToken } = req.cookies;
 
-  // Set access token cookie
-  setCookie({
-    res,
-    name: 'accessToken',
-    value: String(accessToken),
-  });
+  const { access_token, refresh_token } = await authService.refreshToken(currentToken);
+
+  // check access token and auto login after verification
+  if (access_token && refresh_token) {
+    // Set access and refresh token in cookie
+    setCookie({
+      res,
+      name: config.access_key as string,
+      value: String(access_token),
+      options: {
+        maxAge: 15 * 60 * 1000
+      }
+    });
+
+    setCookie({
+      res,
+      name: config.refresh_key as string,
+      value: String(refresh_token),
+      options: {
+        maxAge: 15 * 24 * 60 * 60 * 1000
+      }
+    });
+
+
+  }
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
     message: 'Access token retrieve successfully.',
-    data: null,
+    data: { access_token },
   });
 });
 
@@ -191,5 +209,5 @@ export const authController = {
   changePasswordController,
   forgotPasswordController,
   resetPasswordController,
-  refreshTokenController,
+  refreshToken,
 };

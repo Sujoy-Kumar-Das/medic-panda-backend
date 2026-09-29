@@ -30,8 +30,8 @@ router.post('/logout', auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmi
 router.post(
   '/change-password',
   auth(USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.user),
-  validateRequest(authValidationSchema.changePasswordValidationSchema),
-  authController.changePasswordController,
+  validateRequest(authValidationSchema.changePassword),
+  authController.changePassword,
 );
 
 router.post(

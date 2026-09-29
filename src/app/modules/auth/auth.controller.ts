@@ -103,9 +103,9 @@ const login = catchAsync(async (req, res) => {
 
 const logout = catchAsync(async (req, res) => {
 
-  const { userId, email } = req.user;
+  const { userId } = req.user;
 
-  const result = await authService.logout({ userId, email });
+  const result = await authService.logout({ userId });
 
   const isProduction = process.env.NODE_ENV === 'production';
 
@@ -129,8 +129,20 @@ const logout = catchAsync(async (req, res) => {
 
 
 
-const changePasswordController = catchAsync(async (req, res) => {
-  const result = await authService.changePasswordService(req.user, req.body);
+const changePassword = catchAsync(async (req, res) => {
+  const result = await authService.changePassword(req.user, req.body);
+
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? ('none' as const) : ('lax' as const),
+    path: '/',
+  };
+
+  res.clearCookie(config.access_key as string, cookieOptions);
+  res.clearCookie(config.refresh_key as string, cookieOptions);
 
   sendResponse(res, {
     success: true,
@@ -206,7 +218,7 @@ export const authController = {
   verifyOtp,
   login,
   logout,
-  changePasswordController,
+  changePassword,
   forgotPasswordController,
   resetPasswordController,
   refreshToken,

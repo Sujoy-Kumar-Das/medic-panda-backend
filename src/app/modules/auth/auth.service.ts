@@ -316,20 +316,21 @@ const login = async (payload: ILogin) => {
 };
 
 
-const logout = async ({ userId, email }: { userId: Types.ObjectId, email: string }) => {
+const logout = async ({ userId }: { userId: Types.ObjectId }) => {
 
-  await RedisClient.del(redisRefreshKey(userId, email))
+  await RedisClient.del(redisRefreshKey(userId))
 
   return { message: 'Logout Successfully.' };
 };
 
-const changePasswordService = async (
+const changePassword = async (
   userData: JwtPayload,
   payload: IChangePassword,
 ) => {
   const { oldPassword, newPassword } = payload;
   const { email, role, userId } = userData;
 
+  // find the user
   const user = await USER
     .findOne({ _id: userId, email, role })
     .select('+password');
@@ -338,21 +339,49 @@ const changePasswordService = async (
     throw new AppError(404, 'This user is not exists');
   }
 
-  //   check is the password matched
-  const isPasswordMatched = await USER.isPasswordMatched(
-    oldPassword,
-    user.password,
-  );
+  // check is the password change block active or not
+  if (user.passwordChangeBlockTime && user.passwordChangeBlockTime > new Date()) {
+    const remainingSeconds = Math.ceil(
+      (user.passwordChangeBlockTime.getTime() - Date.now()) / 1000
+    );
 
-  if (!isPasswordMatched) {
-    throw new AppError(403, 'Old password is wrong.');
+    throw new AppError(
+      423,
+      `Too many failed attempts. Please try again after ${remainingSeconds} seconds.`
+    );
   }
+
+  //  password check
+  const isPasswordMatched = await USER.isPasswordMatched(oldPassword, user.password);
+
+  // if password did not matched update wrong attampted count
+  if (!isPasswordMatched) {
+    const updatedAttempts = (user.passwordWrongAttempt || 0) + 1;
+
+    // lock the account temporarily and reset the counter for next time
+    if (updatedAttempts >= MAX_LOGIN_ATTEMPTS) {
+
+      await USER.updateOne(
+        { _id: user._id },
+        {
+          passwordWrongAttempt: 0,
+          passwordChangeBlockTime: new Date(Date.now() + LOGIN_LOCK_DURATION_MS),
+        }
+      );
+      throw new AppError(423, "Too many failed attempts. Your account has been temporarily locked.");
+    }
+
+
+    await USER.updateOne({ _id: user._id }, { passwordWrongAttempt: updatedAttempts });
+    throw new AppError(403, "Invalid password.Your password did not match.");
+  };
 
   const isOldAndNewPasswordAreSame = await USER.isPasswordMatched(
     newPassword,
     user.password,
   );
 
+  // check old and new password are same or not
   if (isOldAndNewPasswordAreSame) {
     throw new AppError(401, 'New password must be different.');
   }
@@ -368,8 +397,15 @@ const changePasswordService = async (
     {
       password: newHashedPassword,
       passwordChangeAt: new Date(),
+      passwordChangeBlockTime: null,
+      passwordWrongAttempt: 0
+
     },
   );
+
+  // delete refresh token from redis
+  await RedisClient.del(redisRefreshKey(user._id));
+
   return null;
 };
 
@@ -531,7 +567,7 @@ export const authService = {
   verifyOtp,
   login,
   logout,
-  changePasswordService,
+  changePassword,
   forgotPassword,
   resetPassword,
   refreshToken,

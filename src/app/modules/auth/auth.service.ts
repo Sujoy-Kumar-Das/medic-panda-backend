@@ -1,5 +1,5 @@
 import { JwtPayload } from 'jsonwebtoken';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import config from '../../config';
 import resetPasswordEmailTemplate from '../../emailTemplate/resetPasswordEmailTemplate';
 import AppError from '../../errors/AppError';
@@ -316,7 +316,10 @@ const login = async (payload: ILogin) => {
 };
 
 
-const logoutService = async () => {
+const logout = async ({ userId, email }: { userId: Types.ObjectId, email: string }) => {
+
+  await RedisClient.del(redisRefreshKey(userId, email))
+
   return { message: 'Logout Successfully.' };
 };
 
@@ -519,7 +522,7 @@ export const authService = {
   singup,
   verifyOtp,
   login,
-  logoutService,
+  logout,
   changePasswordService,
   forgotPassword,
   resetPassword,

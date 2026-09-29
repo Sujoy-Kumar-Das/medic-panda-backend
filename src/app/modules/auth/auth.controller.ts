@@ -77,8 +77,11 @@ const login = catchAsync(async (req, res) => {
 });
 
 
-const logoutController = catchAsync(async (req, res) => {
-  const result = await authService.logoutService();
+const logout = catchAsync(async (req, res) => {
+
+  const { userId, email } = req.user;
+
+  const result = await authService.logout({ userId, email });
 
   const isProduction = process.env.NODE_ENV === 'production';
 
@@ -89,8 +92,7 @@ const logoutController = catchAsync(async (req, res) => {
     path: '/',
   };
 
-  res.clearCookie('accessToken', cookieOptions);
-  res.clearCookie('refreshToken', cookieOptions);
+  res.clearCookie(config.access_key as string, cookieOptions);
 
   sendResponse(res, {
     statusCode: 200,
@@ -158,7 +160,7 @@ export const authController = {
   singup,
   verifyOtp,
   login,
-  logoutController,
+  logout,
   changePasswordController,
   forgotPasswordController,
   resetPasswordController,

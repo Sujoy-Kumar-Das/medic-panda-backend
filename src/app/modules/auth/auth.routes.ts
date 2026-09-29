@@ -25,7 +25,7 @@ router.post(
   authController.login,
 );
 
-router.post('/logout', authController.logoutController);
+router.post('/logout', auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin), authController.logout);
 
 router.post(
   '/change-password',

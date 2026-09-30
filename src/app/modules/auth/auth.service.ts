@@ -419,14 +419,6 @@ const forgotPassword = async (payload: { email: string }) => {
     );
   }
 
-  // update resetTime
-  await RedisClient.set(
-    redisForgotPasswordResethKey(user._id),
-    'requested',
-    'EX',
-    120
-  );
-
   const jwtPayload = { role: user.role, userId: user._id };
 
   // Generate reset token (valid for 2 minutes)
@@ -435,6 +427,14 @@ const forgotPassword = async (payload: { email: string }) => {
     secret: config.resetPasswordSecret as string,
     expiresIn: '2m',
   });
+
+  // store reset token in redis
+  await RedisClient.set(
+    redisForgotPasswordResethKey(user._id),
+    generateHash(forgotPasswordVerificationToken),
+    'EX',
+    120
+  );
 
 
   // Prepare the reset link and email content
@@ -450,40 +450,40 @@ const resetPassword = async (
   token: string,
   payload: { password: string; confirmPassword: string },
 ) => {
-  const decoded = verifyToken(token, config.access_token as string);
-
-  const { role, userId } = decoded;
-
-  const user = await USER
-    .findOne({ _id: userId, role })
-    .select('+isBlocked +isDeleted');
-
-  if (!user) {
-    throw new AppError(404, 'This user is not exists');
+  if (payload.password !== payload.confirmPassword) {
+    throw new AppError(400, 'Passwords do not match.');
   }
 
-  if (user?.isBlocked) {
-    throw new AppError(403, 'This user is blocked.');
+  // decoded jwt
+  const decoded = verifyToken(token, config.resetPasswordSecret as string);
+
+  const { userId } = decoded;
+
+  // get the hash forgot password token from redis
+  const storedHash = await RedisClient.getdel(redisForgotPasswordResethKey(userId));
+
+  if (!storedHash || storedHash !== generateHash(token)) {
+    throw new AppError(401, 'Invalid or expired reset link.');
   }
 
-  if (user?.isDeleted) {
-    throw new AppError(404, 'This user is not found.');
-  }
+  const user = await USER.findAndValidateUser({ _id: userId });
 
-  const newHashedPassword = await hashPassword(payload.confirmPassword);
+  const newHashedPassword = await hashPassword(payload.password);
 
-  return await USER.findOneAndUpdate(
-    { _id: user._id, role: user.role },
+  await USER.updateOne(
+    { _id: user._id },
     {
       password: newHashedPassword,
       passwordChangeAt: new Date(),
       passwordWrongAttempt: 0,
       resetTime: null,
     },
-    {
-      new: true,
-    },
   );
+
+  // clear users session
+  await RedisClient.del(redisRefreshKey(user._id));
+
+  return null;
 };
 
 const refreshToken = async (token: string) => {

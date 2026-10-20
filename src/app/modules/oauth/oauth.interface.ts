@@ -1,8 +1,8 @@
-import { Schema } from "mongoose";
+import { Types } from "mongoose";
 
 export interface IOauth {
-    _id?: Schema.Types.ObjectId;
-    userId: Schema.Types.ObjectId;
+    _id?: Types.ObjectId;
+    userId: Types.ObjectId;
     provider: "google" | "facebook" | "credential";
     providerId: string;
     createdAt?: string;

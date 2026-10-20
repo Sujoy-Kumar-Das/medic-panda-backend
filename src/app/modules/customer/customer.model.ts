@@ -31,7 +31,7 @@ const customerSchema = new Schema<ICustomer>(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: [true, "Customer must be linked to a user."],
       unique: true,
     },

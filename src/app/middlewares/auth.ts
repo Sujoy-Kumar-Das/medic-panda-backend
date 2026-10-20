@@ -39,7 +39,7 @@ const auth = (...requiredRoles: IUserRoles[]) => {
       throw new AppError(404, 'You are not authorized.');
     }
 
-    req.user = { email: user.email, role: user.role, userId: user._id };
+    req.auth.user = { email: user.email, role: user.role, userId: user._id };
 
     next();
   });

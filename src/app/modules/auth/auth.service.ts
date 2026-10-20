@@ -1,5 +1,6 @@
 import { JwtPayload } from 'jsonwebtoken';
 import mongoose, { Types } from 'mongoose';
+import { Profile } from 'passport-google-oauth20';
 import config from '../../config';
 import AppError from '../../errors/AppError';
 import generateOtp from '../../helpers/OTP';
@@ -16,9 +17,11 @@ import hashPassword from '../../utils/hashPassword';
 import verifyToken from '../../utils/verifyJwtToken';
 import { ICustomer } from '../customer/customer.interface';
 import { CUSTOMER } from '../customer/customer.model';
+import { OAUTH } from '../oauth/oauth.model';
+import { USER_ROLE } from '../user/user.constant';
 import { IUser } from '../user/user.interface';
 import { USER } from '../user/user.model';
-import { IChangePassword, ILogin, ILoginResponseData } from './auth.interface';
+import { IChangePassword, ILogin } from './auth.interface';
 
 
 // auth service constranits
@@ -49,6 +52,195 @@ interface IVerifyOtp {
   email: string;
   otp: string;
 }
+
+const createUserSessionAndTokens = async (user: Partial<IUser>) => {
+  try {
+
+    // create the payload
+    const tokenPayload = {
+      role: user.role as string,
+      userId: user._id as Types.ObjectId
+    };
+
+    // generate access and refresh tokens
+    const accessToken = createAccessToken({ payload: tokenPayload });
+    const refreshToken = createRefreshToken({ payload: tokenPayload });
+
+    // store tokens in redis
+    await RedisClient.set(
+      redisRefreshKey(user._id as Types.ObjectId),
+      generateHash(refreshToken),
+      "EX",
+      REFRESH_TOKEN_TTL_SECONDS
+    );
+
+    // prepare response and return
+    const loginData = {
+      access_token: accessToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        isVerified: user.isEmailVerified as boolean,
+        role: user.role,
+      },
+    };
+
+    return {
+      refresh_token: refreshToken,
+      ...loginData
+    };
+  } catch (error) {
+    console.log(error);
+    throw new AppError(500, "Failed to create user session. Please try again later.");
+  }
+};
+
+// singup and login with google
+const googleLogin = async (profile: Profile) => {
+  const email = profile.emails?.[0]?.value;
+  const isVerified = profile.emails?.[0]?.verified;
+  const googleId = profile.id;
+  const name = profile.displayName;
+
+  if (!email) {
+    throw new AppError(400, 'Google account must provide an email address.');
+  }
+
+  if (!isVerified) {
+    throw new AppError(403, 'Google account must have a verified email address.');
+  }
+
+  // find the user from OAUTH collection
+  const oAuthUser = await OAUTH.findOne({ providerId: googleId }).populate<{ userId: IUser }>('userId');
+
+  if (oAuthUser && oAuthUser.userId) {
+    const existingUser = oAuthUser.userId;
+
+    if (existingUser.isDeleted || !existingUser.isActive) {
+      throw new AppError(403, "You are not eligible for login.");
+    }
+
+    // check is the users role is user or not because only users can linkup with oauth
+    if (existingUser.role !== USER_ROLE.user) {
+      throw new AppError(
+        403,
+        'You are not allowed to login via Google. Please use credential login.'
+      );
+    }
+
+
+    // login the user
+    await USER.updateOne(
+      { _id: existingUser._id },
+      {
+        passwordWrongAttempt: 0,
+        passwordChangeBlockTime: null,
+        lastLoginAt: new Date(),
+      }
+    );
+
+    return await createUserSessionAndTokens(existingUser);
+  }
+
+  // find the user from user collections
+  let user = await USER.findOne({ email });
+
+  if (user) {
+
+    if (user.isDeleted || !user.isActive) {
+      throw new AppError(403, "You are not eligible for login.");
+    }
+
+    // check is the users role is user or not because only users can linkup with oauth
+    if (user.role !== USER_ROLE.user) {
+      throw new AppError(
+        403,
+        'You are not allowed to login via Google. Please use credential login.'
+      );
+    }
+  }
+
+  // start transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+
+    // check is the user already have an account with credentials
+    if (user) {
+      const oAuthUserData = {
+        provider: 'google',
+        providerId: googleId,
+        userId: user._id,
+      };
+
+      // if yes then linkup with oauth
+      await OAUTH.create([oAuthUserData], { session });
+
+    } else {
+
+      // create a user with with oauth
+      // create user in USER collection
+      const newUser = await USER.create(
+        [
+          {
+            email,
+            role: 'user',
+            isEmailVerified: true,
+          },
+        ],
+        { session }
+      );
+
+      user = newUser[0];
+
+      // create user in customer collection
+      await CUSTOMER.create(
+        [
+          {
+            user: user._id,
+            name: name || 'MedicPanda User',
+          },
+        ],
+        { session }
+      );
+
+      // create user in oauth collection
+      await OAUTH.create(
+        [
+          {
+            provider: 'google',
+            providerId: googleId,
+            userId: user._id,
+          },
+        ],
+        { session }
+      );
+    }
+
+    await USER.updateOne(
+      { _id: user._id },
+      {
+        passwordWrongAttempt: 0,
+        passwordChangeBlockTime: null,
+        lastLoginAt: new Date(),
+      },
+      { session }
+    );
+
+    // commit transction
+    await session.commitTransaction();
+    session.endSession();
+
+    return await createUserSessionAndTokens(user);
+
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.log(error);
+    throw new AppError(400, "Failed to create user.");
+  }
+};
 
 // singup user in redis and sent OTP via bullmq for verificaiton service
 const singup = async (payload: ISingupPayload) => {
@@ -168,8 +360,8 @@ const verifyOtp = async (payload: IVerifyOtp) => {
       email,
       isEmailVerified: true,
       role: "user",
-      password: userFromRedis.password
-
+      password: userFromRedis.password,
+      lastLoginAt: new Date(),
     }
 
     // create user with transaction
@@ -186,17 +378,6 @@ const verifyOtp = async (payload: IVerifyOtp) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [newCustomer] = await CUSTOMER.create([customerData], { session });
 
-    const jwtPayload = {
-      role: newUser.role,
-      userId: newUser._id
-    }
-
-    // create access token
-    const accessToken = createAccessToken({ payload: jwtPayload });
-
-    // create refresh token
-    const refreshToken = createRefreshToken({ payload: jwtPayload });
-
     // commint mongoose operation
     await session.commitTransaction();
 
@@ -204,21 +385,8 @@ const verifyOtp = async (payload: IVerifyOtp) => {
     await RedisClient.del(redisSingupKey(email));
 
 
-    // store the refresh token in redis store
-    await RedisClient.set(redisRefreshKey(newUser._id), generateHash(refreshToken), "EX",
-      REFRESH_TOKEN_TTL_SECONDS);
 
-    // prepare login data
-    const loginData: ILoginResponseData = {
-      access_token: accessToken,
-      user: {
-        id: newUser._id,
-        email: newUser.email,
-        isVerified: newUser.isEmailVerified as boolean,
-      }
-    }
-
-    return { refresh_token: refreshToken, ...loginData };
+    return await createUserSessionAndTokens(newUser);
 
   } catch (error) {
     await session.abortTransaction();
@@ -238,6 +406,7 @@ const login = async (payload: ILogin) => {
   const { email, password } = payload;
 
   const user = await USER.findAndValidateUser({ email }, true);
+
 
   if (user.passwordChangeBlockTime && user.passwordChangeBlockTime > new Date()) {
     const remainingSeconds = Math.ceil(
@@ -282,39 +451,15 @@ const login = async (payload: ILogin) => {
     }
   );
 
-  // token payload
-  const tokenPayload = { role: user.role, userId: user._id };
-
-  // create tokens
-  const accessToken = createAccessToken({ payload: tokenPayload });
-  const refreshToken = createRefreshToken({ payload: tokenPayload });
-
-
-  await RedisClient.set(
-    redisRefreshKey(user._id),
-    generateHash(refreshToken),
-    "EX",
-    REFRESH_TOKEN_TTL_SECONDS
-  );
-
-  const loginData: ILoginResponseData = {
-    access_token: accessToken,
-    user: {
-      id: user._id,
-      email: user.email,
-      isVerified: user.isEmailVerified as boolean,
-    },
-  };
-
-  return { refresh_token: refreshToken, ...loginData };
+  return await createUserSessionAndTokens(user);
 };
 
 
-const logout = async ({ userId }: { userId: Types.ObjectId }) => {
+const logout = async (userId: string) => {
 
   await RedisClient.del(redisRefreshKey(userId))
 
-  return { message: 'Logout Successfully.' };
+  return null;
 };
 
 const changePassword = async (
@@ -517,28 +662,22 @@ const refreshToken = async (token: string) => {
     throw new AppError(401, "Password changed. Please login again.");
   }
 
-  // generate jwt payload for access and refresh token
-  const jwtPayload = { userId: user._id, role: user.role };
-
-  const accessToken = createAccessToken({ payload: jwtPayload });
-
-  const newRefreshToken = createRefreshToken({
-    payload: jwtPayload,
-  });
-
-  // store token in redis
-  await RedisClient.set(
-    key,
-    generateHash(newRefreshToken),
-    "EX",
-    REFRESH_TOKEN_TTL_SECONDS
+  // login the user
+  await USER.updateOne(
+    { _id: user._id },
+    {
+      passwordWrongAttempt: 0,
+      passwordChangeBlockTime: null,
+      lastLoginAt: new Date(),
+    }
   );
 
-  return { access_token: accessToken, refresh_token: newRefreshToken };
+  return await createUserSessionAndTokens(user);
 };
 
 export const authService = {
   singup,
+  googleLogin,
   verifyOtp,
   login,
   logout,

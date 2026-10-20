@@ -19,6 +19,8 @@ const oauthSchema = new Schema<IOauth>(
         },
         providerId: {
             type: String,
+            unique: true,
+            index: true,
             required: [true, "Provider ID is required."],
         },
     },
@@ -28,5 +30,5 @@ const oauthSchema = new Schema<IOauth>(
     }
 );
 
-export const OauthModel: Model<IOauth> = model<IOauth>("Oauth", oauthSchema);
+export const OAUTH: Model<IOauth> = model<IOauth>("Oauth", oauthSchema);
 

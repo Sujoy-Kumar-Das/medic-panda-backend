@@ -1,4 +1,5 @@
 import express from 'express';
+import passport from 'passport';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
@@ -6,6 +7,25 @@ import { authController } from './auth.controller';
 import { authValidationSchema } from './auth.validationSchema';
 
 const router = express.Router();
+
+
+
+router.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+  })
+);
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: '/login',
+  }),
+  authController.googleLogin
+);
 
 router.post(
   '/singup',

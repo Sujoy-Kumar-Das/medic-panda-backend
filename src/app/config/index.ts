@@ -52,5 +52,10 @@ export default {
   baseFrontendLinkDev: process.env.base_frontend_link_dev,
 
   // ---------- Reset password informations ----------
-  resetPasswordSecret: process.env.reset_password_secret
+  resetPasswordSecret: process.env.reset_password_secret,
+
+  // ---------- google clients credentials ----------
+  googleClientID: process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  googleCallbackURL: process.env.GOOGLE_CALLBACK_URL,
 };
